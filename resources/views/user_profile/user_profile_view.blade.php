@@ -7,7 +7,7 @@
             <div class="right-wrapper text-end">
                 <ol class="breadcrumbs">
                     <li>
-                        <a href="index.html">
+                        <a href="{{route('dashboard')}}">
                             <i class="bx bx-home-alt"></i>
                         </a>
                     </li>
@@ -31,7 +31,7 @@
                     <div class="card-body">
                         <div class="thumb-info mb-3">
                             <img
-                                src="{{!empty($user->photo)?url('upload/user_image/'.$user->photo) :url('upload/no_image.jpg')}}"
+                                src="{{!empty($user->photo)?url($user->photo) :url('upload/no_image.jpg')}}"
                                 class="rounded img-fluid" alt="No Image">
                             {{--<img src="{{asset('backend/assets/img/!logged-user.jpg')}}" class="rounded img-fluid" alt="John Doe">--}}
                             <div class="thumb-info-title">
@@ -68,14 +68,18 @@
                     <div class="card-body">
 
                         <div id="edit" class="tab-pane">
-                            <form class="p-3">
+                            <form method="POST" action="{{route('user.profile.store')}}" class="p-3" enctype="multipart/form-data">
+                                @csrf
                                 <h4 class="mb-3 font-weight-semibold text-dark">Personal Information</h4>
                                 <div class="row row mb-4">
                                     <div class="form-group col">
                                         <label for="inputAddress">Name</label>
                                         <input type="text" class="form-control" id="name" name="name"
                                                value="{{$user->name}}"
-                                               placeholder="Enter Name">
+                                               placeholder="Enter Name" required>
+                                        @error('name')
+                                            <span class="text-danger"> {{ $message }} </span>
+                                        @enderror
                                     </div>
                                 </div>
                                 <div class="row mb-4">
@@ -83,7 +87,10 @@
                                         <label for="phone">Enter Phone</label>
                                         <input type="text" class="form-control" id="phone" name="phone"
                                                value="{{$user->phone}}"
-                                               placeholder="Enter your phone">
+                                               placeholder="Enter your phone" required>
+                                        @error('phone')
+                                            <span class="text-danger"> {{ $message }} </span>
+                                        @enderror
                                     </div>
                                 </div>
 
@@ -92,7 +99,10 @@
                                         <label for="phone">Enter Email</label>
                                         <input type="text" class="form-control" id="email" name="email"
                                                value="{{$user->email}}"
-                                               placeholder="Enter your email">
+                                               placeholder="Enter your email" required>
+                                        @error('email')
+                                            <span class="text-danger"> {{ $message }} </span>
+                                        @enderror
                                     </div>
                                 </div>
 
@@ -101,7 +111,7 @@
                                     <div class="form-group col">
                                         <label for="photo">Photo</label>
                                         <div class="input-group">
-                                            <input type="file" class="form-control" id="image" name="image">
+                                            <input type="file" class="form-control" id="photo" name="photo">
                                         </div>
                                     </div>
                                 </div>
@@ -110,7 +120,7 @@
                                 <div class="col-md-12">
                                     <div class="mb-3">
                                         <label for="showImage" class="form-label"> </label>
-                                        <img id="showImage" src="{{ (!empty($user->photo)) ? url('upload/user_image/'.$adminData->photo) : url('upload/no_image.jpg') }}"
+                                        <img id="showPhoto" src="{{ (!empty($user->photo)) ? url($user->photo) : url('upload/no_image.jpg') }}"
                                              class="rounded-circle img-thumbnail"
                                              style="width: 150px; height: 150px; object-fit: cover;"
                                              alt="profile-image">
@@ -120,10 +130,9 @@
 
                                 <div class="row">
                                     <div class="col-md-12 text-end mt-3">
-                                        <button class="btn btn-primary modal-confirm">Save</button>
+                                        <button class="btn btn-primary modal-confirm">Update Profile</button>
                                     </div>
                                 </div>
-
                             </form>
 
                         </div>
@@ -140,10 +149,10 @@
     <script type="text/javascript">
 
         $(document).ready(function(){
-            $('#image').change(function(e){
+            $('#photo').change(function(e){
                 var reader = new FileReader();
                 reader.onload =  function(e){
-                    $('#showImage').attr('src',e.target.result);
+                    $('#showPhoto').attr('src',e.target.result);
                 }
                 reader.readAsDataURL(e.target.files['0']);
             });

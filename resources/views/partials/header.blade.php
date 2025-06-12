@@ -19,7 +19,7 @@
         <div id="userbox" class="userbox">
             <a href="#" data-bs-toggle="dropdown">
                 <figure class="profile-picture">
-                    <img src="{{ (!empty($userData->photo)) ? url('upload/user_image/'.$userData->photo) : url('upload/no_image.jpg') }}" alt="user-image" class="rounded-circle">
+                    <img src="{{ (!empty($userData->photo)) ? url($userData->photo) : url('upload/no_image.jpg') }}" alt="user-image" class="rounded-circle">
                     {{--<img src="{{asset('backend/assets/img/!logged-user.jpg')}}" alt="Joseph Doe" class="rounded-circle" data-lock-picture="{{asset('backend/assets/img/!logged-user.jpg')}}" />--}}
                 </figure>
                 <div class="profile-info" data-lock-name="Exam Bill" data-lock-email="johndoe@okler.com">

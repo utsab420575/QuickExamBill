@@ -22,6 +22,7 @@ Route::middleware('auth')->group(function () {
     Route::controller(UserController::class)->group(function () {
         Route::get('/user/logout', 'UserDestroy')->name('user.logout');
         Route::get('/user/profile', 'UserProfile')->name('user.profile');
+        Route::post('/user/profile/store', 'UserProfileStore')->name('user.profile.store');
     });
 });
 
