@@ -11,15 +11,20 @@
     <div class="header-right">
 
 
+        @php
+            $id = Auth::user()->id;
+            $userData = App\Models\User::find($id);
+        @endphp
         {{--<span class="separator"></span>--}}
         <div id="userbox" class="userbox">
             <a href="#" data-bs-toggle="dropdown">
                 <figure class="profile-picture">
-                    <img src="{{asset('backend/assets/img/!logged-user.jpg')}}" alt="Joseph Doe" class="rounded-circle" data-lock-picture="{{asset('backend/assets/img/!logged-user.jpg')}}" />
+                    <img src="{{ (!empty($userData->photo)) ? url('upload/user_image/'.$userData->photo) : url('upload/no_image.jpg') }}" alt="user-image" class="rounded-circle">
+                    {{--<img src="{{asset('backend/assets/img/!logged-user.jpg')}}" alt="Joseph Doe" class="rounded-circle" data-lock-picture="{{asset('backend/assets/img/!logged-user.jpg')}}" />--}}
                 </figure>
-                <div class="profile-info" data-lock-name="John Doe" data-lock-email="johndoe@okler.com">
-                    <span class="name">John Doe Junior</span>
-                    <span class="role">Administrator</span>
+                <div class="profile-info" data-lock-name="Exam Bill" data-lock-email="johndoe@okler.com">
+                    <span class="name">{{$userData->name}}</span>
+                    {{--<span class="role">Administrator</span>--}}
                 </div>
                 <i class="fa custom-caret"></i>
             </a>
