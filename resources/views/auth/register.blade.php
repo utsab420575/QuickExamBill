@@ -60,10 +60,10 @@
                     </div>
                     {{--Phone--}}
                     <div class="form-group mb-3">
-                        <label>Phone Number</label>
+                        <label>Phone Number(01*********)</label>
                         <input name="phone" id="phone" type="tel" class="form-control form-control-lg" value="{{old('phone')}}" required />
-                        @error('name')
-                            <span class="text-danger"> {{ $phone }} </span>
+                        @error('phone')
+                            <span class="text-danger"> {{ $message }} </span>
                         @enderror
                     </div>
                     {{--Password--}}

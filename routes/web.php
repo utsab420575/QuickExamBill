@@ -20,7 +20,8 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::controller(UserController::class)->group(function () {
-        Route::get('/user/logout', [UserController::class, 'UserDestroy'])->name('user.logout');
+        Route::get('/user/logout', 'UserDestroy')->name('user.logout');
+        Route::get('/user/profile', 'UserProfile')->name('user.profile');
     });
 });
 

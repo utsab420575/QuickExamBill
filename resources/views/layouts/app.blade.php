@@ -31,6 +31,9 @@
     <!-- Head Libs -->
     <script src="{{asset('backend/assets/vendor/modernizr/modernizr.js')}}"></script>
 
+    {{--this is for to make workable image choose box--}}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+
 
     @stack('styles')
     @yield('styles')
@@ -85,6 +88,7 @@
 <script src="{{asset('backend/assets/vendor/jqvmap/maps/continents/jquery.vmap.europe.js')}}"></script>
 <script src="{{asset('backend/assets/vendor/jqvmap/maps/continents/jquery.vmap.north-america.js')}}"></script>
 <script src="{{asset('backend/assets/vendor/jqvmap/maps/continents/jquery.vmap.south-america.js')}}"></script>
+
 <!-- Theme Base, Components and Settings -->
 <script src="{{asset('backend/assets/js/theme.js')}} "></script>
 <!-- Theme Custom -->
@@ -93,6 +97,8 @@
 <script src="{{asset('backend/assets/js/theme.init.js')}} "></script>
 <!-- Examples -->
 <script src="{{asset('backend/assets/js/examples/examples.dashboard.js')}} "></script>
+
+
 @stack('scripts')
 </body>
 </html>
