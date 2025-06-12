@@ -34,8 +34,13 @@
     {{--this is for to make workable image choose box--}}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
 
-
+    <style>
+        #userbox {
+            width: 150px; /* or any value you want */
+        }
+        </style>
     @stack('styles')
+
     @yield('styles')
 </head>
 <body>

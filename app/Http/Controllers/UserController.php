@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -89,5 +90,43 @@ class UserController extends Controller
 
         return redirect()->route('dashboard');
     }
+    public function UserPasswordChange(){
+        return view('user_profile.change_password');
+    }//End Method
+
+    public function UserPasswordUpdate(Request $request){
+        /// Validation
+        $request->validate([
+            'old_password' => 'required',
+            'new_password' => 'required|confirmed',
+
+        ]);
+
+        /// Match The Old Password
+        if (!Hash::check($request->old_password, Auth::user()->password)) {
+
+           /* $notification = array(
+                'message' => 'Old Password Dones not Match!!',
+                'alert-type' => 'error'
+            );
+            return back()->with($notification);*/
+            return redirect()->back()->with('error', 'Old Password Not Match');
+
+        }
+
+        $user = Auth::user();
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+
+       /* $notification = array(
+            'message' => 'Password Change Successfully',
+            'alert-type' => 'success'
+        );*/
+
+        //return back()->with($notification);
+        return redirect()->route('dashboard');
+
+    }//End Method
 
 }

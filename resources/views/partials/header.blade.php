@@ -30,10 +30,15 @@
             </a>
             <div class="dropdown-menu">
                 <ul class="list-unstyled mb-2">
-                    <li class="divider"></li>
-                    <li>
+
+                    <li   class="pt-2">
                         <a role="menuitem" tabindex="-1" href="{{route('user.profile')}}"><i class="bx bx-user-circle"></i> My Profile</a>
                     </li>
+
+                    <li>
+                        <a role="menuitem" tabindex="-1" href="{{route('user.password.change')}}"><i class="bx bx-user-circle"></i>Change Password</a>
+                    </li>
+                    <li class="divider"></li>
                     <li>
                         <a role="menuitem" tabindex="-1" href="#" data-lock-screen="true"><i class="bx bx-lock"></i> Lock Screen</a>
                     </li>

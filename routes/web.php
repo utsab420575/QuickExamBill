@@ -23,6 +23,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/user/logout', 'UserDestroy')->name('user.logout');
         Route::get('/user/profile', 'UserProfile')->name('user.profile');
         Route::post('/user/profile/store', 'UserProfileStore')->name('user.profile.store');
+        Route::get('/user/password/change','UserPasswordChange')->name('user.password.change');
+        Route::post('/user/password/update','UserPasswordUpdate')->name('user.password.update');
     });
 });
 
