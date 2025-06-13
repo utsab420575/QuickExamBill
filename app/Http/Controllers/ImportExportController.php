@@ -45,6 +45,7 @@ class ImportExportController extends Controller
                     $user->update([
                         'name' => $userData['name'],
                         'phone' => $userData['phoneno'],
+                        //'password' => $userData['password'], // already hashed
                     ]);
                     $updated++;
                     Log::info("User updated: {$user->email}");
