@@ -16,7 +16,7 @@
             $userData = App\Models\User::find($id);
         @endphp
         {{--<span class="separator"></span>--}}
-        <div id="userbox" class="userbox">
+        <div id="userbox" class="userbox pt-2">
             <a href="#" data-bs-toggle="dropdown">
                 <figure class="profile-picture">
                     <img src="{{ (!empty($userData->photo)) ? url($userData->photo) : url('upload/no_image.jpg') }}" alt="user-image" class="rounded-circle">
@@ -31,7 +31,7 @@
             <div class="dropdown-menu">
                 <ul class="list-unstyled mb-2">
 
-                    <li   class="pt-2">
+                    <li   class="pt-4">
                         <a role="menuitem" tabindex="-1" href="{{route('user.profile')}}"><i class="bx bx-user-circle"></i> My Profile</a>
                     </li>
 
@@ -39,9 +39,9 @@
                         <a role="menuitem" tabindex="-1" href="{{route('user.password.change')}}"><i class="bx bx-user-circle"></i>Change Password</a>
                     </li>
                     <li class="divider"></li>
-                    <li>
+                    {{--<li>
                         <a role="menuitem" tabindex="-1" href="#" data-lock-screen="true"><i class="bx bx-lock"></i> Lock Screen</a>
-                    </li>
+                    </li>--}}
                     <li>
                         <a role="menuitem" tabindex="-1" href="{{route('user.logout')}}"><i class="bx bx-power-off"></i> Logout</a>
                     </li>
