@@ -25,14 +25,16 @@
         <!-- start: page -->
 
         <div class="row">
-            <div class="col-6">
+            <div class="col-4">
                 <h4 class="font-weight-bold text-dark">Select Table & Press Import</h4>
             </div>
-            <div class="col-6">
+            <div class="col-8">
                 <h4 class="font-weight-bold text-dark text-center">Import Data Showing Section</h4>
             </div>
-            <div class="col-md-6 col-lg-6 col-xl-6">
+
+            <div class="col-md-4 ">
                 <div class="accordion accordion-primary" id="parent">
+                    {{--User--}}
                     <div class="card card-default">
                         <div class="card-header">
                             <h4 class="card-title m-0">
@@ -42,7 +44,7 @@
                             </h4>
                         </div>
                         <div id="child1" class="collapse show" data-bs-parent="#parent">
-                            <div class="card-body text-end">
+                            <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-6 text-start">
                                         {{-- Spinner Button (hidden by default) --}}
@@ -64,60 +66,138 @@
                         </div>
                     </div>
 
+                    {{--Faculty--}}
                     <div class="card card-default">
                         <div class="card-header">
                             <h4 class="card-title m-0">
                                 <a class="accordion-toggle" data-bs-toggle="collapse" data-bs-parent="#parent" data-bs-target="#child2">
-                                    Teacher Import
+                                    Faculty Import
                                 </a>
                             </h4>
                         </div>
-                        <div id="child2" class="collapse show" data-bs-parent="#parent">
-                            <div class="card-body text-end">
-                                <button type="submit" class="btn btn-warning">
-                                    <i class="fas fa-download"></i> Import Teachers
-                                </button>
+                        <div id="child2" class="collapse" data-bs-parent="#parent">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 text-start">
+                                        {{-- Spinner Button (hidden by default) --}}
+                                        <button class="btn btn-warning" type="button" id="loadingButtonFaculty" disabled style="display: none;">
+                                            <span class="spinner-grow spinner-grow-sm" aria-hidden="true"></span>
+                                            <span role="status"> Importing...</span>
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <form method="POST" action="{{route('import.table.faculties')}}" id="importFacultyForm">
+                                            @csrf
+                                            <button type="submit" class="btn btn-warning" id="submitButtonFaculty">
+                                                <i class="fas fa-download"></i> Import Faculties
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
+                    {{--Department--}}
                     <div class="card card-default">
                         <div class="card-header">
                             <h4 class="card-title m-0">
                                 <a class="accordion-toggle" data-bs-toggle="collapse" data-bs-parent="#parent" data-bs-target="#child3">
-                                    Designation Import
+                                    Department Import
                                 </a>
                             </h4>
                         </div>
                         <div id="child3" class="collapse" data-bs-parent="#parent">
                             <div class="card-body text-end">
-                                <button type="submit" class="btn btn-warning">
-                                    <i class="fas fa-download"></i> Import Designation
-                                </button>
+                                <div class="row">
+                                    <div class="col-md-6 text-start">
+                                        {{-- Spinner Button (hidden by default) --}}
+                                        <button class="btn btn-warning" type="button" id="loadingButtonDepartment" disabled style="display: none;">
+                                            <span class="spinner-grow spinner-grow-sm" aria-hidden="true"></span>
+                                            <span role="status"> Importing...</span>
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <form method="POST" action="{{route('import.table.departments')}}" id="importDepartmentForm">
+                                            @csrf
+                                            <button type="submit" class="btn btn-warning" id="submitButtonDepartment">
+                                                <i class="fas fa-download"></i> Import Departments
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
+
+                    {{--Designation--}}
                     <div class="card card-default">
                         <div class="card-header">
                             <h4 class="card-title m-0">
                                 <a class="accordion-toggle" data-bs-toggle="collapse" data-bs-parent="#parent" data-bs-target="#child4">
-                                    Department Import
+                                    Designation Import
                                 </a>
                             </h4>
                         </div>
                         <div id="child4" class="collapse" data-bs-parent="#parent">
                             <div class="card-body text-end">
-                                <button type="submit" class="btn btn-warning">
-                                    <i class="fas fa-download"></i> Import Departments
-                                </button>
+                                <div class="row">
+                                    <div class="col-md-6 text-start">
+                                        {{-- Spinner Button (hidden by default) --}}
+                                        <button class="btn btn-warning" type="button" id="loadingButtonDesignation" disabled style="display: none;">
+                                            <span class="spinner-grow spinner-grow-sm" aria-hidden="true"></span>
+                                            <span role="status"> Importing...</span>
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <form method="POST" action="{{route('import.table.designations')}}" id="importDesignationForm">
+                                            @csrf
+                                            <button type="submit" class="btn btn-warning" id="submitButtonDesignation">
+                                                <i class="fas fa-download"></i> Import Designation
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{--Teacher--}}
+                    <div class="card card-default">
+                        <div class="card-header">
+                            <h4 class="card-title m-0">
+                                <a class="accordion-toggle" data-bs-toggle="collapse" data-bs-parent="#parent" data-bs-target="#child5">
+                                    Teacher Import
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="child5" class="collapse" data-bs-parent="#parent">
+                            <div class="card-body text-end">
+                                <div class="row">
+                                    <div class="col-md-6 text-start">
+                                        {{-- Spinner Button (hidden by default) --}}
+                                        <button class="btn btn-warning" type="button" id="loadingButtonTeacher" disabled style="display: none;">
+                                            <span class="spinner-grow spinner-grow-sm" aria-hidden="true"></span>
+                                            <span role="status"> Importing...</span>
+                                        </button>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <form method="POST" action="{{route('import.table.teachers')}}" id="importTeacherForm">
+                                            @csrf
+                                            <button type="submit" class="btn btn-warning" id="submitButtonTeacher">
+                                                <i class="fas fa-download"></i> Import Teachers
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
             </div>
-            <div class="col-md-6 col-lg-6 col-xl-6">
+            <div class="col-md-8 ">
 
 
 
@@ -165,6 +245,34 @@
         document.getElementById('importUserForm').addEventListener('submit', function () {
             document.getElementById('submitButton').style.display = 'none';
             document.getElementById('loadingButton').style.display = 'inline-block';
+        });
+    </script>
+
+    <script>
+        document.getElementById('importFacultyForm').addEventListener('submit', function () {
+            document.getElementById('submitButtonFaculty').style.display = 'none';
+            document.getElementById('loadingButtonFaculty').style.display = 'inline-block';
+        });
+    </script>
+
+    <script>
+        document.getElementById('importDepartmentForm').addEventListener('submit', function () {
+            document.getElementById('submitButtonDepartment').style.display = 'none';
+            document.getElementById('loadingButtonDepartment').style.display = 'inline-block';
+        });
+    </script>
+
+    <script>
+        document.getElementById('importDesignationForm').addEventListener('submit', function () {
+            document.getElementById('submitButtonDesignation').style.display = 'none';
+            document.getElementById('loadingButtonDesignation').style.display = 'inline-block';
+        });
+    </script>
+
+    <script>
+        document.getElementById('importTeacherForm').addEventListener('submit', function () {
+            document.getElementById('submitButtonTeacher').style.display = 'none';
+            document.getElementById('loadingButtonTeacher').style.display = 'inline-block';
         });
     </script>
 @endpush
