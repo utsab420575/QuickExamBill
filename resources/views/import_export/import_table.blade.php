@@ -39,7 +39,10 @@
                         <div class="card-header">
                             <h4 class="card-title m-0">
                                 <a class="accordion-toggle" data-bs-toggle="collapse" data-bs-parent="#parent" data-bs-target="#child1">
-                                    User Import
+                                    <span class="fa-stack fa-lg me-2">
+                                      <i class="fa-solid fa-circle fa-stack-2x text-info"></i> <!-- Blue circle -->
+                                      <i class="fa-solid fa-1 fa-stack-1x text-light" ></i>         <!-- White number -->
+                                    </span>User Import
                                 </a>
                             </h4>
                         </div>
@@ -71,7 +74,10 @@
                         <div class="card-header">
                             <h4 class="card-title m-0">
                                 <a class="accordion-toggle" data-bs-toggle="collapse" data-bs-parent="#parent" data-bs-target="#child2">
-                                    Faculty Import
+                                    <span class="fa-stack fa-lg me-2">
+                                      <i class="fa-solid fa-circle fa-stack-2x text-info"></i> <!-- Blue circle -->
+                                      <i class="fa-solid fa-2 fa-stack-1x text-light" ></i>         <!-- White number -->
+                                    </span>Faculty Import
                                 </a>
                             </h4>
                         </div>
@@ -103,7 +109,10 @@
                         <div class="card-header">
                             <h4 class="card-title m-0">
                                 <a class="accordion-toggle" data-bs-toggle="collapse" data-bs-parent="#parent" data-bs-target="#child3">
-                                    Department Import
+                                    <span class="fa-stack fa-lg me-2">
+                                      <i class="fa-solid fa-circle fa-stack-2x text-info"></i> <!-- Blue circle -->
+                                      <i class="fa-solid fa-3 fa-stack-1x text-light" ></i>         <!-- White number -->
+                                    </span>Department Import
                                 </a>
                             </h4>
                         </div>
@@ -136,7 +145,10 @@
                         <div class="card-header">
                             <h4 class="card-title m-0">
                                 <a class="accordion-toggle" data-bs-toggle="collapse" data-bs-parent="#parent" data-bs-target="#child4">
-                                    Designation Import
+                                    <span class="fa-stack fa-lg me-2">
+                                      <i class="fa-solid fa-circle fa-stack-2x text-info"></i> <!-- Blue circle -->
+                                      <i class="fa-solid fa-4 fa-stack-1x text-light" ></i>         <!-- White number -->
+                                    </span>Designation Import
                                 </a>
                             </h4>
                         </div>
@@ -168,7 +180,10 @@
                         <div class="card-header">
                             <h4 class="card-title m-0">
                                 <a class="accordion-toggle" data-bs-toggle="collapse" data-bs-parent="#parent" data-bs-target="#child5">
-                                    Teacher Import
+                                    <span class="fa-stack fa-lg me-2">
+                                      <i class="fa-solid fa-circle fa-stack-2x text-info"></i> <!-- Blue circle -->
+                                      <i class="fa-solid fa-5 fa-stack-1x text-light" ></i>         <!-- White number -->
+                                    </span>Teacher Import
                                 </a>
                             </h4>
                         </div>

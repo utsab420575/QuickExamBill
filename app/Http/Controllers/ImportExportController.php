@@ -76,17 +76,26 @@ class ImportExportController extends Controller
             ]);
 
 
+
             DB::commit();
 
             Log::info("User sync completed. Inserted: $inserted, Updated: $updated");
 
-            return redirect()->back();
+            $notification=array(
+                "message"=>"User Import Success",
+                "alert-type"=>"success"
+            );
+            return redirect()->back()->with($notification);
         } catch (\Exception $e) {
             DB::rollBack();
 
             Log::error('User sync failed: ' . $e->getMessage());
 
-            return response()->json(['error' => 'User sync failed.'], 500);
+            $notification=array(
+                "message"=>"User Import Failed",
+                "alert-type"=>"error"
+            );
+            return redirect()->back()->with($notification);
         }
     }
 
@@ -146,17 +155,26 @@ class ImportExportController extends Controller
             ]);
 
 
+
             DB::commit();
 
             Log::info("Faculty sync completed. Inserted: $inserted, Updated: $updated");
 
-            return redirect()->back();
+            $notification=array(
+                "message"=>"Faculty Import Success",
+                "alert-type"=>"success"
+            );
+            return redirect()->back()->with($notification);
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Log::error('User sync failed: ' . $e->getMessage());
+            Log::error('Faculty sync failed: ' . $e->getMessage());
 
-            return response()->json(['error' => 'User sync failed.'], 500);
+            $notification=array(
+                "message"=>"Faculty Import Failed",
+                "alert-type"=>"error"
+            );
+            return redirect()->back()->with($notification);
         }
     }//End Method
 
@@ -218,17 +236,26 @@ class ImportExportController extends Controller
             ]);
 
 
+
             DB::commit();
 
             Log::info("Department sync completed. Inserted: $inserted, Updated: $updated");
 
-            return redirect()->back();
+            $notification=array(
+                "message"=>"Department Import Success",
+                "alert-type"=>"success"
+            );
+            return redirect()->back()->with($notification);
         } catch (\Exception $e) {
             DB::rollBack();
 
             Log::error('Department sync failed: ' . $e->getMessage());
 
-            return response()->json(['error' => 'User sync failed.'], 500);
+            $notification=array(
+                "message"=>"Department Import Failed",
+                "alert-type"=>"error"
+            );
+            return redirect()->back()->with($notification);
         }
     }//End Method
 
@@ -286,20 +313,31 @@ class ImportExportController extends Controller
             ]);
 
 
+
             DB::commit();
 
             Log::info("Designation sync completed. Inserted: $inserted, Updated: $updated");
 
-            return redirect()->back();
+            $notification=array(
+                "message"=>"Designation Import Sucess",
+                "alert-type"=>"success"
+            );
+            return redirect()->back()->with($notification);
         } catch (\Exception $e) {
             DB::rollBack();
 
             Log::error('Designation sync failed: ' . $e->getMessage());
 
-            return response()->json(['error' => 'Designation sync failed.'], 500);
+            $notification=array(
+                "message"=>"Designation Import Failed",
+                "alert-type"=>"error"
+            );
+            return redirect()->back()->with($notification);
+            //return response()->json(['error' => 'Designation sync failed.'], 500);
         }
     }//End Method
 
+    //Teacher Import
     public function ImportTeacherTable()
     {
        // return 'hi';
@@ -403,11 +441,23 @@ class ImportExportController extends Controller
 
             Log::info("Teacher import done. Inserted: $inserted, Updated: $updated, Skipped: $skipped");
 
-            return redirect()->back()->with('success', "Imported: $inserted, Updated: $updated, Skipped: $skipped");
+            $notification=array(
+                "message"=>"Teacher Import Success",
+                "alert-type"=>"success"
+            );
+            return redirect()->back()->with($notification);
+
+           // return redirect()->back()->with('success', "Imported: $inserted, Updated: $updated, Skipped: $skipped");
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Teacher import failed: ' . $e->getMessage());
-            return response()->json(['error' => 'Teacher import failed.'], 500);
+
+            $notification=array(
+                "message"=>"Teacher Import Failed",
+                "alert-type"=>"error"
+            );
+            return redirect()->back()->with($notification);
+            //return response()->json(['error' => 'Teacher import failed.'], 500);
         }
     }
 

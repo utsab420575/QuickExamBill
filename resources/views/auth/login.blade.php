@@ -26,7 +26,10 @@
     <!-- Theme Custom CSS -->
     <link rel="stylesheet" href="{{asset('backend/assets/css/custom.css')}}">
     <!-- Head Libs -->
-    <script src="{{asset('backend/assets/backend/assets/vendor/modernizr/modernizr.js')}}"></script>
+    <script src="{{asset('backend/assets/vendor/modernizr/modernizr.js')}}"></script>
+
+    <!-- Toaster Css-->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
 </head>
 <body>
 <!-- start: page -->
@@ -122,5 +125,39 @@
 <script src="{{asset('backend/assets/js/custom.js')}} "></script>
 <!-- Theme Initialization Files -->
 <script src="{{asset('backend/assets/js/theme.init.js')}} "></script>
+
+<!-- Toaster js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+
+<script>
+    @if(Session::has('message'))
+        toastr.options = {
+        "closeButton": true,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "timeOut": "4000"
+    };
+
+    var type = "{{ Session::get('alert-type', 'info') }}";
+    switch (type) {
+        case 'info':
+            toastr.info("{{ Session::get('message') }}");
+            break;
+
+        case 'success':
+            toastr.success("{{ Session::get('message') }}");
+            break;
+
+        case 'warning':
+            toastr.warning("{{ Session::get('message') }}");
+            break;
+
+        case 'error':
+            toastr.error("{{ Session::get('message') }}");
+            break;
+    }
+    @endif
+</script>
 </body>
 </html>

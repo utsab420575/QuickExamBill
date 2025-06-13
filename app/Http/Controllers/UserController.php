@@ -24,7 +24,11 @@ class UserController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/login');
+
+        $notification=array(
+            "message"=>'Profile Logout Sucessfully',
+            "alert-type"=>'info');
+        return redirect()->route('login')->with($notification);
     }
 
     public function UserProfile(){
