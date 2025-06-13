@@ -1,5 +1,7 @@
 @extends('layouts.app')
 @section('content')
+    {{--this is for to make workable image choose box--}}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
     <section role="main" class="content-body">
         <header class="page-header">
             <h2>User Profile</h2>
@@ -144,6 +146,7 @@
         </div>
         <!-- end: page -->
     </section>
+
 
     {{--for showing image when select choose image--}}
     <script type="text/javascript">

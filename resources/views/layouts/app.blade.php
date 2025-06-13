@@ -11,6 +11,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <!-- Web Fonts  -->
     <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800|Shadows+Into+Light" rel="stylesheet" type="text/css">
+
+
     <!-- Vendor CSS -->
     <link rel="stylesheet" href="{{asset('backend/assets/vendor/bootstrap/css/bootstrap.css')}}" />
     <link rel="stylesheet" href="{{asset('backend/assets/vendor/animate/animate.compat.css')}}">
@@ -18,10 +20,19 @@
     <link rel="stylesheet" href="{{asset('backend/assets/vendor/boxicons/css/boxicons.min.css')}}" />
     <link rel="stylesheet" href="{{asset('backend/assets/vendor/magnific-popup/magnific-popup.css')}}" />
     <link rel="stylesheet" href="{{asset('backend/assets/vendor/bootstrap-datepicker/css/bootstrap-datepicker3.css')}}" />
+    <link rel="stylesheet" href="{{asset('backend/assets/vendor/select2/css/select2.css')}}" />
+    <link rel="stylesheet" href="{{asset('backend/assets/vendor/select2-bootstrap-theme/select2-bootstrap.min.css')}}" />
+    <link rel="stylesheet" href="{{asset('backend/assets/vendor/datatables/media/css/dataTables.bootstrap5.css')}}" />
+
+    <!-- Vendor CSS -->
     <link rel="stylesheet" href="{{asset('backend/assets/vendor/jquery-ui/jquery-ui.css')}}" />
     <link rel="stylesheet" href="{{asset('backend/assets/vendor/jquery-ui/jquery-ui.theme.css')}}" />
     <link rel="stylesheet" href="{{asset('backend/assets/vendor/bootstrap-multiselect/css/bootstrap-multiselect.css')}}" />
     <link rel="stylesheet" href="{{asset('backend/assets/vendor/morris/morris.css')}}" />
+
+
+
+
     <!-- Theme CSS -->
     <link rel="stylesheet" href="{{asset('backend/assets/css/theme.css')}}" />
     <!-- Skin CSS -->
@@ -31,8 +42,13 @@
     <!-- Head Libs -->
     <script src="{{asset('backend/assets/vendor/modernizr/modernizr.js')}}"></script>
 
-    {{--this is for to make workable image choose box--}}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+
+
+
+
+    <!-- Toaster Css-->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+
 
 
     @stack('styles')
@@ -53,6 +69,8 @@
        {{-- end body--}}
     </div>
 </section>
+
+
 <!-- Vendor -->
 <script src="{{asset('backend/assets/vendor/jquery/jquery.js')}}"></script>
 <script src="{{asset('backend/assets/vendor/jquery-browser-mobile/jquery.browser.mobile.js')}}"></script>
@@ -63,6 +81,23 @@
 <script src="{{asset('backend/assets/vendor/nanoscroller/nanoscroller.js')}}"></script>
 <script src="{{asset('backend/assets/vendor/magnific-popup/jquery.magnific-popup.js')}}"></script>
 <script src="{{asset('backend/assets/vendor/jquery-placeholder/jquery.placeholder.js')}}"></script>
+
+
+<!-- Specific Page Vendor -->
+<script src="{{asset('backend/assets/vendor/select2/js/select2.js')}}"></script>
+<script src="{{asset('backend/assets/vendor/datatables/media/js/jquery.dataTables.min.js')}}"></script>
+<script src="{{asset('backend/assets/vendor/datatables/media/js/dataTables.bootstrap5.min.js')}}"></script>
+<script src="{{asset('backend/assets/vendor/datatables/extras/TableTools/Buttons-1.4.2/js/dataTables.buttons.min.js')}}"></script>
+<script src="{{asset('backend/assets/vendor/datatables/extras/TableTools/Buttons-1.4.2/js/buttons.bootstrap4.min.js')}}"></script>
+<script src="{{asset('backend/assets/vendor/datatables/extras/TableTools/Buttons-1.4.2/js/buttons.html5.min.js')}}"></script>
+<script src="{{asset('backend/assets/vendor/datatables/extras/TableTools/Buttons-1.4.2/js/buttons.print.min.js')}}"></script>
+<script src="{{asset('backend/assets/vendor/datatables/extras/TableTools/JSZip-2.5.0/jszip.min.js')}}"></script>
+<script src="{{asset('backend/assets/vendor/datatables/extras/TableTools/pdfmake-0.1.32/pdfmake.min.js')}}"></script>
+<script src="{{asset('backend/assets/vendor/datatables/extras/TableTools/pdfmake-0.1.32/vfs_fonts.js')}}"></script>
+
+
+
+
 <!-- Specific Page Vendor -->
 <script src="{{asset('backend/assets/vendor/jquery-ui/jquery-ui.js')}}"></script>
 <script src="{{asset('backend/assets/vendor/jqueryui-touch-punch/jquery.ui.touch-punch.js')}}"></script>
@@ -90,14 +125,62 @@
 <script src="{{asset('backend/assets/vendor/jqvmap/maps/continents/jquery.vmap.north-america.js')}}"></script>
 <script src="{{asset('backend/assets/vendor/jqvmap/maps/continents/jquery.vmap.south-america.js')}}"></script>
 
+
 <!-- Theme Base, Components and Settings -->
 <script src="{{asset('backend/assets/js/theme.js')}} "></script>
 <!-- Theme Custom -->
 <script src="{{asset('backend/assets/js/custom.js')}} "></script>
 <!-- Theme Initialization Files -->
 <script src="{{asset('backend/assets/js/theme.init.js')}} "></script>
+
+
+
 <!-- Examples -->
 <script src="{{asset('backend/assets/js/examples/examples.dashboard.js')}} "></script>
+
+
+
+<!-- Toaster js -->
+<!-- if we add jquery 3.6.0 this will cause error ; beacuse we already added jquery from backend/assets/vendor/jquery/jquery.js-->
+{{--<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>--}}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+
+
+<!-- Examples -->
+<script src="{{asset('backend/assets/js/examples/examples.datatables.default.js')}}"></script>
+<script src="{{asset('backend/assets/js/examples/examples.datatables.row.with.details.js')}}"></script>
+<script src="{{asset('backend/assets/js/examples/examples.datatables.tabletools.js')}}"></script>
+
+<script>
+    @if(Session::has('message'))
+        toastr.options = {
+        "closeButton": true,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "timeOut": "4000"
+    };
+
+    var type = "{{ Session::get('alert-type', 'info') }}";
+    switch (type) {
+        case 'info':
+            toastr.info("{{ Session::get('message') }}");
+            break;
+
+        case 'success':
+            toastr.success("{{ Session::get('message') }}");
+            break;
+
+        case 'warning':
+            toastr.warning("{{ Session::get('message') }}");
+            break;
+
+        case 'error':
+            toastr.error("{{ Session::get('message') }}");
+            break;
+    }
+    @endif
+</script>
 
 
 @stack('scripts')

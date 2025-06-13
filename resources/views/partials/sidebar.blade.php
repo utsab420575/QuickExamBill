@@ -20,12 +20,12 @@
                     <li class="nav-parent">
                         <a class="nav-link" href="#">
                             <i class="bx bx-cart-alt" aria-hidden="true"></i>
-                            <span>eCommerce</span>
+                            <span>Import/Export Manage</span>
                         </a>
                         <ul class="nav nav-children">
                             <li>
-                                <a class="nav-link" href="ecommerce-dashboard.html">
-                                    Dashboard
+                                <a class="nav-link" href="{{route('import.table.all')}}">
+                                    All Table Import
                                 </a>
                             </li>
                         </ul>

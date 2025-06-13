@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ImportExportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/user/password/change','UserPasswordChange')->name('user.password.change');
         Route::post('/user/password/update','UserPasswordUpdate')->name('user.password.update');
     });
+
+    Route::controller(ImportExportController::class)->group(function(){
+        Route::get('import/table//all','ImportAllTable')->name('import.table.all');
+    });
+
 });
 
 require __DIR__.'/auth.php';
