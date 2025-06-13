@@ -29,7 +29,8 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::controller(ImportExportController::class)->group(function(){
-        Route::get('import/table//all','ImportAllTable')->name('import.table.all');
+        Route::get('import/table/all','ImportAllTable')->name('import.table.all');
+        Route::post('import/table/users','ImportUserTable')->name('import.table.users');
     });
 
 });
