@@ -12,23 +12,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class CommitteeInputController extends Controller
+class CommitteeInputReviewController extends Controller
 {
-    //regular session list
-    public function regularSessionShow(){
-        $sessions=ApiData::getRegularSessions();
+    //showing session list
+    public function reviewSessionShow(){
+        $sessions=ApiData::getReviewSessions();
         if($sessions === null) {
             return redirect()->back()->with([
                 'message' => 'Session Import Failed',
                 'alert-type' => 'error',
             ]);
         }
-        return view('committee_input.session_view.regular_session_list',compact('sessions'));
+        return view('committee_input.session_view.review_session_list',compact('sessions'));
     }
-
-
-
-    public function regularSessionForm(Request $request)
+    public function reviewSessionForm(Request $request)
     {
 
         $sid=$request->sid;
@@ -52,7 +49,7 @@ class CommitteeInputController extends Controller
 
         // return response()->json(['$all_course_with_teacher'=>$all_course_with_teacher]);
         /*return response()->json(['head'=>$all_course_with_class_test_teacher]);*/
-        return view('committee_input.regular_form.regular_session_form')
+        return view('committee_input.review_form.review_session_form')
             ->with('sid',$sid)
             /*->with('teacher_head', $teacher_head)*/
             /*  ->with('teacher_coordinator', $teacher_coordinator)*/
@@ -78,7 +75,7 @@ class CommitteeInputController extends Controller
         $sessionId = $request->sid;
         $min_rate=$request->moderation_committee_min_rate;
         $max_rate=$request->moderation_committee_max_rate;
-        $exam_type=1;
+        $exam_type=2;
 
         Log::info('teacherId',$teacherIds);
         Log::info('teacherId',$amounts);

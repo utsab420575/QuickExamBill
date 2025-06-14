@@ -31,13 +31,14 @@
                             <h2 class="card-title">Select Regular Session</h2>
                         </header>
                         <div class="card-body">
-                            <form id="sessionForm" class="form-horizontal form-bordered" method="post" action="">
+                            <form class="form-horizontal form-bordered" method="post" action="{{route('committee.input.regular.session.form')}}">
                                 @csrf
+                                {{--<input type="hidden"  name="exam_type" value="regular">--}}
                                 <div class="form-group row pb-1">
                                     <label class="col-lg-3 control-label text-lg-end pt-2">Select Session</label>
                                     <div class="col-lg-6">
                                         @php use Illuminate\Support\Facades\Crypt; @endphp
-                                        <select class="form-control mb-3" id="sessionSelect" required>
+                                        <select class="form-control mb-3" name="sid" required>
                                             <option selected disabled value="">-- Select Session --</option>
                                             @foreach($sessions as $session)
                                                 {{--<option value="{{ Crypt::encryptString($session['id']) }}">--}}
@@ -59,27 +60,3 @@
         <!-- end: page -->
     </section>
 @endsection
-
-{{--
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const form = document.getElementById('sessionForm');
-        const select = document.getElementById('sessionSelect');
-
-        if (form && select) {
-            form.addEventListener('submit', function (e) {
-                e.preventDefault();
-
-                const selectedId = select.value;
-
-                if (selectedId) {
-                    const routeBase = "{{ url('/sessions/regular/form') }}";
-                    window.location.href = `${routeBase}/${selectedId}`;
-                } else {
-                    alert('Please select a session.');
-                }
-            });
-        }
-    });
-</script>
---}}

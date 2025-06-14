@@ -68,7 +68,7 @@ class ApiData{
 
         return null;
     }
-    public static function  getSessionWiseTheoryCourses(Request $request,$sid){
+    public static function  getSessionWiseTheoryCourses($sid){
          $authKey = 'OE3KFIE649MRECGQ';
         //$authKey = $request->authKey;
         // ✅ Properly embed $sid into the URL
@@ -100,7 +100,7 @@ class ApiData{
 
         return ['error' => 'Unable to fetch data', 'status_code' => $httpCode];
     }
-    public static function  getSessionWiseSessionalCourses(Request $request,$sid){
+    public static function  getSessionWiseSessionalCourses($sid){
         $authKey = 'OE3KFIE649MRECGQ';
         //$authKey = $request->authKey;
         // ✅ Properly embed $sid into the URL
@@ -133,7 +133,7 @@ class ApiData{
         return ['error' => 'Unable to fetch data', 'status_code' => $httpCode];
     }
 
-    public static function  getSessionWiseTheorySessionalCourses(Request $request,$sid){
+    public static function  getSessionWiseTheorySessionalCourses($sid){
         $authKey = 'OE3KFIE649MRECGQ';
         //$authKey = $request->authKey;
         // ✅ Properly embed $sid into the URL
@@ -166,7 +166,7 @@ class ApiData{
         return ['error' => 'Unable to fetch data', 'status_code' => $httpCode];
     }
 
-    public static function  getSessionWiseStudentAdvisor(Request $request,$sid){
+    public static function  getSessionWiseStudentAdvisor($sid){
         $authKey = 'OE3KFIE649MRECGQ';
         //$authKey = $request->authKey;
         // ✅ Properly embed $sid into the URL
