@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CommitteeInputController;
 use App\Http\Controllers\ImportExportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
@@ -45,6 +46,19 @@ Route::middleware('auth')->group(function () {
         Route::post('import/table/designations','ImportDesignationTable')->name('import.table.designations');
         Route::post('import/table/teachers','ImportTeacherTable')->name('import.table.teachers');
     });
+
+    Route::prefix('committee/input')->controller(CommitteeInputController::class)->group(function () {
+        Route::get('regular/session', 'regularSessionShow')->name('committee.input.regular.session');
+        Route::get('regular/session/form/{sid}', 'regularSessionForm')->name('committee.input.regular.session.form');
+
+        Route::get('review/session', 'reviewSessionShow')->name('committee.input.review.session');
+        Route::get('review/session/form/{sid}', 'reviewSessionForm')->name('committee.input.review.session.form');
+    });
+
+
+
+
+
 
 
 
