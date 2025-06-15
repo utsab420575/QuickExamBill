@@ -85,21 +85,37 @@
             row.setAttribute('data-row', moderationCommitteeRowCount);
 
             row.innerHTML = `
-            <div class="col-md-1 text-center">
-                <input type="checkbox" class="form-check-input moderation-committee-toggle-input" data-row="${moderationCommitteeRowCount}">
-            </div>
-            <div class="col-md-6">
-                <select name="moderation_committee_teacher_ids[]" class="form-select teacher-select" data-row="${moderationCommitteeRowCount}" disabled required>
-                    <option value="">-- Select Teacher --</option>
-                    ${moderationCommitteeTeachers.map(t => `<option value="${t.id}">${t.user.name}, ${t.designation.designation}</option>`).join('')}
-                </select>
-            </div>
-            <div class="col-md-4">
-                <input type="number" name="moderation_committee_amounts[]" class="form-control amount-input" placeholder="Provide Amount" disabled required>
-            </div>
-        `;
+                <div class="row mb-3">
+                    <div class="col-md-1 text-center">
+                        <input type="checkbox" class="form-check-input moderation-committee-toggle-input mt-2" data-row="${moderationCommitteeRowCount}">
+                    </div>
+                    <div class="col-md-6">
+                        <!--1st change: data-plugin-selectTwo class="form-control teacher-select populate"-->
+                        <select name="moderation_committee_teacher_ids[]" data-plugin-selectTwo class="form-control teacher-select populate" data-row="${moderationCommitteeRowCount}" disabled required>
+                            <option value="">-- Select Teacher --</option>
+                            ${moderationCommitteeTeachers.map(t => `<option
+                                                value="${t.id}">
+
+                                                ${t.user.name}, ${t.designation.designation},${t.department.shortname}
+                                            </option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="number" name="moderation_committee_amounts[]" class="form-control amount-input" placeholder="Provide Amount" disabled required>
+                    </div>
+                </div>
+            `;
 
             container.appendChild(row);
+
+            //2nd change:
+            // Re-initialize Select2 for the new element
+            $(row).find('select').select2({
+                theme: 'bootstrap',
+                width: '100%',
+                allowClear: true,
+                placeholder: '-- Select Teacher --'
+            });
 
             const checkbox = row.querySelector('.moderation-committee-toggle-input');
             checkbox.addEventListener('change', function () {

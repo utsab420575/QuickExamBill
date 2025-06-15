@@ -32,6 +32,8 @@
     <link rel="stylesheet" href="{{asset('backend/assets/vendor/morris/morris.css')}}" />
 
 
+    <link rel="stylesheet" href="{{asset('backend/assets/vendor/select2/css/select2.css')}}" />
+    <link rel="stylesheet" href="{{asset('backend/assets/vendor/select2-bootstrap-theme/select2-bootstrap.min.css')}}" />
 
 
     <!-- Theme CSS -->
@@ -98,7 +100,7 @@
 
 
 
-
+<script src="{{asset('backend/assets/vendor/select2/js/select2.js')}}"></script>
 <!-- Specific Page Vendor -->
 <script src="{{asset('backend/assets/vendor/jquery-ui/jquery-ui.js')}}"></script>
 <script src="{{asset('backend/assets/vendor/jqueryui-touch-punch/jquery.ui.touch-punch.js')}}"></script>

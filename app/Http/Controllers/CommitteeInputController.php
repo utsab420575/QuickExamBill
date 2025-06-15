@@ -33,9 +33,29 @@ class CommitteeInputController extends Controller
 
         $sid=$request->sid;
         $session_info=ApiData::getSessionInfo($sid);
+        //filter by department
+        $order = ['Arch', 'CE', 'ChE', 'Chem','CSE','EEE','FE','HSS','IPE','Math','ME','MME','Phy','TE']; // Custom order of departments
 
-        $teachers = Teacher::with('user', 'designation')->get();
+        $teachers = Teacher::with('user', 'designation', 'department')
+            ->whereHas('department', function ($query) use ($order) {
+                $query->whereIn('shortname', $order);
+            })
+            ->join('departments', 'teachers.department_id', '=', 'departments.id')
+            ->orderByRaw("FIELD(departments.shortname, '" . implode("','", $order) . "')")
+            ->select('teachers.*') // Select only teacher fields to avoid conflict
+            ->get();
+
         //return $teachers;
+        // Group by department short name
+        $groupedTeachers = $teachers->groupBy(function ($teacher) {
+            return $teacher->department->fullname ?? 'Unknown';
+        });
+
+        // Move 'Arch' to the beginning
+        $groupedTeachers = $groupedTeachers->sortBy(function ($group, $key) {
+            return $key === 'Architecture' ? 0 : 1;
+        });
+        //return $groupedTeachers;
         //all theory course with teacher
         $all_course_with_teacher = ApiData::getSessionWiseTheoryCourses($sid);
         //no need to call again for class test(class test for theory course)
@@ -57,6 +77,7 @@ class CommitteeInputController extends Controller
             /*->with('teacher_head', $teacher_head)*/
             /*  ->with('teacher_coordinator', $teacher_coordinator)*/
             ->with('session_info', $session_info)
+            ->with('groupedTeachers', $groupedTeachers)
             ->with('teachers', $teachers)
             ->with('all_course_with_teacher', $all_course_with_teacher)
             ->with('all_course_with_class_test_teacher', $all_course_with_teacher)
@@ -81,7 +102,7 @@ class CommitteeInputController extends Controller
         $exam_type=1;
 
         Log::info('teacherId',$teacherIds);
-        Log::info('teacherId',$amounts);
+        Log::info('amounts',$amounts);
         Log::info('sessionId: ' . $sessionId);
 
         // Step 1: Validate teacher inputs

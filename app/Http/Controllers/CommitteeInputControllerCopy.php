@@ -12,35 +12,29 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class CommitteeInputReviewController extends Controller
+class CommitteeInputControllerCopy extends Controller
 {
-    //showing session list
-    public function reviewSessionShow(){
-        $sessions=ApiData::getReviewSessions();
+    //regular session list
+    public function regularSessionShow(){
+        $sessions=ApiData::getRegularSessions();
         if($sessions === null) {
             return redirect()->back()->with([
                 'message' => 'Session Import Failed',
                 'alert-type' => 'error',
             ]);
         }
-        return view('committee_input.session_view.review_session_list',compact('sessions'));
+        return view('committee_input.session_view.regular_session_list',compact('sessions'));
     }
-    public function reviewSessionForm(Request $request)
+
+
+
+    public function regularSessionForm(Request $request)
     {
 
         $sid=$request->sid;
         $session_info=ApiData::getSessionInfo($sid);
 
-        $order = ['Arch', 'CE', 'ChE', 'Chem','CSE','EEE','FE','HSS','IPE','Math','ME','MME','Phy','TE']; // Custom order of departments
-
-        $teachers = Teacher::with('user', 'designation', 'department')
-            ->whereHas('department', function ($query) use ($order) {
-                $query->whereIn('shortname', $order);
-            })
-            ->join('departments', 'teachers.department_id', '=', 'departments.id')
-            ->orderByRaw("FIELD(departments.shortname, '" . implode("','", $order) . "')")
-            ->select('teachers.*') // Select only teacher fields to avoid conflict
-            ->get();
+        $teachers = Teacher::with('user', 'designation')->get();
         //return $teachers;
         //all theory course with teacher
         $all_course_with_teacher = ApiData::getSessionWiseTheoryCourses($sid);
@@ -58,7 +52,7 @@ class CommitteeInputReviewController extends Controller
 
         // return response()->json(['$all_course_with_teacher'=>$all_course_with_teacher]);
         /*return response()->json(['head'=>$all_course_with_class_test_teacher]);*/
-        return view('committee_input.review_form.review_session_form')
+        return view('committee_input.regular_form.regular_session_form')
             ->with('sid',$sid)
             /*->with('teacher_head', $teacher_head)*/
             /*  ->with('teacher_coordinator', $teacher_coordinator)*/
@@ -84,7 +78,7 @@ class CommitteeInputReviewController extends Controller
         $sessionId = $request->sid;
         $min_rate=$request->moderation_committee_min_rate;
         $max_rate=$request->moderation_committee_max_rate;
-        $exam_type=2;
+        $exam_type=1;
 
         Log::info('teacherId',$teacherIds);
         Log::info('teacherId',$amounts);
