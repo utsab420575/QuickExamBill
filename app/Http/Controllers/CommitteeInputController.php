@@ -31,11 +31,13 @@ class CommitteeInputController extends Controller
     public function regularSessionForm(Request $request)
     {
 
+        //this session id got from session list blade
         $sid=$request->sid;
         $session_info=ApiData::getSessionInfo($sid);
         //filter by department
         $order = ['Arch', 'CE', 'ChE', 'Chem','CSE','EEE','FE','HSS','IPE','Math','ME','MME','Phy','TE']; // Custom order of departments
 
+        //this is for selection box with search
         $teachers = Teacher::with('user', 'designation', 'department')
             ->whereHas('department', function ($query) use ($order) {
                 $query->whereIn('shortname', $order);
@@ -56,6 +58,8 @@ class CommitteeInputController extends Controller
             return $key === 'Architecture' ? 0 : 1;
         });
         //return $groupedTeachers;
+
+
         //all theory course with teacher
         $all_course_with_teacher = ApiData::getSessionWiseTheoryCourses($sid);
         //no need to call again for class test(class test for theory course)
@@ -227,4 +231,182 @@ class CommitteeInputController extends Controller
             ], 500);
         }
     }
+
+    //storeExaminerPaperSetter
+    public function storeExaminerPaperSetter(Request $request)
+    {
+        $paperSetterData = $request->input('paper_setter_ids', []);
+        $examinerData = $request->input('examiner_ids', []);
+        $noOfScripts = $request->input('no_of_script', []);
+        $script_rate=$request->examiner_rate_per_script;
+        $examiner_min_rate=$request->examiner_min_rate;
+        $paper_setter_rate=$request->paper_setter_rate;
+        $sessionId = $request->sid;
+
+        try {
+            DB::beginTransaction();
+
+            // RateHead 2 - Paper Setters
+            $rateHead_2 = RateHead::where('order_no', 2)->first();
+            if (!$rateHead_2) {
+                $rateHead_2 = new RateHead();
+                $rateHead_2->head = 'Paper Setters';
+                $rateHead_2->exam_type = 1;
+                $rateHead_2->order_no = 2;
+                $rateHead_2->dist_type = 'Individual';
+                $rateHead_2->enable_min = 0;
+                $rateHead_2->enable_max = 0;
+                $rateHead_2->is_course = 1;
+                $rateHead_2->is_student_count = 0;
+                $rateHead_2->marge_with = null;
+                $rateHead_2->status = 1;
+                $rateHead_2->save();
+                Log::info('✅ New RateHead created', $rateHead_2->toArray());
+            }
+
+            // RateHead 3 - Examiner
+            $rateHead_3 = RateHead::where('order_no', 3)->first();
+            if (!$rateHead_3) {
+                $rateHead_3 = new RateHead();
+                $rateHead_3->head = 'Examiner';
+                $rateHead_3->exam_type = 1;
+                $rateHead_3->order_no = 3;
+                $rateHead_3->dist_type = 'Share';
+                $rateHead_3->enable_min = 1;
+                $rateHead_3->enable_max = 0;
+                $rateHead_3->is_course = 1;
+                $rateHead_3->is_student_count = 1;
+                $rateHead_3->marge_with = null;
+                $rateHead_3->status = 1;
+                $rateHead_3->save();
+                Log::info('✅ New RateHead created', $rateHead_3->toArray());
+            }
+
+            // Ensure Session exists
+            $session_info = LocalData::getOrCreateRegularSession($sessionId);
+
+            // RateAmount for RateHead 2
+            $rateAmount_2 = RateAmount::where('rate_head_id', $rateHead_2->id)
+                ->where('session_id', $session_info->id)
+                ->first();
+
+            if (!$rateAmount_2) {
+                $rateAmount_2 = new RateAmount();
+                $rateAmount_2->rate_head_id = $rateHead_2->id;
+                $rateAmount_2->session_id = $session_info->id;
+                $rateAmount_2->default_rate = $paper_setter_rate;
+                $rateAmount_2->save();
+                Log::info('✅ New RateAmount created', $rateAmount_2->toArray());
+            }
+
+            // RateAmount for RateHead 3
+            $rateAmount_3 = RateAmount::where('rate_head_id', $rateHead_3->id)
+                ->where('session_id', $session_info->id)
+                ->first();
+
+            if (!$rateAmount_3) {
+                $rateAmount_3 = new RateAmount();
+                $rateAmount_3->rate_head_id = $rateHead_3->id;
+                $rateAmount_3->session_id = $session_info->id;
+                $rateAmount_3->default_rate = $script_rate;
+                $rateAmount_3->min_rate = $examiner_min_rate;
+                $rateAmount_3->save();
+                Log::info('✅ New RateAmount created', $rateAmount_3->toArray());
+            }
+
+
+            /*"paper_setters":
+               {
+                    "1": ["110", "120"],
+                    "4": ["120", "140"],
+                }*/
+            //here $courseId is 1,4
+            //$teacherIds [110, 120] for 1
+            //$teacherIds [120, 140] for 4
+            // Store Paper Setters
+            foreach ($paperSetterData as $courseId => $teacherIds) {
+                //loop for $teacherIds [120, 140] $teacherId=120,$teacherId=140
+                foreach ($teacherIds as $teacherId) {
+                    $rateAssign = new RateAssign();
+                    $rateAssign->teacher_id = $teacherId;
+                    $rateAssign->rate_head_id = $rateHead_2->id;
+                    $rateAssign->session_id = $session_info->id;
+                    $rateAssign->no_of_items = 0;
+                    $rateAssign->total_amount = $paper_setter_rate;
+
+
+                    // Add hidden course-related data
+                    $rateAssign->course_code = $request->input("courseno.$courseId");
+                    $rateAssign->course_name = $request->input("coursetitle.$courseId");
+                    $rateAssign->total_students = $request->input("registered_students_count.$courseId");
+                    $rateAssign->total_teacher = $request->input("teacher_count.$courseId");
+                    $rateAssign->save();
+                }
+            }
+
+            // Store Examiners
+            foreach ($examinerData as $courseId => $teacherIds) {
+                $total_input_students = $noOfScripts[$courseId] ?? 0;
+                $no_of_scripts = $noOfScripts[$courseId] ?? 0;
+
+                $teacherCount = count($teacherIds);
+
+                //hidden input
+                $courseno = $request->input("courseno.$courseId");
+                $coursetitle = $request->input("coursetitle.$courseId");
+                $registered_students_count = $request->input("registered_students_count.$courseId");
+                $teacher_count = $request->input("teacher_count.$courseId");
+
+                if ($teacherCount > 0) {
+                    $no_of_scripts = $no_of_scripts / $teacherCount;
+                } else {
+                    $no_of_scripts = 0;
+                }
+                foreach ($teacherIds as $teacherId) {
+                    $total_amount = $no_of_scripts * $rateAmount_3->default_rate;
+                    if ($total_amount < $rateAmount_3->min_rate) {
+                        $total_amount = $rateAmount_3->min_rate;
+                    }
+                    //another way for insert
+                    RateAssign::create([
+                        'teacher_id'   => $teacherId,
+                        'rate_head_id' => $rateHead_3->id,
+                        'session_id'   => $session_info->id,
+                        'no_of_items'  => $no_of_scripts,
+                        'total_amount' => $total_amount,
+
+                        // Add hidden course-related data
+                        'course_code'  => $courseno,
+                        'course_name'   => $coursetitle,
+                        'total_students' => $total_input_students,
+                        'total_teacher'  => $teacher_count,
+                    ]);
+                }
+            }
+
+            DB::commit();
+            Log::info('✅ All examiner and paper setter data saved successfully.', [
+                'session_id' => $session_info->id,
+                'rate_heads' => [
+                    'paper_setter' => $rateHead_2->id,
+                    'examiner' => $rateHead_3->id,
+                ]
+            ]);
+
+
+            return response()->json([
+                'message' => 'Examiner and Paper Setter data saved successfully.'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'An error occurred while saving data.',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
 }
+
+

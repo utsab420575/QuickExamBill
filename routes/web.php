@@ -55,6 +55,7 @@ Route::middleware('auth')->group(function () {
         Route::post('regular/session/form', 'regularSessionForm')->name('committee.input.regular.session.form');
         //now store committee wise data to database ;
         Route::post('/examination/moderation/committee/store', 'storeExaminationModerationCommittee')->name('committee.input.examination.moderation.committee.store');
+        Route::post('/examiner/paper/setter/store','storeExaminerPaperSetter')->name('committee.input.examiner.paper.setter.store');
     });
 
     Route::prefix('committee/input')->controller(CommitteeInputReviewController::class)->group(function () {
@@ -64,15 +65,12 @@ Route::middleware('auth')->group(function () {
         Route::post('review/session/form', 'reviewSessionForm')->name('committee.input.review.session.form');
         //now store committee wise data to database ;
         Route::post('/review/examination/moderation/committee/store', 'storeExaminationModerationCommittee')->name('committee.input.review.examination.moderation.committee.store');
+
     });
 
 
     //Regular SubForm
-    /*Route::get('/regular-previous-sessions',[StaffController::class,'regular_previous_sessions']);
-    Route::get('/review-previous-sessions',[StaffController::class,'review_previous_sessions']);*/
-    Route::get('/session-wise-theory-courses/{sid}',[StaffController::class,'session_wise_theory_courses']);
 
-    Route::post('/examiner/paper/setter/store', [StaffController::class, 'storeExaminerPaperSetter'])->name('examiner.paper.setter.store');
     Route::post('/class/test/teacher/store', [StaffController::class, 'storeClassTestTeacherStore'])->name('class.test.teacher.store');
     Route::get('/session-wise-sessional-courses/{sid}',[StaffController::class,'session_wise_sessional_courses']);
     Route::post('/sessional/course/teacher/store', [StaffController::class, 'storeSessionalCourseTeacher'])->name('sessional.course.teacher.store');

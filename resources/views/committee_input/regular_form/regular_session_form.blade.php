@@ -45,7 +45,7 @@
                 : null;
         @endphp
 
-        @if($rate_amount)
+        @if(!$rate_amount)
             @include('committee_input.patritals.regular.list_moderation_committe')
         @else
             <div class="alert alert-info">
@@ -54,8 +54,8 @@
         @endif
 
       {{--  @include('committee_input.patritals.regular.list_moderation_committe_test')--}}
-        {{--@include('committee_input.patritals.regular.list_paper_setter_examineer')
-        @include('committee_input.patritals.regular.list_class_test_teacher')
+        @include('committee_input.patritals.regular.list_paper_setter_examineer')
+        {{--@include('committee_input.patritals.regular.list_class_test_teacher')
         @include('committee_input.patritals.regular.list_sessional_course_teacher')
         @include('committee_input.patritals.regular.list_scrutinizers')
         @include('committee_input.patritals.regular.list_preparation_theory_grade_sheet')
