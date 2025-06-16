@@ -20,7 +20,7 @@
     </style>
 @endpush
 
-<form id="form-list-of-moderation-committee" action="{{ route('committee.input.examination.moderation.committee.store') }}" method="POST">
+<form id="form-list-of-moderation-committee" action="{{ route('committee.input.regular.examination.moderation.committee.store') }}" method="POST">
     @csrf
     <input type="hidden" id="{{$sid}}" name="sid" value="{{$sid}}">
     <div class="row mb-5">

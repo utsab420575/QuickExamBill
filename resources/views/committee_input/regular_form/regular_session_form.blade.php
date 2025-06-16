@@ -45,7 +45,7 @@
                 : null;
         @endphp
 
-        @if(!$rate_amount)
+        @if($rate_amount)
             @include('committee_input.patritals.regular.list_moderation_committe')
         @else
             <div class="alert alert-info">
@@ -53,8 +53,23 @@
             </div>
         @endif
 
-      {{--  @include('committee_input.patritals.regular.list_moderation_committe_test')--}}
-        @include('committee_input.patritals.regular.list_paper_setter_examineer')
+        @include('committee_input.patritals.regular.list_moderation_committe_test')
+        @php
+            $rate_head = \App\Models\RateHead::where('order_no', 2)->first();
+            $session = \App\Models\Session::where('ugr_id', $sid)->where('exam_type_id', 1)->first();
+            $rate_amount = $session
+                ? \App\Models\RateAmount::where('session_id', $session->id)->where('saved', 1)->first()
+                : null;
+        @endphp
+
+        @if($rate_amount)
+            @include('committee_input.patritals.regular.list_paper_setter_examineer')
+        @else
+            <div class="alert alert-info">
+                List of Examiners  Committee already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}. If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
+            </div>
+        @endif
+
         {{--@include('committee_input.patritals.regular.list_class_test_teacher')
         @include('committee_input.patritals.regular.list_sessional_course_teacher')
         @include('committee_input.patritals.regular.list_scrutinizers')

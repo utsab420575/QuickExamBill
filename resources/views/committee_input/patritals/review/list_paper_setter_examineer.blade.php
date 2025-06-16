@@ -60,7 +60,7 @@
                                 <input type="hidden" name="courseno[{{ $single_course->id }}]" value="{{ $single_course->courseno }}">
                                 <input type="hidden" name="coursetitle[{{ $single_course->id }}]" value="{{ $single_course->coursetitle }}">
                                 <input type="hidden" name="registered_students_count[{{ $single_course->id }}]" value="{{ $courseData->registered_students_count }}">
-                                <input type="hidden" name="teacher_count[{{ $single_course->id }}]" value="{{ count($single_course->teachers) }}">
+
 
                                 <section class="card card-featured card-featured-secondary mb-4 w-100">
                                     <header class="card-header">
@@ -72,49 +72,53 @@
                                     <div class="card-body card-list-of-examiner-paper-setter">
                                         <div class="row">
                                             <!-- Left Side: Paper Setter & Examiner -->
-                                            <div class="col-md-8">
+                                            <div class="col-md-10">
                                                 <div class="p-2">
-                                                    @foreach($single_course->teachers as $assignedTeacher)
                                                         <div class="row mb-3">
                                                             <!-- Paper Setter -->
                                                             <div class="col-md-6">
                                                                 <label for="paper_setter_{{ $single_course->id }}_{{ $loop->index }}">Paper Setter</label>
-                                                                <select name="paper_setter_ids[{{ $single_course->id }}][]" data-plugin-selectTwo
+                                                                <select name="paper_setter_ids[{{ $single_course->id }}][]" multiple data-plugin-selectTwo
                                                                         id="paper_setter_{{ $single_course->id }}_{{ $loop->index }}"
                                                                         class="form-control  populate"  required>
-                                                                    <option value="">-- Select Teacher --</option>
-                                                                    @foreach($teachers as $teacherOption)
-                                                                        <option value="{{ $teacherOption->id }}"
-                                                                            {{ $assignedTeacher->id == $teacherOption->id ? 'selected' : '' }}>
-                                                                            {{ $teacherOption->user->name }} - {{ $teacherOption->designation->designation }} -{{$teacherOption->department->shortname}}
-                                                                        </option>
+                                                                    <option value="" disabled>-- Select Teacher --</option>
+                                                                    @foreach($groupedTeachers as $deptFulltName => $deptTeachers)
+                                                                        <optgroup label="{{ $deptFulltName }}">
+                                                                            @foreach($deptTeachers as $teacher)
+                                                                                <option value="{{ $teacher->id }}">
+                                                                                    {{ $teacher->user->name }}  - {{ $teacher->department->shortname }}
+                                                                                </option>
+                                                                            @endforeach
+                                                                        </optgroup>
                                                                     @endforeach
                                                                 </select>
                                                             </div>
 
                                                             <!-- Examiner -->
                                                             <div class="col-md-6">
-                                                                {{--<label for="examiner_{{ $assignedTeacher->id }}">Examiner</label>--}}
                                                                 <label for="examiner_{{ $single_course->id }}">Examiner</label>
-                                                                <select name="examiner_ids[{{ $single_course->id }}][]" data-plugin-selectTwo
-                                                                        id="examiner_{{ $assignedTeacher->id }}"
+                                                                <select name="examiner_ids[{{ $single_course->id }}][]" multiple data-plugin-selectTwo
+                                                                        id="examiner_{{ $single_course->id }}"
                                                                         class="form-control populate" required>
                                                                     <option value="">-- Select Teacher --</option>
-                                                                    @foreach($teachers as $teacherOption)
-                                                                        <option value="{{ $teacherOption->id }}"
-                                                                            {{ $assignedTeacher->id == $teacherOption->id ? 'selected' : '' }}>
-                                                                            {{ $teacherOption->user->name }} - {{ $teacherOption->designation->designation }}-{{$teacherOption->department->shortname}}
-                                                                        </option>
+                                                                    @foreach($groupedTeachers as $deptFulltName => $deptTeachers)
+                                                                        <optgroup label="{{ $deptFulltName }}">
+                                                                            @foreach($deptTeachers as $teacher)
+                                                                                <option value="{{ $teacher->id }}">
+                                                                                    {{ $teacher->user->name }} - {{ $teacher->designation->designation }} - {{ $teacher->department->shortname }}
+                                                                                </option>
+                                                                            @endforeach
+                                                                        </optgroup>
                                                                     @endforeach
                                                                 </select>
                                                             </div>
                                                         </div>
-                                                    @endforeach
+
                                                 </div>
                                             </div>
 
                                             <!-- Right Side: No of Scripts -->
-                                            <div class="col-md-4 d-flex align-items-center justify-content-center">
+                                            <div class="col-md-2 d-flex align-items-center justify-content-center">
                                                 <div class="form-group w-100">
                                                     <label for="no_of_script_{{ $single_course->id }}">No of Scripts</label>
                                                     <input type="number"

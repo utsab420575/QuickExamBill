@@ -48,16 +48,19 @@ Route::middleware('auth')->group(function () {
         Route::post('import/table/teachers','ImportTeacherTable')->name('import.table.teachers');
     });
 
+
+    //For Regular Session
     Route::prefix('committee/input')->controller(CommitteeInputController::class)->group(function () {
         //show regular session list form
         Route::get('regular/session', 'regularSessionShow')->name('committee.input.regular.session');
         //show full form
         Route::post('regular/session/form', 'regularSessionForm')->name('committee.input.regular.session.form');
         //now store committee wise data to database ;
-        Route::post('/examination/moderation/committee/store', 'storeExaminationModerationCommittee')->name('committee.input.examination.moderation.committee.store');
-        Route::post('/examiner/paper/setter/store','storeExaminerPaperSetter')->name('committee.input.examiner.paper.setter.store');
+        Route::post('/regular/examination/moderation/committee/store', 'storeExaminationModerationCommittee')->name('committee.input.regular.examination.moderation.committee.store');
+        Route::post('/regular/examiner/paper/setter/store','storeExaminerPaperSetter')->name('committee.input.regular.examiner.paper.setter.store');
     });
 
+    //For Review Session
     Route::prefix('committee/input')->controller(CommitteeInputReviewController::class)->group(function () {
         //show review session list form
         Route::get('review/session', 'reviewSessionShow')->name('committee.input.review.session');

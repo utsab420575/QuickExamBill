@@ -11,6 +11,7 @@ use App\Services\LocalData;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class CommitteeInputController extends Controller
 {
@@ -61,7 +62,9 @@ class CommitteeInputController extends Controller
 
 
         //all theory course with teacher
-        $all_course_with_teacher = ApiData::getSessionWiseTheoryCourses($sid);
+        $all_course_with_teacher = ApiData::getSessionWiseTheoryCoursesRegular($sid);
+        //return $all_course_with_teacher;
+
         //no need to call again for class test(class test for theory course)
         // $all_course_with_class_test_teacher=ApiData::getSessionWiseTheoryCourses(sid);
         //all sessional course with teacher
@@ -91,7 +94,7 @@ class CommitteeInputController extends Controller
     }
 
 
-    //Examinat
+    //Examination Moderation Committee
     public function storeExaminationModerationCommittee(Request $request)
     {
         // Log all request data with a custom message
@@ -178,7 +181,7 @@ class CommitteeInputController extends Controller
                 ->where('exam_type_id',$exam_type)
                 ->first();
 
-            Log::info('rateAmount', $rateAmount ? $rateAmount->toArray() : ['$rateAmount' => null]);
+            Log::info('rateAmount', $rateAmount ? $rateAmount->toArray() : ['rateAmount' => null]);
             if (!$rateAmount) {
                 $rateAmount = new RateAmount();
                 $rateAmount->default_rate = 0;
@@ -188,7 +191,6 @@ class CommitteeInputController extends Controller
                 $rateAmount->rate_head_id = $rateHead->id;
                 $rateAmount->exam_type_id = $exam_type;
                 $rateAmount->saved = 1;
-                $rateAmount->save();
                 if ($rateAmount->save()) {
                     Log::info('✅ New RateAmount created', $rateAmount->toArray());
                 } else {
@@ -232,9 +234,26 @@ class CommitteeInputController extends Controller
         }
     }
 
-    //storeExaminerPaperSetter
+    //store PaperSetter/Examiner
     public function storeExaminerPaperSetter(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'examiner_rate_per_script' => 'required|numeric|min:1',
+            'examiner_min_rate' => 'required|numeric|min:1',
+            'paper_setter_rate' => 'required|numeric|min:1',
+            'paper_setter_ids' => 'required|array',
+            'examiner_ids' => 'required|array',
+            'no_of_script' => 'required|array',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation error.',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+
         $paperSetterData = $request->input('paper_setter_ids', []);
         $examinerData = $request->input('examiner_ids', []);
         $noOfScripts = $request->input('no_of_script', []);
@@ -242,16 +261,28 @@ class CommitteeInputController extends Controller
         $examiner_min_rate=$request->examiner_min_rate;
         $paper_setter_rate=$request->paper_setter_rate;
         $sessionId = $request->sid;
+        $exam_type=1;
+        // ✅ Log all data
+        Log::info('🔍 Incoming Examiner & Paper Setter Submission', [
+            'paper_setter_ids' => $paperSetterData,
+            'examiner_ids' => $examinerData,
+            'no_of_script' => $noOfScripts,
+            'examiner_rate_per_script' => $script_rate,
+            'examiner_min_rate' => $examiner_min_rate,
+            'paper_setter_rate' => $paper_setter_rate,
+            'session_id' => $sessionId,
+            'exam_type' => $exam_type,
+        ]);
 
         try {
             DB::beginTransaction();
 
             // RateHead 2 - Paper Setters
             $rateHead_2 = RateHead::where('order_no', 2)->first();
+            Log::info('rateHead2', $rateHead_2 ? $rateHead_2->toArray() : ['rateHead2' => null]);
             if (!$rateHead_2) {
                 $rateHead_2 = new RateHead();
                 $rateHead_2->head = 'Paper Setters';
-                $rateHead_2->exam_type = 1;
                 $rateHead_2->order_no = 2;
                 $rateHead_2->dist_type = 'Individual';
                 $rateHead_2->enable_min = 0;
@@ -260,16 +291,19 @@ class CommitteeInputController extends Controller
                 $rateHead_2->is_student_count = 0;
                 $rateHead_2->marge_with = null;
                 $rateHead_2->status = 1;
-                $rateHead_2->save();
-                Log::info('✅ New RateHead created', $rateHead_2->toArray());
+                if ($rateHead_2->save()) {
+                    Log::info('✅ New RateHead created', $rateHead_2->toArray());
+                } else {
+                    Log::error('❌ Failed to save RateHead');
+                }
             }
 
             // RateHead 3 - Examiner
             $rateHead_3 = RateHead::where('order_no', 3)->first();
+            Log::info('rateHead3', $rateHead_2 ? $rateHead_2->toArray() : ['rateHead3' => null]);
             if (!$rateHead_3) {
                 $rateHead_3 = new RateHead();
                 $rateHead_3->head = 'Examiner';
-                $rateHead_3->exam_type = 1;
                 $rateHead_3->order_no = 3;
                 $rateHead_3->dist_type = 'Share';
                 $rateHead_3->enable_min = 1;
@@ -278,25 +312,36 @@ class CommitteeInputController extends Controller
                 $rateHead_3->is_student_count = 1;
                 $rateHead_3->marge_with = null;
                 $rateHead_3->status = 1;
-                $rateHead_3->save();
-                Log::info('✅ New RateHead created', $rateHead_3->toArray());
+                if ($rateHead_3->save()) {
+                    Log::info('✅ New RateHead3 created', $rateHead_3->toArray());
+                } else {
+                    Log::error('❌ Failed to save RateHead3');
+                }
             }
 
             // Ensure Session exists
-            $session_info = LocalData::getOrCreateRegularSession($sessionId);
+            $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
 
             // RateAmount for RateHead 2
             $rateAmount_2 = RateAmount::where('rate_head_id', $rateHead_2->id)
                 ->where('session_id', $session_info->id)
+                ->where('exam_type_id',$exam_type)
                 ->first();
 
+            Log::info('rateAmount2', $rateAmount_2 ? $rateAmount_2->toArray() : ['rateAmount_2' => null]);
             if (!$rateAmount_2) {
                 $rateAmount_2 = new RateAmount();
-                $rateAmount_2->rate_head_id = $rateHead_2->id;
-                $rateAmount_2->session_id = $session_info->id;
                 $rateAmount_2->default_rate = $paper_setter_rate;
-                $rateAmount_2->save();
-                Log::info('✅ New RateAmount created', $rateAmount_2->toArray());
+                //null for min_rate , max_rate
+                $rateAmount_2->session_id = $session_info->id;
+                $rateAmount_2->rate_head_id = $rateHead_2->id;
+                $rateAmount_2->exam_type_id = $exam_type;
+                $rateAmount_2->saved = 1;
+                if ($rateAmount_2->save()) {
+                    Log::info('✅ New RateAmount created', $rateAmount_2->toArray());
+                } else {
+                    Log::error('❌ Failed to save RateAmount');
+                }
             }
 
             // RateAmount for RateHead 3
@@ -306,12 +351,18 @@ class CommitteeInputController extends Controller
 
             if (!$rateAmount_3) {
                 $rateAmount_3 = new RateAmount();
-                $rateAmount_3->rate_head_id = $rateHead_3->id;
-                $rateAmount_3->session_id = $session_info->id;
                 $rateAmount_3->default_rate = $script_rate;
                 $rateAmount_3->min_rate = $examiner_min_rate;
-                $rateAmount_3->save();
-                Log::info('✅ New RateAmount created', $rateAmount_3->toArray());
+                //max rate null(not defined)
+                $rateAmount_3->session_id = $session_info->id;
+                $rateAmount_3->rate_head_id = $rateHead_3->id;
+                $rateAmount_3->exam_type_id = $exam_type;
+                $rateAmount_3->saved = 1;
+                if ($rateAmount_3->save()) {
+                    Log::info('✅ New RateAmount created', $rateAmount_3->toArray());
+                } else {
+                    Log::error('❌ Failed to save RateHead');
+                }
             }
 
 
@@ -333,14 +384,37 @@ class CommitteeInputController extends Controller
                     $rateAssign->session_id = $session_info->id;
                     $rateAssign->no_of_items = 0;
                     $rateAssign->total_amount = $paper_setter_rate;
+                    $rateAssign->exam_type_id = $exam_type;
+
+
 
 
                     // Add hidden course-related data
                     $rateAssign->course_code = $request->input("courseno.$courseId");
                     $rateAssign->course_name = $request->input("coursetitle.$courseId");
                     $rateAssign->total_students = $request->input("registered_students_count.$courseId");
-                    $rateAssign->total_teacher = $request->input("teacher_count.$courseId");
-                    $rateAssign->save();
+                    $rateAssign->total_teachers = $request->input("teacher_count.$courseId");
+
+
+
+                    // ✅ Log before saving
+                    Log::info('📄 Saving Paper Setter Assignment', [
+                        'course_id' => $courseId,
+                        'teacher_id' => $teacherId,
+                        'course_code' => $rateAssign->course_code,
+                        'course_name' => $rateAssign->course_name,
+                        'total_students' => $rateAssign->total_students,
+                        'total_teacher' => $rateAssign->total_teacher,
+                        'rate_head_id' => $rateAssign->rate_head_id,
+                        'session_id' => $rateAssign->session_id,
+                        'exam_type_id' => $rateAssign->exam_type_id,
+                        'total_amount' => $rateAssign->total_amount,
+                    ]);
+                    if ($rateAssign->save()) {
+                        Log::info('✅ RateAssign saved successfully', $rateAssign->toArray());
+                    } else {
+                        Log::error('❌ Failed to save RateAssign - unknown error', $rateAssign->toArray());
+                    }
                 }
             }
 
@@ -357,6 +431,19 @@ class CommitteeInputController extends Controller
                 $registered_students_count = $request->input("registered_students_count.$courseId");
                 $teacher_count = $request->input("teacher_count.$courseId");
 
+
+                Log::info('📘 Examiner Course-wise Input Data', [
+                    'course_id' => $courseId,
+                    'teacher_ids' => $teacherIds,
+                    'total_input_students' => $total_input_students,
+                    'no_of_scripts' => $no_of_scripts,
+                    'teacher_count' => $teacherCount,
+                    'course_code' => $courseno,
+                    'course_title' => $coursetitle,
+                    'registered_students_count' => $registered_students_count,
+                    'hidden_teacher_count' => $teacher_count,
+                ]);
+
                 if ($teacherCount > 0) {
                     $no_of_scripts = $no_of_scripts / $teacherCount;
                 } else {
@@ -367,6 +454,23 @@ class CommitteeInputController extends Controller
                     if ($total_amount < $rateAmount_3->min_rate) {
                         $total_amount = $rateAmount_3->min_rate;
                     }
+
+
+                    // ✅ Log before saving
+                    Log::info('📄 Saving Examiner Data', [
+                        'course_id' => $courseId,
+                        'teacher_id' => $teacherId,
+                        'course_code' => $courseno,
+                        'course_name' => $coursetitle,
+                        'total_students' => $total_input_students,
+                        'total_teacher' => $teacher_count,
+                        'rate_head_id' => $rateHead_3->id,
+                        'session_id' => $session_info->id,
+                        'exam_type_id' => $exam_type,
+                        'total_amount' => $total_amount,
+                    ]);
+
+
                     //another way for insert
                     RateAssign::create([
                         'teacher_id'   => $teacherId,
@@ -374,12 +478,13 @@ class CommitteeInputController extends Controller
                         'session_id'   => $session_info->id,
                         'no_of_items'  => $no_of_scripts,
                         'total_amount' => $total_amount,
+                        'exam_type_id'=>$exam_type,
 
                         // Add hidden course-related data
                         'course_code'  => $courseno,
                         'course_name'   => $coursetitle,
                         'total_students' => $total_input_students,
-                        'total_teacher'  => $teacher_count,
+                        'total_teachers'  => $teacher_count,
                     ]);
                 }
             }

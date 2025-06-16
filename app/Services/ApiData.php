@@ -45,7 +45,7 @@ class ApiData{
     {
         $response = Http::withHeaders([
             'X-API-KEY' => 'EXAMBILL_98745012'
-        ])->get('https://ugr.duetbd.org/api/architecture/review-sessions');
+        ])->get('https://ugr.duetbd.org/api/cse/review-sessions');
 
         if ($response->failed()) {
             Log::error('Session import failed from API.');
@@ -57,38 +57,50 @@ class ApiData{
         return $data->sessions ?? null;
     }
 
-    public static function  getSessionWiseTheoryCourses($sid){
-        $authKey = 'OE3KFIE649MRECGQ';
-        //$authKey = $request->authKey;
-        // ✅ Properly embed $sid into the URL
-        $url = "https://ugr.duetbd.org/session-wise-theory-courses/{$sid}?authKey=" . urlencode($authKey);
+    public static function getSessionWiseTheoryCoursesRegular($sid)
+{
+    $response = Http::withHeaders([
+        'X-API-KEY' => 'EXAMBILL_98745012'
+    ])->get("https://ugr.duetbd.org/api/session-wise-theory-courses-regular/{$sid}");
 
-        /*//debug
-        return response()->json([
-            'request' => $request->authKey,
-            'sid' => $sid,
-            'url'=>$url
-        ]);*/
-
-        $curl = curl_init();
-
-        curl_setopt_array($curl, [
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 10,
+    // Handle response
+    if ($response->failed()) {
+        Log::error('Theory course fetch failed', [
+            'status' => $response->status(),
+            'body' => $response->body()
         ]);
 
-        $response = curl_exec($curl);
-        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        curl_close($curl);
+        return [
+            'error' => 'Unable to fetch data',
+            'status_code' => $response->status(),
+        ];
+    }
 
-        if ($httpCode === 200) {
-            $data = json_decode($response, true);
-            return $data ?? null;
+    return json_decode($response->body()); // Returns a stdClass object
+}
+
+    public static function getSessionWiseTheoryCoursesReview($sid)
+    {
+        $response = Http::withHeaders([
+            'X-API-KEY' => 'EXAMBILL_98745012'
+        ])->get("https://ugr.duetbd.org/api/session-wise-theory-courses-review/{$sid}");
+
+        // Handle response
+        if ($response->failed()) {
+            Log::error('Theory course fetch failed', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            return [
+                'error' => 'Unable to fetch data',
+                'status_code' => $response->status(),
+            ];
         }
 
-        return ['error' => 'Unable to fetch data', 'status_code' => $httpCode];
+        return json_decode($response->body()); // Returns a stdClass object
     }
+
 
 
     public static function getPreviousReviewSession()
