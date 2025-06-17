@@ -52,12 +52,16 @@ Route::middleware('auth')->group(function () {
     //For Regular Session
     Route::prefix('committee/input')->controller(CommitteeInputController::class)->group(function () {
         //show regular session list form
-        Route::get('regular/session', 'regularSessionShow')->name('committee.input.regular.session');
+        Route::get('/regular/session', 'regularSessionShow')->name('committee.input.regular.session');
         //show full form
-        Route::post('regular/session/form', 'regularSessionForm')->name('committee.input.regular.session.form');
+        Route::post('/regular/session/form', 'regularSessionForm')->name('committee.input.regular.session.form');
         //now store committee wise data to database ;
         Route::post('/regular/examination/moderation/committee/store', 'storeExaminationModerationCommittee')->name('committee.input.regular.examination.moderation.committee.store');
         Route::post('/regular/examiner/paper/setter/store','storeExaminerPaperSetter')->name('committee.input.regular.examiner.paper.setter.store');
+        Route::post('/regular/class/test/teacher/store', 'storeClassTestTeacherStore')->name('committee.input.regular.class.test.teacher.store');
+        Route::post('regular/sessional/course/teacher/store', 'storeSessionalCourseTeacher')->name('committee.input.regular.sessional.course.teacher.store');
+        Route::post('regular/list/scrutinizers/store', 'storeScrutinizers')->name('committee.input.regular.scrutinizers.store');
+        Route::post('regular/theory/grade/sheet/store', 'storeTheoryGradeSheet')->name('committee.input.regular.theory.grade.sheet.store');
     });
 
     //For Review Session
@@ -68,7 +72,8 @@ Route::middleware('auth')->group(function () {
         Route::post('review/session/form', 'reviewSessionForm')->name('committee.input.review.session.form');
         //now store committee wise data to database ;
         Route::post('/review/examination/moderation/committee/store', 'storeExaminationModerationCommittee')->name('committee.input.review.examination.moderation.committee.store');
-
+        Route::post('/review/examiner/paper/setter/store','storeExaminerPaperSetter')->name('committee.input.review.examiner.paper.setter.store');
+        Route::post('review/list/scrutinizers/store', 'storeScrutinizers')->name('committee.input.review.scrutinizers.store');
     });
 
 

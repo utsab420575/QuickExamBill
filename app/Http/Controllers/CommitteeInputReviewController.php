@@ -401,7 +401,7 @@ class CommitteeInputReviewController extends Controller
                         'course_code' => $rateAssign->course_code,
                         'course_name' => $rateAssign->course_name,
                         'total_students' => $rateAssign->total_students,
-                        'total_teacher' => $rateAssign->total_teacher,
+                        'total_teachers' => $rateAssign->total_teachers,
                         'rate_head_id' => $rateAssign->rate_head_id,
                         'session_id' => $rateAssign->session_id,
                         'exam_type_id' => $rateAssign->exam_type_id,
@@ -506,6 +506,173 @@ class CommitteeInputReviewController extends Controller
             return response()->json([
                 'message' => 'An error occurred while saving data.',
                 'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeScrutinizers(Request $request)
+    {
+        $scrutinizer_teacher_ids = $request->input('scrutinizer_teacher_ids', []);
+        $scrutinizers_no_of_students = $request->input('scrutinizers_no_of_students', []);
+        $sessionId = $request->input('sid');
+        $scrutinize_script_rate = $request->input('scrutinize_script_rate');
+        $scrutinize_min_rate = $request->input('scrutinize_min_rate');
+        $exam_type = 2;
+
+        Log::info('📥 Scrutinizer Form Submission Received', [
+            'teacher_ids' => $scrutinizer_teacher_ids,
+            'no_of_students' => $scrutinizers_no_of_students,
+            'session_id' => $sessionId,
+            'script_rate' => $scrutinize_script_rate,
+            'min_rate' => $scrutinize_min_rate
+        ]);
+
+        // ✅ Validate the input
+        $validator = Validator::make($request->all(), [
+            'scrutinizer_teacher_ids' => 'required|array',
+            'scrutinizers_no_of_students' => 'required|array',
+            'scrutinize_script_rate' => 'required|numeric|min:1',
+            'scrutinize_min_rate' => 'required|numeric|min:0',
+            'sid' => 'required'
+        ]);
+
+        // Per-course validation
+        foreach ($scrutinizer_teacher_ids as $courseId => $teacherIds) {
+            if (empty($teacherIds)) {
+                $validator->after(function ($validator) use ($courseId) {
+                    $validator->errors()->add("scrutinizer_teacher_ids.$courseId", "Select at least one teacher for course ID $courseId.");
+                });
+            }
+
+            $studentCount = $scrutinizers_no_of_students[$courseId] ?? null;
+            if ($studentCount === null || $studentCount === '' || $studentCount < 1) {
+                $validator->after(function ($validator) use ($courseId) {
+                    $validator->errors()->add("scrutinizers_no_of_students.$courseId", "Enter a valid number of students for course ID $courseId.");
+                });
+            }
+        }
+
+        if ($validator->fails()) {
+            Log::warning('❌ Scrutinizer form validation failed', [
+                'errors' => $validator->errors()->toArray()
+            ]);
+
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            Log::info('🔍 Fetching or creating RateHead for Scrutinizer');
+            $rateHead = RateHead::where('order_no', 9)->first();
+
+            if (!$rateHead) {
+                $rateHead = new RateHead();
+                $rateHead->order_no = 9;
+                $rateHead->head = 'Scrutinizing(Answre Script)';
+                $rateHead->dist_type = 'Share';
+                $rateHead->enable_min = 1;
+                $rateHead->enable_max = 0;
+                $rateHead->is_course = 1;
+                $rateHead->is_student_count = 1;
+                $rateHead->marge_with = null;
+                $rateHead->status = 1;
+                $rateHead->save();
+            }
+
+
+            Log::debug('✅ RateHead confirmed', $rateHead->toArray());
+
+            $session_info = LocalData::getOrCreateRegularSession($sessionId, $exam_type);
+            Log::info('✅ Session ensured', ['session_id' => $session_info->id]);
+
+            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
+                ->where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->first();
+
+            if (!$rateAmount) {
+                $rateAmount = new RateAmount();
+                $rateAmount->rate_head_id = $rateHead->id;
+                $rateAmount->session_id = $session_info->id;
+                $rateAmount->exam_type_id = $exam_type;
+                $rateAmount->default_rate = $scrutinize_script_rate;
+                $rateAmount->min_rate = $scrutinize_min_rate;
+                $rateAmount->saved = 1;
+                $rateAmount->save();
+            }
+
+            Log::debug('✅ RateAmount confirmed', $rateAmount->toArray());
+
+            foreach ($scrutinizer_teacher_ids as $courseId => $teacherIds) {
+                $studentCount = (int) $scrutinizers_no_of_students[$courseId];
+                $teacherCount = count($teacherIds);
+
+                $courseno = $request->input("courseno.$courseId");
+                $coursetitle = $request->input("coursetitle.$courseId");
+                //$registered_students_count = $request->input("registered_students_count.$courseId");
+                //$teacher_count = $request->input("teacher_count.$courseId");
+
+                Log::info("📌 Processing Course ID: $courseId", [
+                    'teacher_count' => $teacherCount,
+                    'students' => $studentCount
+                ]);
+
+                if ($teacherCount > 0 && $studentCount > 0) {
+                    $studentsPerTeacher = $studentCount / $teacherCount;
+
+                    foreach ($teacherIds as $teacherId) {
+                        $calculatedAmount = $studentsPerTeacher * $rateAmount->default_rate;
+                        $total_amount = max($rateAmount->min_rate, $calculatedAmount);
+
+                        RateAssign::create([
+                            'teacher_id' => $teacherId,
+                            'rate_head_id' => $rateHead->id,
+                            'session_id' => $session_info->id,
+                            'no_of_items' => $studentsPerTeacher,
+                            'total_amount' => $total_amount,
+                            'course_code' => $courseno,
+                            'course_name' => $coursetitle,
+                            'total_students' => $studentCount,
+                            'total_teachers' => $teacherCount,
+                            'exam_type_id' => $exam_type
+                        ]);
+
+                        Log::debug("✅ RateAssign created for teacher $teacherId", [
+                            'amount' => $total_amount,
+                            'items' => $studentsPerTeacher
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            Log::info('✅ All scrutinizer data saved successfully.', [
+                'session_id' => $session_info->id,
+                'rate_head_id' => $rateHead->id
+            ]);
+
+            return response()->json([
+                'message' => 'Scrutinizers committee saved successfully.',
+                'scrutinizer_teacher_ids' => $scrutinizer_teacher_ids,
+                'scrutinizers_no_of_students' => $scrutinizers_no_of_students,
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('❌ Exception caught during scrutinizer save', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'An error occurred while saving data.',
+                'error' => $e->getMessage()
             ], 500);
         }
     }

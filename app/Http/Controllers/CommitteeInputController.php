@@ -262,6 +262,7 @@ class CommitteeInputController extends Controller
         $paper_setter_rate=$request->paper_setter_rate;
         $sessionId = $request->sid;
         $exam_type=1;
+
         // ✅ Log all data
         Log::info('🔍 Incoming Examiner & Paper Setter Submission', [
             'paper_setter_ids' => $paperSetterData,
@@ -512,6 +513,623 @@ class CommitteeInputController extends Controller
             ], 500);
         }
     }
+
+    //internal class assignment
+    public function storeClassTestTeacherStore(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'class_test_teachers_ids' => 'required|array',
+            'no_of_students_ct' => 'required|array',
+            'class_test_rate' => 'required|numeric|min:1',
+            'sid' => 'required|numeric',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation error.',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $classTestTeacherData = $request->input('class_test_teachers_ids', []);
+        $noOfStudents = $request->input('no_of_students_ct', []);
+        $sessionId = $request->sid;
+        $class_test_rate = $request->class_test_rate;
+        $exam_type = 1;
+
+        // ✅ Log incoming request
+        Log::info('🔍 Incoming Class Test Teacher Submission', [
+            'class_test_teachers_ids' => $classTestTeacherData,
+            'no_of_students_ct' => $noOfStudents,
+            'class_test_rate' => $class_test_rate,
+            'session_id' => $sessionId,
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $rateHead = RateHead::where('order_no', 4)->first();
+            if (!$rateHead) {
+                $rateHead = new RateHead();
+                $rateHead->head = 'Class Test';
+                $rateHead->order_no = 4;
+                $rateHead->dist_type = 'Share';
+                $rateHead->enable_min = 0;
+                $rateHead->enable_max = 0;
+                $rateHead->is_course = 1;
+                $rateHead->is_student_count = 1;
+                $rateHead->marge_with = null;
+                $rateHead->status = 1;
+
+                if ($rateHead->save()) {
+                    Log::info('✅ New RateHead created', $rateHead->toArray());
+                } else {
+                    Log::error('❌ Failed to save RateHead');
+                }
+            }
+
+            $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+
+            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
+                ->where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->first();
+
+            if (!$rateAmount) {
+                $rateAmount = new RateAmount();
+                $rateAmount->rate_head_id = $rateHead->id;
+                $rateAmount->session_id = $session_info->id;
+                $rateAmount->default_rate = $class_test_rate;
+                $rateAmount->exam_type_id = $exam_type;
+                $rateAmount->saved = 1;
+
+                if ($rateAmount->save()) {
+                    Log::info('✅ New RateAmount created', $rateAmount->toArray());
+                } else {
+                    Log::error('❌ Failed to save RateAmount');
+                }
+            }
+
+            foreach ($classTestTeacherData as $courseId => $teacherIds) {
+                $courseno = $request->input("courseno.$courseId");
+                $coursetitle = $request->input("coursetitle.$courseId");
+                $input_studentCount = $noOfStudents[$courseId] ?? 0;
+                $teacher_count = $request->input("teacher_count.$courseId");
+                $teacherCount = count($teacherIds);
+
+                $studentCount = $teacherCount > 0 ? $input_studentCount * 2 : 0;
+
+                Log::info('📘 Class Test Course-wise Input Data', [
+                    'course_id' => $courseId,
+                    'teacher_ids' => $teacherIds,
+                    'student_count' => $studentCount,
+                    'course_code' => $courseno,
+                    'course_title' => $coursetitle,
+                    'hidden_teacher_count' => $teacher_count,
+                ]);
+
+                foreach ($teacherIds as $teacherId) {
+                    $total_amount = $studentCount * $rateAmount->default_rate;
+
+                    Log::info('📄 Saving Class Test RateAssign', [
+                        'teacher_id' => $teacherId,
+                        'course_id' => $courseId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session_info->id,
+                        'exam_type_id' => $exam_type,
+                        'total_amount' => $total_amount,
+                    ]);
+
+                    RateAssign::create([
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session_info->id,
+                        'no_of_items' => $studentCount,
+                        'total_amount' => $total_amount,
+                        'exam_type_id' => $exam_type,
+
+                        'course_code' => $courseno,
+                        'course_name' => $coursetitle,
+                        'total_students' => $input_studentCount,
+                        'total_teachers' => $teacher_count,
+                    ]);
+                }
+            }
+
+            DB::commit();
+            Log::info('✅ Class Test Teacher Data Stored Successfully.', [
+                'session_id' => $session_info->id,
+                'rate_head_id' => $rateHead->id,
+            ]);
+
+            return response()->json([
+                'message' => 'Class Test Teacher data saved successfully.'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ Error storing Class Test Teacher data', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'An error occurred while saving data.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeSessionalCourseTeacher(Request $request)
+    {
+        // ✅ Step 1: Validation
+        $validator = Validator::make($request->all(), [
+            'sessional_course_teacher_ids' => 'required|array',
+            'no_of_contact_hour' => 'required|array',
+            'total_week' => 'required|numeric|min:1',
+            'sid' => 'required',
+            'sessional_per_hour_rate' => 'required|numeric|min:1',
+            'sessional_examiner_min_rate' => 'required|numeric|min:1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation error.',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // ✅ Step 2: Extract input
+        $sessionalTeacherData = $request->input('sessional_course_teacher_ids', []);
+        $noOfContactHour = $request->input('no_of_contact_hour', []);
+        $total_week = $request->total_week;
+        $sessionId = $request->sid;
+        $sessional_per_hour_rate = $request->sessional_per_hour_rate;
+        $sessional_examiner_min_rate = $request->sessional_examiner_min_rate;
+        $exam_type = 1;
+
+        // ✅ Log incoming data
+        Log::info('🔍 Incoming Sessional Course Submission', [
+            'teacher_ids' => $sessionalTeacherData,
+            'contact_hours' => $noOfContactHour,
+            'total_week' => $total_week,
+            'session_id' => $sessionId,
+            'per_hour_rate' => $sessional_per_hour_rate,
+            'min_rate' => $sessional_examiner_min_rate,
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // ✅ Step 3: Create or fetch RateHead
+            $rateHead = RateHead::where('order_no', 5)->first();
+            if (!$rateHead) {
+                $rateHead = new RateHead();
+                $rateHead->head = 'Laboratory/Survey works';
+                $rateHead->order_no = 5;
+                $rateHead->dist_type = 'Share';
+                $rateHead->enable_min = 1;
+                $rateHead->enable_max = 0;
+                $rateHead->is_course = 1;
+                $rateHead->is_student_count = 0;
+                $rateHead->marge_with = null;
+                $rateHead->status = 1;
+
+                if ($rateHead->save()) {
+                    Log::info('✅ New RateHead created', $rateHead->toArray());
+                } else {
+                    Log::error('❌ Failed to save RateHead');
+                }
+            }
+
+            // ✅ Step 4: Get or create session info
+            $session_info = LocalData::getOrCreateRegularSession($sessionId, $exam_type);
+
+            // ✅ Step 5: Get or create RateAmount
+            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
+                ->where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->first();
+
+            if (!$rateAmount) {
+                $rateAmount = new RateAmount();
+                $rateAmount->rate_head_id = $rateHead->id;
+                $rateAmount->session_id = $session_info->id;
+                $rateAmount->default_rate = $sessional_per_hour_rate;
+                $rateAmount->min_rate = $sessional_examiner_min_rate;
+                $rateAmount->exam_type_id = $exam_type;
+                $rateAmount->saved = 1;
+
+                if ($rateAmount->save()) {
+                    Log::info('✅ New RateAmount created', $rateAmount->toArray());
+                } else {
+                    Log::error('❌ Failed to save RateAmount');
+                }
+            }
+
+            // ✅ Step 6: Save RateAssign per teacher
+            foreach ($sessionalTeacherData as $courseId => $teacherIds) {
+                $hours = $noOfContactHour[$courseId] ?? [];
+
+                foreach ($teacherIds as $index => $teacherId) {
+                    $contactHour = isset($hours[$index]) ? floatval($hours[$index]) : 0;
+                    $totalAmount = $contactHour * $rateAmount->default_rate * $total_week;
+
+                    if ($totalAmount < $rateAmount->min_rate) {
+                        $totalAmount = $rateAmount->min_rate;
+                    }
+
+                    Log::info('📘 Sessional Teacher RateAssign', [
+                        'teacher_id' => $teacherId,
+                        'course_id' => $courseId,
+                        'contact_hour' => $contactHour,
+                        'total_week' => $total_week,
+                        'total_amount' => $totalAmount,
+                    ]);
+
+                    RateAssign::create([
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session_info->id,
+                        'no_of_items' => $contactHour,
+                        'total_amount' => $totalAmount,
+                        'exam_type_id' => $exam_type,
+
+                        'course_code' => $request->input("courseno.$courseId"),
+                        'course_name' => $request->input("coursetitle.$courseId"),
+                        'total_students' => $total_week,
+                        'total_teachers' => $request->input("teacher_count.$courseId"),
+                    ]);
+                }
+            }
+
+            DB::commit();
+            Log::info('✅ Sessional Course Teacher Data Stored Successfully', [
+                'session_id' => $session_info->id,
+                'rate_head_id' => $rateHead->id,
+            ]);
+
+            return response()->json([
+                'message' => 'Sessional Course Teacher data saved successfully.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ Error storing Sessional Course Teacher data', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'An error occurred while saving data.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function storeScrutinizers(Request $request)
+    {
+        $scrutinizer_teacher_ids = $request->input('scrutinizer_teacher_ids', []);
+        $scrutinizers_no_of_students = $request->input('scrutinizers_no_of_students', []);
+        $sessionId = $request->input('sid');
+        $scrutinize_script_rate = $request->input('scrutinize_script_rate');
+        $scrutinize_min_rate = $request->input('scrutinize_min_rate');
+        $exam_type = 1;
+
+        Log::info('📥 Scrutinizer Form Submission Received', [
+            'teacher_ids' => $scrutinizer_teacher_ids,
+            'no_of_students' => $scrutinizers_no_of_students,
+            'session_id' => $sessionId,
+            'script_rate' => $scrutinize_script_rate,
+            'min_rate' => $scrutinize_min_rate
+        ]);
+
+        // ✅ Validate the input
+        $validator = Validator::make($request->all(), [
+            'scrutinizer_teacher_ids' => 'required|array',
+            'scrutinizers_no_of_students' => 'required|array',
+            'scrutinize_script_rate' => 'required|numeric|min:1',
+            'scrutinize_min_rate' => 'required|numeric|min:0',
+            'sid' => 'required'
+        ]);
+
+        // Per-course validation
+        foreach ($scrutinizer_teacher_ids as $courseId => $teacherIds) {
+            if (empty($teacherIds)) {
+                $validator->after(function ($validator) use ($courseId) {
+                    $validator->errors()->add("scrutinizer_teacher_ids.$courseId", "Select at least one teacher for course ID $courseId.");
+                });
+            }
+
+            $studentCount = $scrutinizers_no_of_students[$courseId] ?? null;
+            if ($studentCount === null || $studentCount === '' || $studentCount < 1) {
+                $validator->after(function ($validator) use ($courseId) {
+                    $validator->errors()->add("scrutinizers_no_of_students.$courseId", "Enter a valid number of students for course ID $courseId.");
+                });
+            }
+        }
+
+        if ($validator->fails()) {
+            Log::warning('❌ Scrutinizer form validation failed', [
+                'errors' => $validator->errors()->toArray()
+            ]);
+
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            Log::info('🔍 Fetching or creating RateHead for Scrutinizer');
+            $rateHead = RateHead::where('order_no', 9)->first();
+
+            if (!$rateHead) {
+                $rateHead = new RateHead();
+                $rateHead->order_no = 9;
+                $rateHead->head = 'Scrutinizing(Answre Script)';
+                $rateHead->dist_type = 'Share';
+                $rateHead->enable_min = 1;
+                $rateHead->enable_max = 0;
+                $rateHead->is_course = 1;
+                $rateHead->is_student_count = 1;
+                $rateHead->marge_with = null;
+                $rateHead->status = 1;
+                $rateHead->save();
+            }
+
+
+            Log::debug('✅ RateHead confirmed', $rateHead->toArray());
+
+            $session_info = LocalData::getOrCreateRegularSession($sessionId, $exam_type);
+            Log::info('✅ Session ensured', ['session_id' => $session_info->id]);
+
+            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
+                ->where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->first();
+
+            if (!$rateAmount) {
+                $rateAmount = new RateAmount();
+                $rateAmount->rate_head_id = $rateHead->id;
+                $rateAmount->session_id = $session_info->id;
+                $rateAmount->exam_type_id = $exam_type;
+                $rateAmount->default_rate = $scrutinize_script_rate;
+                $rateAmount->min_rate = $scrutinize_min_rate;
+                $rateAmount->saved = 1;
+                $rateAmount->save();
+            }
+
+            Log::debug('✅ RateAmount confirmed', $rateAmount->toArray());
+
+            foreach ($scrutinizer_teacher_ids as $courseId => $teacherIds) {
+                $studentCount = (int) $scrutinizers_no_of_students[$courseId];
+                $teacherCount = count($teacherIds);
+
+                $courseno = $request->input("courseno.$courseId");
+                $coursetitle = $request->input("coursetitle.$courseId");
+                //$registered_students_count = $request->input("registered_students_count.$courseId");
+                //$teacher_count = $request->input("teacher_count.$courseId");
+
+                Log::info("📌 Processing Course ID: $courseId", [
+                    'teacher_count' => $teacherCount,
+                    'students' => $studentCount
+                ]);
+
+                if ($teacherCount > 0 && $studentCount > 0) {
+                    $studentsPerTeacher = $studentCount / $teacherCount;
+
+                    foreach ($teacherIds as $teacherId) {
+                        $calculatedAmount = $studentsPerTeacher * $rateAmount->default_rate;
+                        $total_amount = max($rateAmount->min_rate, $calculatedAmount);
+
+                        RateAssign::create([
+                            'teacher_id' => $teacherId,
+                            'rate_head_id' => $rateHead->id,
+                            'session_id' => $session_info->id,
+                            'no_of_items' => $studentsPerTeacher,
+                            'total_amount' => $total_amount,
+                            'course_code' => $courseno,
+                            'course_name' => $coursetitle,
+                            'total_students' => $studentCount,
+                            'total_teachers' => $teacherCount,
+                            'exam_type_id' => $exam_type
+                        ]);
+
+                        Log::debug("✅ RateAssign created for teacher $teacherId", [
+                            'amount' => $total_amount,
+                            'items' => $studentsPerTeacher
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            Log::info('✅ All scrutinizer data saved successfully.', [
+                'session_id' => $session_info->id,
+                'rate_head_id' => $rateHead->id
+            ]);
+
+            return response()->json([
+                'message' => 'Scrutinizers committee saved successfully.',
+                'scrutinizer_teacher_ids' => $scrutinizer_teacher_ids,
+                'scrutinizers_no_of_students' => $scrutinizers_no_of_students,
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('❌ Exception caught during scrutinizer save', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'An error occurred while saving data.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeTheoryGradeSheet(Request $request)
+    {
+        $teacherData = $request->input('prepare_theory_grade_sheet_teacher_ids', []);
+        $studentData = $request->input('prepare_theory_grade_sheet_no_of_students', []);
+        $sessionId=$request->sid;
+        $theory_grade_sheet_rate=$request->theory_grade_sheet_rate;
+        $exam_type=1;
+
+        Log::info('📥 Received Theory Grade Sheet Submission', [
+            'session_id' => $sessionId,
+            'teacher_data' => $teacherData,
+            'student_data' => $studentData,
+            'rate' => $theory_grade_sheet_rate
+        ]);
+        $errors = [];
+
+        // ✅ Step 1: Basic validation
+        if (empty($teacherData)) {
+            $errors['prepare_theory_grade_sheet_teacher_ids'] = 'You must select at least one teacher.';
+        }
+
+        if (empty($studentData)) {
+            $errors['prepare_theory_grade_sheet_no_of_students'] = 'You must provide number of students.';
+        }
+
+
+        foreach ($teacherData as $courseId => $teacherIds) {
+            if (empty($teacherIds)) {
+                $errors["teacher_ids.$courseId"] = "Select at least one teacher for course ID $courseId.";
+            }
+
+            $studentCount = $studentData[$courseId] ?? null;
+            if ($studentCount === null || $studentCount === '' || $studentCount < 1) {
+                $errors["no_of_students.$courseId"] = "Enter a valid number of students for course ID $courseId.";
+            }
+        }
+
+
+        if (!empty($errors)) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => $errors
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // ✅ Step 2: RateHead creation
+            $rateHead = RateHead::where('order_no', '8.a')->first();
+
+            Log::info('🔍 Fetching or creating RateHead for Grade Sheet');
+            if (!$rateHead) {
+                $rateHead = new RateHead();
+                $rateHead->order_no = '8.a';
+                $rateHead->head = 'Gradesheet Preparation';
+                $rateHead->sub_head = 'Theoretical';
+                $rateHead->dist_type = 'Share';
+                $rateHead->enable_min = 0;
+                $rateHead->enable_max = 0;
+                $rateHead->is_course = 1;
+                $rateHead->is_student_count = 1;
+                $rateHead->marge_with = null;
+                $rateHead->status = 1;
+                $rateHead->save();
+                Log::info('✅ New RateHead created:', $rateHead->toArray());
+            }
+
+            Log::debug('✅ RateHead confirmed', $rateHead->toArray());
+
+            // ✅ Step 3: Ensure Session exists
+            $session_info = LocalData::getOrCreateRegularSession($sessionId, $exam_type); // adjust as needed
+            Log::info('✅ Session ensured', ['session_id' => $session_info->id]);
+
+            // ✅ Step 4: RateAmount
+            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
+                ->where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->first();
+
+            if (!$rateAmount) {
+                $rateAmount = new RateAmount();
+                $rateAmount->rate_head_id = $rateHead->id;
+                $rateAmount->session_id = $session_info->id;
+                $rateAmount->default_rate = $theory_grade_sheet_rate;  // ₹24 per script (example rate)
+                $rateAmount->exam_type_id = $exam_type;
+                $rateAmount->saved = 1;
+                $rateAmount->save();
+
+                Log::info('✅ RateAmount created (grade sheet):', $rateAmount->toArray());
+            }
+
+
+            foreach ($teacherData as $courseId => $teacherIds) {
+                $studentCount = (int) $studentData[$courseId];
+                $teacherCount = count($teacherIds);
+
+                //hidden input
+                $courseno = $request->input("courseno.$courseId");
+                $coursetitle = $request->input("coursetitle.$courseId");
+                $registered_students_count = $request->input("registered_students_count.$courseId");
+                $teacher_counts = $request->input("teacher_count.$courseId");
+
+                Log::info("📌 Processing Course ID: $courseId", [
+                    'teacher_count' => $teacherCount,
+                    'students' => $studentCount
+                ]);
+
+                if ($teacherCount > 0 && $studentCount > 0) {
+                    $studentsPerTeacher = $studentCount / $teacherCount;
+
+                    foreach ($teacherIds as $teacherId) {
+                        $calculatedAmount = $studentsPerTeacher * $rateAmount->default_rate;
+                        //$total_amount = max($rateAmount->min_rate, $calculatedAmount); // Enforce min
+
+                        RateAssign::create([
+                            'teacher_id'   => $teacherId,
+                            'rate_head_id' => $rateHead->id,
+                            'session_id'   => $session_info->id,
+                            'no_of_items'  => $studentsPerTeacher,
+                            'total_amount' => $calculatedAmount,
+                            //hidden input
+                            'course_code'  => $courseno,
+                            'course_name'   => $coursetitle,
+                            'total_students' => $studentCount,
+                            'total_teachers' => $teacherCount,
+                            'exam_type_id' => $exam_type
+                        ]);
+                    }
+                }
+            }
+
+
+            DB::commit();
+
+            Log::info('✅ Theory Grade Sheet Rate Assignments saved.', [
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session_info->id,
+            ]);
+
+            return response()->json([
+                'message' => 'Theory Grade Sheet committee saved successfully.',
+                'grade_sheet_teacher_ids' => $teacherData,
+                'grade_sheet_no_of_students' => $studentData
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ Error saving Theory Grade Sheet data: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'An error occurred while saving Theory Grade Sheet data.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
 }
 
 
