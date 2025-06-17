@@ -85,8 +85,28 @@
             </div>
         @endif
 
+
+        @php
+            $rate_head = \App\Models\RateHead::where('order_no', '=','8.a')->first();
+            $session = \App\Models\Session::where('ugr_id', $sid)->where('exam_type_id', 2)->first();
+            $rate_amount = $session
+                ? \App\Models\RateAmount::where('session_id', $session->id)
+                ->where('saved', 1)
+                ->where('rate_head_id',$rate_head->id)
+                ->where('exam_type_id', 2)->first()
+                : null;
+        @endphp
+
+        @if(!$rate_amount)
+            @include('committee_input.patritals.review.list_preparation_theory_grade_sheet')
+        @else
+            <div class="alert alert-info">
+                List of  Theory Grade Sheet  Committee already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}. If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
+            </div>
+        @endif
+
         {{--
-        @include('committee_input.patritals.review.list_preparation_theory_grade_sheet')
+
         @include('committee_input.patritals.review.list_scrutinizing_theory_grade_sheet')
         @include('committee_input.patritals.review.list_review_stencil_cutting_question_paper')
         @include('committee_input.patritals.review.list_review_printing_question_paper')

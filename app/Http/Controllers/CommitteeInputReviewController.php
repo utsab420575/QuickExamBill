@@ -676,4 +676,159 @@ class CommitteeInputReviewController extends Controller
             ], 500);
         }
     }
+    public function storeReviewTheoryGradeSheet(Request $request)
+    {
+        $teacherData = $request->input('prepare_theory_grade_sheet_teacher_ids', []);
+        $studentData = $request->input('prepare_theory_grade_sheet_no_of_students', []);
+        $sessionId=$request->sid;
+        $theory_grade_sheet_rate=$request->theory_grade_sheet_rate;
+        $exam_type=2;
+
+        Log::info('📥 Received Theory Grade Sheet Submission', [
+            'session_id' => $sessionId,
+            'teacher_data' => $teacherData,
+            'student_data' => $studentData,
+            'rate' => $theory_grade_sheet_rate
+        ]);
+        $errors = [];
+
+        // ✅ Step 1: Basic validation
+        if (empty($teacherData)) {
+            $errors['prepare_theory_grade_sheet_teacher_ids'] = 'You must select at least one teacher.';
+        }
+
+        if (empty($studentData)) {
+            $errors['prepare_theory_grade_sheet_no_of_students'] = 'You must provide number of students.';
+        }
+
+
+        foreach ($teacherData as $courseId => $teacherIds) {
+            if (empty($teacherIds)) {
+                $errors["teacher_ids.$courseId"] = "Select at least one teacher for course ID $courseId.";
+            }
+
+            $studentCount = $studentData[$courseId] ?? null;
+            if ($studentCount === null || $studentCount === '' || $studentCount < 1) {
+                $errors["no_of_students.$courseId"] = "Enter a valid number of students for course ID $courseId.";
+            }
+        }
+
+
+        if (!empty($errors)) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => $errors
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // ✅ Step 2: RateHead creation
+            $rateHead = RateHead::where('order_no', '8.a')->first();
+
+            Log::info('🔍 Fetching or creating RateHead for Grade Sheet');
+            if (!$rateHead) {
+                $rateHead = new RateHead();
+                $rateHead->order_no = '8.a';
+                $rateHead->head = 'Gradesheet Preparation';
+                $rateHead->sub_head = 'Theoretical';
+                $rateHead->dist_type = 'Share';
+                $rateHead->enable_min = 0;
+                $rateHead->enable_max = 0;
+                $rateHead->is_course = 1;
+                $rateHead->is_student_count = 1;
+                $rateHead->marge_with = null;
+                $rateHead->status = 1;
+                $rateHead->save();
+                Log::info('✅ New RateHead created:', $rateHead->toArray());
+            }
+
+            Log::debug('✅ RateHead confirmed', $rateHead->toArray());
+
+            // ✅ Step 3: Ensure Session exists
+            $session_info = LocalData::getOrCreateRegularSession($sessionId, $exam_type); // adjust as needed
+            Log::info('✅ Session ensured', ['session_id' => $session_info->id]);
+
+            // ✅ Step 4: RateAmount
+            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
+                ->where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->first();
+
+            if (!$rateAmount) {
+                $rateAmount = new RateAmount();
+                $rateAmount->rate_head_id = $rateHead->id;
+                $rateAmount->session_id = $session_info->id;
+                $rateAmount->default_rate = $theory_grade_sheet_rate;  // ₹24 per script (example rate)
+                $rateAmount->exam_type_id = $exam_type;
+                $rateAmount->saved = 1;
+                $rateAmount->save();
+
+                Log::info('✅ RateAmount created (grade sheet):', $rateAmount->toArray());
+            }
+
+
+            foreach ($teacherData as $courseId => $teacherIds) {
+                $studentCount = (int) $studentData[$courseId];
+                $teacherCount = count($teacherIds);
+
+                //hidden input
+                $courseno = $request->input("courseno.$courseId");
+                $coursetitle = $request->input("coursetitle.$courseId");
+                $registered_students_count = $request->input("registered_students_count.$courseId");
+                $teacher_counts = $request->input("teacher_count.$courseId");
+
+                Log::info("📌 Processing Course ID: $courseId", [
+                    'teacher_count' => $teacherCount,
+                    'students' => $studentCount
+                ]);
+
+                if ($teacherCount > 0 && $studentCount > 0) {
+                    $studentsPerTeacher = $studentCount / $teacherCount;
+
+                    foreach ($teacherIds as $teacherId) {
+                        $calculatedAmount = $studentsPerTeacher * $rateAmount->default_rate;
+                        //$total_amount = max($rateAmount->min_rate, $calculatedAmount); // Enforce min
+
+                        RateAssign::create([
+                            'teacher_id'   => $teacherId,
+                            'rate_head_id' => $rateHead->id,
+                            'session_id'   => $session_info->id,
+                            'no_of_items'  => $studentsPerTeacher,
+                            'total_amount' => $calculatedAmount,
+                            //hidden input
+                            'course_code'  => $courseno,
+                            'course_name'   => $coursetitle,
+                            'total_students' => $studentCount,
+                            'total_teachers' => $teacherCount,
+                            'exam_type_id' => $exam_type
+                        ]);
+                    }
+                }
+            }
+
+
+            DB::commit();
+
+            Log::info('✅ Theory Grade Sheet Rate Assignments saved.', [
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session_info->id,
+            ]);
+
+            return response()->json([
+                'message' => 'Theory Grade Sheet committee saved successfully.',
+                'grade_sheet_teacher_ids' => $teacherData,
+                'grade_sheet_no_of_students' => $studentData
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ Error saving Theory Grade Sheet data: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'An error occurred while saving Theory Grade Sheet data.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

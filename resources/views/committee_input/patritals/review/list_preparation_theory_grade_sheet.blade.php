@@ -14,7 +14,7 @@
         }
     </style>
 @endpush
-<form id="form-list-of-prepare-theory-grade-sheet" action="{{ route('committee.input.regular.theory.grade.sheet.store') }}" method="POST">
+<form id="form-list-of-prepare-theory-grade-sheet" action="{{ route('committee.input.review.theory.grade.sheet.store') }}" method="POST">
     @csrf
     <input type="hidden" id="sid" name="sid" value="{{$sid}}">
     <div class="row mb-5">
