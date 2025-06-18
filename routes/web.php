@@ -63,6 +63,17 @@ Route::middleware('auth')->group(function () {
         Route::post('/regular/list/scrutinizers/store', 'storeScrutinizers')->name('committee.input.regular.scrutinizers.store');
         Route::post('/regular/theory/grade/sheet/store', 'storeTheoryGradeSheet')->name('committee.input.regular.theory.grade.sheet.store');
         Route::post('/regular/sessional/grade/sheet/store', 'storeSessionalGradeSheet')->name('committee.input.sessional.grade.sheet.store');
+        Route::post('/regular/scrutinizers/theory/grade/sheet/store', 'storeScrutinizersTheoryGradeSheet')->name('committee.input.scrutinizers.theory.grade.sheet.store');
+        Route::post('/regular/scrutinizers/sessional/grade/sheet/store','storeScrutinizersSessionalGradeSheet')->name('committee.input.scrutinizers.sessional.grade.sheet.store');
+        Route::post('/regular/prepare/computerized/result/store','storePreparedComputerizedResult')->name('committee.input.prepare.computerized.result.store');
+        Route::post('/regular/verified/computerized/grade/sheet/store', 'storeVerifiedComputerizedGradeSheet')->name('committee.input.verified.computerized.grade.sheet.store');
+        Route::post('/regular/stencil/cutting/committee/store', 'storeStencilCuttingCommittee')->name('committee.input.stencil.cutting.committee.store');
+
+        Route::post('/regular/stencil/cutting/committee/store', 'storeStencilCuttingCommittee')->name('committee.input.regular.stencil.cutting.committee.store');
+        Route::post('/regular/printing/question/committee/store', 'storePrintingQuestion')->name('committee.input.regular.printing.question.committee.store');
+        Route::post('/regular/comparison/committee/store', 'storeReviewComparisonCommittee')->name('committee.input.regular.comparison.committee.store');
+        Route::post('/regular/advisor/student/store', 'storeAdvisorStudent')->name('committee.input.regular.advisor.student.store');
+
     });
 
     //For Review Session
@@ -76,18 +87,19 @@ Route::middleware('auth')->group(function () {
         Route::post('/review/examiner/paper/setter/store','storeExaminerPaperSetter')->name('committee.input.review.examiner.paper.setter.store');
         Route::post('/review/list/scrutinizers/store', 'storeScrutinizers')->name('committee.input.review.scrutinizers.store');
         Route::post('/review/theory/grade/sheet/store', 'storeReviewTheoryGradeSheet')->name('committee.input.review.theory.grade.sheet.store');
+        Route::post('/review/scrutinizers/theory/grade/sheet/store',  'storeReviewScrutinizersTheoryGradeSheet')->name('committee.input.review.scrutinizers.theory.grade.sheet.store');
+
+        Route::post('/review/stencil/cutting/committee/store', 'storeStencilCuttingCommittee')->name('committee.input.review.stencil.cutting.committee.store');
+        Route::post('/review/printing/question/committee/store', 'storePrintingQuestion')->name('committee.input.review.printing.question.committee.store');
+        Route::post('/review/comparison/committee/store', 'storeReviewComparisonCommittee')->name('committee.input.review.comparison.committee.store');
     });
 
 
     //Regular SubForm
 
-    Route::post('/class/test/teacher/store', [StaffController::class, 'storeClassTestTeacherStore'])->name('class.test.teacher.store');
-    Route::get('/session-wise-sessional-courses/{sid}',[StaffController::class,'session_wise_sessional_courses']);
-    Route::post('/sessional/course/teacher/store', [StaffController::class, 'storeSessionalCourseTeacher'])->name('sessional.course.teacher.store');
-    Route::post('/scrutinizers/store', [StaffController::class, 'storeScrutinizers'])->name('scrutinizers.store');
-    Route::post('/theory/grade/sheet/store', [StaffController::class, 'storeTheoryGradeSheet'])->name('theory.grade.sheet.store');
-    Route::post('/sessional/grade/sheet/store', [StaffController::class, 'storeSessionalGradeSheet'])->name('sessional.grade.sheet.store');
-    Route::post('/scrutinizers/theory/grade/sheet/store', [StaffController::class, 'storeScrutinizersTheoryGradeSheet'])->name('scrutinizers.theory.grade.sheet.store');
+
+
+
     Route::post('/scrutinizers/sessional/grade/sheet/store', [StaffController::class, 'storeScrutinizersSessionalGradeSheet'])->name('scrutinizers.sessional.grade.sheet.store');
     Route::post('/prepare/computerized/result/store', [StaffController::class, 'storePreparedComputerizedResult'])->name('prepare.computerized.result.store');
     Route::post('/verified/computerized/result/store', [StaffController::class, 'storeVerifiedComputerizedResult'])->name('verified.computerized.result.store');

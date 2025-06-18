@@ -152,38 +152,29 @@ class ApiData{
         return json_decode($response->body()); // Returns a stdClass object
     }
 
-    public static function  getSessionWiseTheorySessionalCourses($sid){
-        $authKey = 'OE3KFIE649MRECGQ';
-        //$authKey = $request->authKey;
-        // ✅ Properly embed $sid into the URL
-        $url = "https://ugr.duetbd.org/session-wise-theory-sessional-courses/{$sid}?authKey=" . urlencode($authKey);
+    public static function getSessionWiseTheorySessionalCourses($sid)
+    {
+        $response = Http::withHeaders([
+            'X-API-KEY' => 'EXAMBILL_98745012'
+        ])->get("https://ugr.duetbd.org/api/session-wise-theory-sessional-courses/{$sid}");
 
-        /*//debug
-        return response()->json([
-            'request' => $request->authKey,
-            'sid' => $sid,
-            'url'=>$url
-        ]);*/
+        // Handle response
+        if ($response->failed()) {
+            Log::error('Theory Sessional course fetch failed', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
 
-        $curl = curl_init();
-
-        curl_setopt_array($curl, [
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 10,
-        ]);
-
-        $response = curl_exec($curl);
-        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        curl_close($curl);
-
-        if ($httpCode === 200) {
-            $data = json_decode($response, true);
-            return $data ?? null;
+            return [
+                'error' => 'Unable to fetch data',
+                'status_code' => $response->status(),
+            ];
         }
 
-        return ['error' => 'Unable to fetch data', 'status_code' => $httpCode];
+        return json_decode($response->body()); // Returns a stdClass object
     }
+
+
 
     public static function  getSessionWiseStudentAdvisor($sid){
         $authKey = 'OE3KFIE649MRECGQ';
