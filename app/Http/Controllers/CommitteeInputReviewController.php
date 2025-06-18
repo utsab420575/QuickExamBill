@@ -68,9 +68,8 @@ class CommitteeInputReviewController extends Controller
         $all_theory_sessional_courses_with_student_count = ApiData::getSessionWiseTheorySessionalCourses($sid);
         //all student advisor in specific student
         $all_advisor_with_student_count = ApiData::getSessionWiseStudentAdvisor($sid);
-        //active coordinator(we will give it internal database)
-        //$co_ordinator_arch = ApiData::getCoOrdinator();
-
+        //active head
+        $teacher_head = ApiData::getHead();
 
         // return response()->json(['$all_course_with_teacher'=>$all_course_with_teacher]);
         /*return response()->json(['head'=>$all_course_with_class_test_teacher]);*/

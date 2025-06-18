@@ -18,7 +18,7 @@
         }
     </style>
 @endpush
-<form id="form-list-of-advisor-student" action="{{ route('advisor.student.store') }}" method="POST">
+<form id="form-list-of-advisor-student" action="{{ route('committee.input.regular.advisor.student.store') }}" method="POST">
     @csrf
     <input type="hidden" value="{{$sid}}" name="sid">
     <div class="row mb-5">
@@ -48,27 +48,27 @@
                     @php
                         function getTeacherName($teacherId, $teachers) {
                             $teacher = $teachers->firstWhere('id', $teacherId);
-                            return $teacher ? $teacher->user->name . ' - ' . $teacher->designation->name : 'Unknown';
+                            return $teacher ? $teacher->user->name . ' - ' . $teacher->designation->designation : 'Unknown';
                         }
                     @endphp
                     {{--this two column for heading--}}
                     <div class="row mb-2">
                         <div class="col-md-6">
                             <div class="row">
-                                <div class="col-md-4 gap-2 fw-bold">
+                                <div class="col-md-6 gap-2 fw-bold">
                                     Name
                                 </div>
-                                <div class="col-md-6 fw-bold">
+                                <div class="col-md-4 fw-bold">
                                     No of Students
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="row">
-                                <div class="col-md-4 gap-2 fw-bold">
+                                <div class="col-md-6 gap-2 fw-bold">
                                     Name
                                 </div>
-                                <div class="col-md-6 fw-bold">
+                                <div class="col-md-4 fw-bold">
                                     No of Students
                                 </div>
                             </div>
@@ -76,11 +76,14 @@
                     </div>
                    {{-- this for making chunk to divide advisors into two column--}}
                     @php
-                        $teacherStudents = $all_advisor_with_student_count['teacherstudent'] ?? [];
+                        $teacherStudents = $all_advisor_with_student_count->teacherstudent ?? [];
+
+                          // Convert stdClass to array
+                        $teacherStudentsArray = (array) $teacherStudents;
 
                         // Filter out advisors with no students
-                        $filteredAdvisors = array_filter($teacherStudents, function ($advisor) {
-                            return !empty($advisor['students']);
+                        $filteredAdvisors = array_filter($teacherStudentsArray, function ($advisor) {
+                            return !empty($advisor->students);
                         });
 
                         $count = count($filteredAdvisors);
@@ -96,7 +99,7 @@
                                     <div class="form-group row pb-3">
                                         <input type="hidden" name="advisorTeacherIds[]" value="{{ $teacherId }}">
 
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <label>{{ getTeacherName($teacherId, $teachers) }}</label>
                                         </div>
 
@@ -105,7 +108,7 @@
                                                    name="advisorTotal_students[]"
                                                    min="0"
                                                    step="any"
-                                                   value="{{ $singleAdvisor['count'] }}"
+                                                   value="{{ $singleAdvisor->count }}"
                                                    class="form-control"
                                                    required>
                                         </div>

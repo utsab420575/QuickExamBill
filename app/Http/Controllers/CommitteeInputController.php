@@ -75,16 +75,20 @@ class CommitteeInputController extends Controller
         //return $all_theory_sessional_courses_with_student_count;
         //all student advisor in specific student
         $all_advisor_with_student_count = ApiData::getSessionWiseStudentAdvisor($sid);
-        //active coordinator(we will give it internal database)
-        //$co_ordinator_arch = ApiData::getCoOrdinator();
 
+        //active coordinator(we will give it internal database)
+        $teacher_coordinator = ApiData::getCoOrdinator();
+
+        //active coordinator(we will give it internal database)
+        $teacher_head = ApiData::getHead();
+        //return $teacher_head;
 
         // return response()->json(['$all_course_with_teacher'=>$all_course_with_teacher]);
         /*return response()->json(['head'=>$all_course_with_class_test_teacher]);*/
         return view('committee_input.regular_form.regular_session_form')
             ->with('sid',$sid)
-            /*->with('teacher_head', $teacher_head)*/
-            /*  ->with('teacher_coordinator', $teacher_coordinator)*/
+            ->with('teacher_head', $teacher_head)
+           ->with('teacher_coordinator', $teacher_coordinator)
             ->with('session_info', $session_info)
             ->with('groupedTeachers', $groupedTeachers)
             ->with('teachers', $teachers)

@@ -200,25 +200,16 @@
         @include('committee_input.patritals.regular.list_printing_question_paper')
         @include('committee_input.patritals.regular.list_comparison_question_paper')
         @include('committee_input.patritals.regular.list_advisor_student')
-
-        {{--
-
-
-
-
-
-
-
-        @include('committee_input.patritals.regular.list_advisor_student')
         @include('committee_input.patritals.regular.list_verified_final_graduation_result')
-        @include('committee_input.patritals.regular.list_teachers_conducted_central_oral_exam')
+        @include('committee_input.patritals.regular.list_conducted_central_oral_examination')
         @include('committee_input.patritals.regular.list_involved_survey')
         @include('committee_input.patritals.regular.list_conducted_priliminary_viva')
         @include('committee_input.patritals.regular.list_examined_thesis_project')
         @include('committee_input.patritals.regular.list_conducted_oral_examination')
         @include('committee_input.patritals.regular.list_supervised_thesis_project')
         @include('committee_input.patritals.regular.list_honorarium_coordinator')
-        @include('committee_input.patritals.regular.list_honorarium_chairman')--}}
+        @include('committee_input.patritals.regular.list_honorarium_chairman')
+
 
 
         <!-- end: page -->

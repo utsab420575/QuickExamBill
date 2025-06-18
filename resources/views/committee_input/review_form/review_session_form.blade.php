@@ -89,12 +89,13 @@
         @php
             $rate_head = \App\Models\RateHead::where('order_no', '=','8.a')->first();
             $session = \App\Models\Session::where('ugr_id', $sid)->where('exam_type_id', 2)->first();
-            $rate_amount = $session
-                ? \App\Models\RateAmount::where('session_id', $session->id)
-                ->where('saved', 1)
-                ->where('rate_head_id',$rate_head->id)
-                ->where('exam_type_id', 2)->first()
-                : null;
+            $rate_amount = ($session && $rate_head)
+               ? \App\Models\RateAmount::where('session_id', $session->id)
+                   ->where('saved', 1)
+                   ->where('rate_head_id', $rate_head->id)
+                   ->where('exam_type_id', 2)
+                   ->first()
+               : null;
         @endphp
 
         @if(!$rate_amount)
@@ -108,12 +109,13 @@
         @php
             $rate_head = \App\Models\RateHead::where('order_no', '=','10.a')->first();
             $session = \App\Models\Session::where('ugr_id', $sid)->where('exam_type_id', 2)->first();
-            $rate_amount = $session
-                ? \App\Models\RateAmount::where('session_id', $session->id)
-                ->where('saved', 1)
-                ->where('rate_head_id',$rate_head->id)
-                ->where('exam_type_id', 2)->first()
-                : null;
+            $rate_amount = ($session && $rate_head)
+               ? \App\Models\RateAmount::where('session_id', $session->id)
+                   ->where('saved', 1)
+                   ->where('rate_head_id', $rate_head->id)
+                   ->where('exam_type_id', 2)
+                   ->first()
+               : null;
         @endphp
 
         @if(!$rate_amount)
@@ -129,13 +131,10 @@
         @include('committee_input.patritals.review.list_printing_question_paper')
         @include('committee_input.patritals.review.list_comparison_question_paper')
 
-
-        {{--
-             @include('committee_input.patritals.review.list_honorarium_chairman')
+        @include('committee_input.patritals.review.list_honorarium_chairman')
 
 
 
-       --}}
 
 
         <!-- end: page -->

@@ -73,7 +73,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/regular/printing/question/committee/store', 'storePrintingQuestion')->name('committee.input.regular.printing.question.committee.store');
         Route::post('/regular/comparison/committee/store', 'storeReviewComparisonCommittee')->name('committee.input.regular.comparison.committee.store');
         Route::post('/regular/advisor/student/store', 'storeAdvisorStudent')->name('committee.input.regular.advisor.student.store');
-
     });
 
     //For Review Session
