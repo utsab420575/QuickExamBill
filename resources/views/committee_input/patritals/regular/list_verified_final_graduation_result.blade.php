@@ -19,7 +19,7 @@
     </style>
 @endpush
 
-<form id="form-list-of-verified-graduation-result" action="{{ route('committee.input.verified.computerized.grade.sheet.store') }}" method="POST">
+<form id="form-list-of-verified-graduation-result" action="{{ route('verified.final.graduation.result.store') }}" method="POST">
     @csrf
     <input type="hidden" value="{{$sid}}" name="sid">
     <div class="row mb-5">
@@ -34,7 +34,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="final_result_per_student_rate">Per Student Per Result Rate</label>
-                                <input type="number"  name="final_result_per_student_rate" step="any" class="form-control" placeholder="Enter per student per result rate" required>
+                                <input type="number"  name="final_result_per_student_rate" value="700" step="any" class="form-control" placeholder="Enter per student per result rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
@@ -202,7 +202,15 @@
                         },
                         body: formData
                     })
-                        .then(response => response.json())
+                        .then(response => {
+                            if (!response.ok) {
+                                // Return the error JSON and throw it
+                                return response.json().then(err => {
+                                    throw new Error(err.message || 'Unknown error occurred.');
+                                });
+                            }
+                            return response.json(); // if response is OK
+                        })
                         .then(data => {
                             console.log("Server response:", data); // Debug log
                             Swal.fire('Success!', data.message, 'success');
@@ -222,7 +230,11 @@
                         })
                         .catch(error => {
                             console.error('Error:', error);
-                            Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+                            Swal.fire({
+                                title: 'Error!',
+                                text: error.message||'Something went wrong. Please try again.',
+                                icon: 'error'
+                            });
                         });
                 }
             });

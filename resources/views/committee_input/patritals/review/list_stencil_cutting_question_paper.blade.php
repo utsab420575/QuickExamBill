@@ -33,8 +33,8 @@
                     <div class="row mb-2">
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
-                                <label for="stencil-cutting-question-paper-rate">Per Stencil Rate</label>
-                                <input type="number"  name="stencil-cutting-question-paper-rate" value="115" step="any" class="form-control" placeholder="Enter per student per thesis/project rate" required>
+                                <label for="stencil_cutting_question_paper_rate">Per Stencil Rate</label>
+                                <input type="number"  name="stencil_cutting_question_paper_rate" value="115" step="any" class="form-control" placeholder="Enter per student per thesis/project rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
@@ -99,7 +99,7 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <input type="number" name="stencil_cutting_committee_amounts[]" class="form-control amount-input" placeholder="Provide Amount" disabled required>
+                        <input type="number" name="stencil_cutting_committee_amounts[]" step="any" class="form-control amount-input" placeholder="Provide Amount" disabled required>
                     </div>
                 </div>
             `;
@@ -239,7 +239,11 @@
                         })
                         .catch(error => {
                             console.error('Error:', error);
-                            Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+                            Swal.fire({
+                                title: 'Error!',
+                                text: error.message||'Something went wrong. Please try again.',
+                                icon: 'error'
+                            });
                         });
                 }
             });

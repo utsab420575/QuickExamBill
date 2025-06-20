@@ -19,7 +19,7 @@
     </style>
 @endpush
 
-<form id="form-list-of-comparison-question-paper" action="{{ route('committee.input.review.comparison.committee.store') }}" method="POST">
+<form id="form-list-of-comparison-question-paper" action="{{ route('committee.input.comparison.committee.store') }}" method="POST">
     @csrf
     <input type="hidden" value="{{$sid}}" name="sid">
     <div class="row mb-5">
@@ -33,8 +33,8 @@
                     <div class="row mb-2">
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
-                                <label for="comparison-question-paper-rate">Per Question Rate</label>
-                                <input type="number"  name="comparison-question-paper-rate" id="comparison-question-paper-rate" value="1350" step="any" class="form-control" placeholder="Enter per question rate" required>
+                                <label for="comparison_question_paper_rate">Per Question Rate</label>
+                                <input type="number"  name="comparison_question_paper_rate" id="comparison-question-paper-rate" value="1350" step="any" class="form-control" placeholder="Enter per question rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
@@ -89,7 +89,7 @@
                     </div>
                     <div class="col-md-6">
                         <!--1st change: data-plugin-selectTwo class="form-control teacher-select populate"-->
-                        <select name="comparision_question_committee_teacher_ids[]" data-plugin-selectTwo class="form-control teacher-select populate" data-row="${comparisonQuestionRowCount}" disabled required>
+                        <select name="comparison_question_committee_teacher_ids[]" data-plugin-selectTwo class="form-control teacher-select populate" data-row="${comparisonQuestionRowCount}" disabled required>
                             <option value="">-- Select Teacher --</option>
                             ${comparisonQuestionStaffTeachers.map(t => `<option
                                                 value="${t.id}">
@@ -99,7 +99,7 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <input type="number" name="comparision_question_committee_amounts[]" class="form-control amount-input" placeholder="Provide Amount" disabled required>
+                        <input type="number" name="comparison_question_committee_amounts[]" class="form-control amount-input"  step="any" placeholder="Provide Amount" disabled required>
                     </div>
                 </div>
             `;
@@ -239,7 +239,11 @@
                         })
                         .catch(error => {
                             console.error('Error:', error);
-                            Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+                            Swal.fire({
+                                title: 'Error!',
+                                text: error.message||'Something went wrong. Please try again.',
+                                icon: 'error'
+                            });
                         });
                 }
             });

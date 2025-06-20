@@ -67,12 +67,15 @@ Route::middleware('auth')->group(function () {
         Route::post('/regular/scrutinizers/sessional/grade/sheet/store','storeScrutinizersSessionalGradeSheet')->name('committee.input.scrutinizers.sessional.grade.sheet.store');
         Route::post('/regular/prepare/computerized/result/store','storePreparedComputerizedResult')->name('committee.input.prepare.computerized.result.store');
         Route::post('/regular/verified/computerized/grade/sheet/store', 'storeVerifiedComputerizedGradeSheet')->name('committee.input.verified.computerized.grade.sheet.store');
-        Route::post('/regular/stencil/cutting/committee/store', 'storeStencilCuttingCommittee')->name('committee.input.stencil.cutting.committee.store');
+        Route::post('/regular/conducted/central/oral/exam/store', 'storeConductedCentralOralExam')->name('conducted.central.oral.exam.store');
 
-        Route::post('/regular/stencil/cutting/committee/store', 'storeStencilCuttingCommittee')->name('committee.input.regular.stencil.cutting.committee.store');
-        Route::post('/regular/printing/question/committee/store', 'storePrintingQuestion')->name('committee.input.regular.printing.question.committee.store');
-        Route::post('/regular/comparison/committee/store', 'storeReviewComparisonCommittee')->name('committee.input.regular.comparison.committee.store');
-        Route::post('/regular/advisor/student/store', 'storeAdvisorStudent')->name('committee.input.regular.advisor.student.store');
+        Route::post('/regular/stencil/cutting/committee/store', 'storeStencilCuttingCommittee')->name('committee.input.stencil.cutting.committee.store');
+        Route::post('/regular/printing/question/committee/store', 'storePrintingQuestion')->name('committee.input.printing.question.committee.store');
+        Route::post('/regular/comparison/committee/store', 'storeComparisonCommittee')->name('committee.input.comparison.committee.store');
+        Route::post('/regular/advisor/student/store', 'storeAdvisorStudent')->name('committee.input.advisor.student.store');
+        Route::post('/regular/verified/final/graduation/result/store', 'storeVerifiedFinalGraduationResult')->name('verified.final.graduation.result.store');
+        Route::post('/regular/conducted/central/oral/exam/store', 'storeConductedCentralOralExam')->name('conducted.central.oral.exam.store');
+
     });
 
     //For Review Session
@@ -90,7 +93,7 @@ Route::middleware('auth')->group(function () {
 
         Route::post('/review/stencil/cutting/committee/store', 'storeStencilCuttingCommittee')->name('committee.input.review.stencil.cutting.committee.store');
         Route::post('/review/printing/question/committee/store', 'storePrintingQuestion')->name('committee.input.review.printing.question.committee.store');
-        Route::post('/review/comparison/committee/store', 'storeReviewComparisonCommittee')->name('committee.input.review.comparison.committee.store');
+        Route::post('/review/comparison/committee/store', 'storeComparisonCommittee')->name('committee.input.review.comparison.committee.store');
     });
 
 
@@ -98,14 +101,14 @@ Route::middleware('auth')->group(function () {
 
 
 
-
+/*
     Route::post('/scrutinizers/sessional/grade/sheet/store', [StaffController::class, 'storeScrutinizersSessionalGradeSheet'])->name('scrutinizers.sessional.grade.sheet.store');
     Route::post('/prepare/computerized/result/store', [StaffController::class, 'storePreparedComputerizedResult'])->name('prepare.computerized.result.store');
     Route::post('/verified/computerized/result/store', [StaffController::class, 'storeVerifiedComputerizedResult'])->name('verified.computerized.result.store');
     Route::post('/supervision/under/chairman/exam/committee/store', [StaffController::class, 'storeSupervisionUnderChairmanExamCommittee'])->name('supervision.under.chairman.exam.committee.store');
     Route::post('/advisor/student/store', [StaffController::class, 'storeAdvisorStudent'])->name('advisor.student.store');
-    Route::post('/verified/final/graduation/result/store', [StaffController::class, 'storeVerifiedFinalGraduationResult'])->name('verified.final.graduation.result.store');
-    Route::post('/conducted/central/oral/exam/store', [StaffController::class, 'storeConductedCentralOralExam'])->name('conducted.central.oral.exam.store');
+    Route::post('/verified/final/graduation/result/store', [StaffController::class, 'storeVerifiedFinalGraduationResult'])->name('verified.final.graduation.result.store');*/
+
     Route::post('/involved/survey/store', [StaffController::class, 'storeInvolvedSurvey'])->name('involved.survey.store');
     Route::post('/conducted/preliminary/viva/store', [StaffController::class, 'storeConductedPreliminaryViva'])->name('conducted.preliminary.viva.store');
     Route::post('/conducted/oral/examination/store', [StaffController::class, 'storeConductedOralExamination'])->name('conducted.oral.examination.store');

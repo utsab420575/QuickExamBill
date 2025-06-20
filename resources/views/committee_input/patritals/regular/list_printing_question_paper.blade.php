@@ -19,7 +19,7 @@
     </style>
 @endpush
 
-<form id="form-list-of-printing-question-paper" action="{{ route('committee.input.review.printing.question.committee.store') }}" method="POST">
+<form id="form-list-of-printing-question-paper" action="{{ route('committee.input.printing.question.committee.store') }}" method="POST">
     @csrf
     <input type="hidden" value="{{$sid}}" name="sid">
     <div class="row mb-5">
@@ -33,8 +33,8 @@
                     <div class="row mb-2">
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
-                                <label for="printing-question-paper-rate">Per Stencil Rate</label>
-                                <input type="number"  name="printing-question-paper-rate" id="printing-question-paper-rate" value="35" step="any" class="form-control" placeholder="Enter per stencil rate" required>
+                                <label for="printing_question_paper_rate">Per Stencil Rate</label>
+                                <input type="number"  name="printing_question_paper_rate" id="printing-question-paper-rate" value="35" step="any" class="form-control" placeholder="Enter per stencil rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
@@ -99,7 +99,7 @@
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <input type="number" name="printing_question_committee_amounts[]" class="form-control amount-input" placeholder="Provide Amount" disabled required>
+                        <input type="number" name="printing_question_committee_amounts[]" class="form-control amount-input"  step="any" placeholder="Provide stencil number" disabled required>
                     </div>
                 </div>
             `;
@@ -239,7 +239,11 @@
                         })
                         .catch(error => {
                             console.error('Error:', error);
-                            Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+                            Swal.fire({
+                                title: 'Error!',
+                                text: error.message||'Something went wrong. Please try again.',
+                                icon: 'error'
+                            });
                         });
                 }
             });

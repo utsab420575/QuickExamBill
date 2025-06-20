@@ -76,12 +76,18 @@ class CommitteeInputController extends Controller
         //all student advisor in specific student
         $all_advisor_with_student_count = ApiData::getSessionWiseStudentAdvisor($sid);
 
-        //active coordinator(we will give it internal database)
+        //active coordinator(we will
+        //
+        //
+        // give it internal database)
         $teacher_coordinator = ApiData::getCoOrdinator();
 
         //active coordinator(we will give it internal database)
         $teacher_head = ApiData::getHead();
         //return $teacher_head;
+
+        //total student
+        $totalStudentInSession=ApiData::getTotalStudentInSession($sid);
 
         // return response()->json(['$all_course_with_teacher'=>$all_course_with_teacher]);
         /*return response()->json(['head'=>$all_course_with_class_test_teacher]);*/
@@ -96,7 +102,8 @@ class CommitteeInputController extends Controller
             ->with('all_course_with_class_test_teacher', $all_course_with_teacher)
             ->with('all_sessional_course_with_teacher', $all_sessional_course_with_teacher)
             ->with('all_theory_sessional_courses_with_student_count', $all_theory_sessional_courses_with_student_count)
-            ->with('all_advisor_with_student_count', $all_advisor_with_student_count);
+            ->with('all_advisor_with_student_count', $all_advisor_with_student_count)
+            ->with('totalStudentInSession', $totalStudentInSession);
     }
 
 
@@ -1778,6 +1785,906 @@ class CommitteeInputController extends Controller
         }
     }
 
+    public function storeVerifiedComputerizedGradeSheet(Request $request)
+    {
+        $teacherIds = $request->input('verified_computerized_result_teachers', []);
+        $totalStudents = (int) $request->input('verified_computerized_result_total_students');
+        $sessionId = $request->sid;
+        $verified_computerized_grade_sheet_rate = $request->verified_computerized_grade_sheet_rate;
+        $exam_type=1;
+
+        Log::info('📥 Received Verified Computerized Result Data', [
+            'session_id' => $sessionId,
+            'teacher_ids' => $teacherIds,
+            'total_students' => $totalStudents,
+            'rate' => $verified_computerized_grade_sheet_rate
+        ]);
+
+        $errors = [];
+
+        // Validation
+        if (empty($teacherIds)) {
+            $errors['verified_computerized_result_teachers'] = 'Select at least one teacher.';
+        }
+
+        if (!$totalStudents || $totalStudents < 1) {
+            $errors['verified_computerized_result_total_students'] = 'Enter a valid number of students.';
+        }
+
+        if (!empty($errors)) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => $errors
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Step 1: RateHead
+            $rateHead = RateHead::firstOrNew([
+                'order_no' => '8.c',
+            ]);
+
+            if(!$rateHead->exist){
+                $rateHead->head = 'Grade Sheeets/GPA Verification';
+                $rateHead->dist_type = 'Share';
+                $rateHead->enable_min = 0;
+                $rateHead->enable_max = 0;
+                $rateHead->is_course = 0;
+                $rateHead->is_student_count = 1;
+                $rateHead->marge_with = null;
+                $rateHead->status = 1;
+                $rateHead->save();
+                Log::info('✅ RateHead created or found:', $rateHead->toArray());
+            }
+
+
+            Log::info('✅ RateHead created or updated.', $rateHead->toArray());
+
+            // Step 2: Get or create session
+            $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+
+            // Step 3: RateAmount
+            $rateAmount = RateAmount::firstOrNew([
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session_info->id,
+                'exam_type_id' => $exam_type,
+            ]);
+
+            if (!$rateAmount->exists) {
+                $rateAmount->default_rate = $verified_computerized_grade_sheet_rate; // Set your rate here
+                $rateAmount->exam_type_id = $exam_type;
+                $rateAmount->saved = 1;
+                $rateAmount->save();
+                Log::info('✅ RateAmount created.', $rateAmount->toArray());
+            }
+
+            // Step 4: Assign to teachers
+            $total_teacher=count($teacherIds);
+            $studentsPerTeacher = $totalStudents / count($teacherIds);
+
+            foreach ($teacherIds as $teacherId) {
+                $calculatedAmount = $studentsPerTeacher * $rateAmount->default_rate;
+                // $totalAmount = max($rateAmount->min_rate ?? 0, $calculatedAmount);
+
+
+                Log::info('📘 Preparation Of Scrutinziing Sessoinal Store', [
+                    'teacher_id'   => $teacherId,
+                    'rate_head_id' => $rateHead->id,
+                    'session_id'   => $session_info->id,
+                    'no_of_items'  => $studentsPerTeacher,
+                    'total_amount' => $calculatedAmount,
+
+
+                    'total_students' => $totalStudents,
+                    'total_teachers'  => $total_teacher,
+                    'exam_type_id' => $exam_type
+                ]);
+                $rateAssign = new RateAssign();
+                $rateAssign->teacher_id = $teacherId;
+                $rateAssign->rate_head_id = $rateHead->id;
+                $rateAssign->session_id = $session_info->id;
+                $rateAssign->no_of_items = $studentsPerTeacher;
+                $rateAssign->total_amount = $calculatedAmount;
+                $rateAssign->exam_type_id = $exam_type;
+
+
+
+
+                //total student & total teacher
+                $rateAssign->total_students = $totalStudents;
+                $rateAssign->total_teachers = $total_teacher;
+
+                $rateAssign->save();
+            }
+
+            DB::commit();
+
+            Log::info('✅ Verified Computerized Result Assignments saved.', [
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session_info->id,
+            ]);
+
+            return response()->json([
+                'message' => 'Verified Computerized Result saved successfully.',
+                'teacher_ids' => $teacherIds,
+                'total_students' => $totalStudents
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ Error saving Verified Computerized Result: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'An error occurred while saving data.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function storeStencilCuttingCommittee(Request $request)
+    {
+        // Log all request data with a custom message
+        Log::info('Stencill Committee', [
+            'request_data' => $request->all()  // Log all input data from the request
+        ]);
+        $teacherIds = $request->input('stencil_cutting_committee_teacher_ids'); // array
+        $number_of_stencil = $request->input('stencil_cutting_committee_amounts');        // array (indexed)
+        $sessionId = $request->sid;
+        $per_stencil_cutting_rate=$request->stencil_cutting_question_paper_rate;
+        $exam_type=1;
+
+
+        Log::info('📥 Received Stencill Committee Data', [
+            'teacherId' => $teacherIds,
+            'number_of_stencil' => $number_of_stencil,
+            'rate' => $per_stencil_cutting_rate,
+            'sessionId' => $sessionId,
+        ]);
+
+        // Step 1: Validate teacher inputs
+        if (empty($teacherIds) || !is_array($teacherIds) || count($teacherIds) !== count($number_of_stencil)) {
+            return response()->json([
+                'message' => 'Invalid data submitted. Please select teachers and their respective student count.'
+            ], 422);
+        }
+
+
+        Log::info('pass out1');
+        // Step 2: Check for duplicates
+        if (count($teacherIds) !== count(array_unique($teacherIds))) {
+            return response()->json([
+                'message' => 'Duplicate teacher selection detected. Please choose unique teachers.'
+            ], 422);
+        }
+
+
+
+
+        Log::info('pass out2');
+        DB::beginTransaction();
+
+
+
+        try {
+            // Step 3: Ensure RateHead exists
+            $rateHead = RateHead::where('order_no', '12.a')->first();
+            Log::info('rateHead', $rateHead ? $rateHead->toArray() : ['rateHead' => null]);
+            if (!$rateHead) {
+                $rateHead = new RateHead();
+                $rateHead->head = 'Question';
+                $rateHead->sub_head='Stencil Cutting';
+                $rateHead->order_no = '12.a';
+                $rateHead->is_course = 1;
+                $rateHead->dist_type = 'Individual';
+                $rateHead->is_student_count = 1;
+                $rateHead->marge_with = null;
+                $rateHead->status = 1;
+                $rateHead->save();
+                if ($rateHead->save()) {
+                    Log::info('✅ New RateHead created', $rateHead->toArray());
+                } else {
+                    Log::error('❌ Failed to save RateHead');
+                }
+            }
+
+            //ensure session exist
+            $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+
+
+
+
+
+            // Step 4: Ensure  RateAmount exists(Rate Amount Exist for Rate Head=1)
+            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
+                ->where('session_id', $session_info->id)
+                ->where('exam_type_id',$exam_type)
+                ->first();
+
+            Log::info('rateAmount', $rateAmount ? $rateAmount->toArray() : ['rateAmount' => null]);
+            if (!$rateAmount) {
+                $rateAmount = new RateAmount();
+                $rateAmount->default_rate = $per_stencil_cutting_rate;
+                $rateAmount->session_id = $session_info->id;
+                $rateAmount->rate_head_id = $rateHead->id;
+                $rateAmount->exam_type_id = $exam_type;
+                $rateAmount->saved = 1;
+                if ($rateAmount->save()) {
+                    Log::info('✅ New RateAmount created', $rateAmount->toArray());
+                } else {
+                    Log::error('❌ Failed to save RateHead');
+                }
+            }
+
+
+
+            // Step 5: Loop and store teacher-wise rate_assign
+            foreach ($teacherIds as $index => $teacherId) {
+                $stencil_count=$number_of_stencil[$index];
+                $calculatedAmount =  $stencil_count * $rateAmount->default_rate;
+
+                if ($calculatedAmount <= 0) {
+                    //  DB::rollBack();
+                    return response()->json([
+                        'message' => "Invalid amount for teacher ID: $teacherId."
+                    ], 422);
+                }
+
+                Log::info('📘 Stencill Cutting Store', [
+                    'teacher_id' => $teacherId,
+                    'rate_head_id' => $rateHead->id,
+                    'session_id' => $session_info->id,
+                    'exam_type_id'=>$exam_type,
+                    'no_of_items' => $stencil_count,
+                    'total_amount' => $calculatedAmount,
+                ]);
+
+                RateAssign::create([
+                    'teacher_id' => $teacherId,
+                    'rate_head_id' => $rateHead->id,
+                    'session_id' => $session_info->id,
+                    'exam_type_id'=>$exam_type,
+                    'no_of_items' => $stencil_count,
+                    'total_amount' => $calculatedAmount,
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Stencill cutting data stored successfully.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::info($e->getMessage());
+            return response()->json([
+                'message' => 'Something went wrong.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    public function storePrintingQuestion(Request $request)
+    {
+        // Log all request data with a custom message
+        Log::info('Printing Question', [
+            'request_data' => $request->all()  // Log all input data from the request
+        ]);
+        $teacherIds = $request->input('print_question_committee_teacher_ids'); // array
+        $number_of_stencil = $request->input('printing_question_committee_amounts');        // array (indexed)
+        $sessionId = $request->sid;
+        $per_printing_question_paper_rate=$request->printing_question_paper_rate;
+        $exam_type=1;
+
+
+        Log::info('📥 Received Stencill Committee Data', [
+            'teacherId' => $teacherIds,
+            'number_of_stencil' => $number_of_stencil,
+            'rate' => $per_printing_question_paper_rate,
+            'sessionId' => $sessionId,
+        ]);
+
+        // Step 1: Validate teacher inputs
+        if (empty($teacherIds) || !is_array($teacherIds) || count($teacherIds) !== count($number_of_stencil)) {
+            return response()->json([
+                'message' => 'Invalid data submitted. Please select teachers and their respective student count.'
+            ], 422);
+        }
+
+
+        Log::info('pass out1');
+        // Step 2: Check for duplicates
+        if (count($teacherIds) !== count(array_unique($teacherIds))) {
+            return response()->json([
+                'message' => 'Duplicate teacher selection detected. Please choose unique teachers.'
+            ], 422);
+        }
+
+
+
+
+        Log::info('pass out2');
+        DB::beginTransaction();
+        try {
+            // Step 3: Ensure RateHead exists
+            $rateHead = RateHead::where('order_no', '12.b')->first();
+            Log::info('rateHead', $rateHead ? $rateHead->toArray() : ['rateHead' => null]);
+            if (!$rateHead) {
+                $rateHead = new RateHead();
+                $rateHead->head = 'Question';
+                $rateHead->sub_head='Printing';
+                $rateHead->order_no = '12.b';
+                $rateHead->is_course = 0;
+                $rateHead->dist_type = 'Individual';
+                $rateHead->is_student_count = 1;
+                $rateHead->marge_with = null;
+                $rateHead->status = 1;
+                $rateHead->save();
+                if ($rateHead->save()) {
+                    Log::info('✅ New RateHead created', $rateHead->toArray());
+                } else {
+                    Log::error('❌ Failed to save RateHead');
+                }
+            }
+
+            //ensure session exist
+            $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+
+
+
+
+
+            // Step 4: Ensure  RateAmount exists(Rate Amount Exist for Rate Head=1)
+            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
+                ->where('session_id', $session_info->id)
+                ->where('exam_type_id',$exam_type)
+                ->first();
+
+            Log::info('rateAmount', $rateAmount ? $rateAmount->toArray() : ['rateAmount' => null]);
+            if (!$rateAmount) {
+                $rateAmount = new RateAmount();
+                $rateAmount->default_rate = $per_printing_question_paper_rate;
+                $rateAmount->session_id = $session_info->id;
+                $rateAmount->rate_head_id = $rateHead->id;
+                $rateAmount->exam_type_id = $exam_type;
+                $rateAmount->saved = 1;
+                if ($rateAmount->save()) {
+                    Log::info('✅ New RateAmount created', $rateAmount->toArray());
+                } else {
+                    Log::error('❌ Failed to save RateHead');
+                }
+            }
+
+
+
+            // Step 5: Loop and store teacher-wise rate_assign
+            foreach ($teacherIds as $index => $teacherId) {
+                $stencil_count=$number_of_stencil[$index];
+                $calculatedAmount =  $stencil_count * $rateAmount->default_rate;
+
+                if ($calculatedAmount <= 0) {
+                    //  DB::rollBack();
+                    return response()->json([
+                        'message' => "Invalid amount for teacher ID: $teacherId."
+                    ], 422);
+                }
+
+                Log::info('📘 Question Comparison Store', [
+                    'teacher_id' => $teacherId,
+                    'rate_head_id' => $rateHead->id,
+                    'session_id' => $session_info->id,
+                    'exam_type_id'=>$exam_type,
+                    'no_of_items' => $stencil_count,
+                    'total_amount' => $calculatedAmount,
+                ]);
+
+                RateAssign::create([
+                    'teacher_id' => $teacherId,
+                    'rate_head_id' => $rateHead->id,
+                    'session_id' => $session_info->id,
+                    'exam_type_id'=>$exam_type,
+                    'no_of_items' => $stencil_count,
+                    'total_amount' => $calculatedAmount,
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Stencill cutting data stored successfully.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::info($e->getMessage());
+            return response()->json([
+                'message' => 'Something went wrong.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeComparisonCommittee(Request $request)
+    {
+        // Log all request data with a custom message
+        Log::info('Comparison,Correction Committee', [
+            'request_data' => $request->all()  // Log all input data from the request
+        ]);
+        $teacherIds = $request->input('comparison_question_committee_teacher_ids'); // array
+        $number_of_correction = $request->input('comparison_question_committee_amounts');        // array (indexed)
+        $sessionId = $request->sid;
+        $per_comparsion_rate=$request->comparison_question_paper_rate;
+        $exam_type=1;
+
+
+        Log::info('📥 Received Question Comparison Committee Data', [
+            'teacherId' => $teacherIds,
+            'number_of_stencil' => $number_of_correction,
+            'rate' => $per_comparsion_rate,
+            'sessionId' => $sessionId,
+        ]);
+
+        // Step 1: Validate teacher inputs
+        if (empty($teacherIds) || !is_array($teacherIds) || count($teacherIds) !== count($number_of_correction)) {
+            return response()->json([
+                'message' => 'Invalid data submitted. Please select teachers and their respective student count.'
+            ], 422);
+        }
+
+
+        Log::info('pass out1');
+        // Step 2: Check for duplicates
+        if (count($teacherIds) !== count(array_unique($teacherIds))) {
+            return response()->json([
+                'message' => 'Duplicate teacher selection detected. Please choose unique teachers.'
+            ], 422);
+        }
+
+
+
+
+        Log::info('pass out2');
+        DB::beginTransaction();
+
+
+
+        try {
+            // Step 3: Ensure RateHead exists
+            $rateHead = RateHead::where('order_no', 11)->first();
+            Log::info('rateHead', $rateHead ? $rateHead->toArray() : ['rateHead' => null]);
+            if (!$rateHead) {
+                $rateHead = new RateHead();
+                $rateHead->head = 'Question Typing,Sketching & Misc.';
+                $rateHead->order_no = '11';
+                $rateHead->is_course = 1;
+                $rateHead->dist_type = 'Individual';
+                $rateHead->is_student_count = 1;
+                $rateHead->marge_with = null;
+                $rateHead->status = 1;
+                $rateHead->save();
+                if ($rateHead->save()) {
+                    Log::info('✅ New RateHead created', $rateHead->toArray());
+                } else {
+                    Log::error('❌ Failed to save RateHead');
+                }
+            }
+
+            //ensure session exist
+            $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+
+
+
+
+
+            // Step 4: Ensure  RateAmount exists(Rate Amount Exist for Rate Head=1)
+            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
+                ->where('session_id', $session_info->id)
+                ->where('exam_type_id',$exam_type)
+                ->first();
+
+            Log::info('rateAmount', $rateAmount ? $rateAmount->toArray() : ['rateAmount' => null]);
+            if (!$rateAmount) {
+                $rateAmount = new RateAmount();
+                $rateAmount->default_rate = $per_comparsion_rate;
+                $rateAmount->session_id = $session_info->id;
+                $rateAmount->rate_head_id = $rateHead->id;
+                $rateAmount->exam_type_id = $exam_type;
+                $rateAmount->saved = 1;
+                if ($rateAmount->save()) {
+                    Log::info('✅ New RateAmount created', $rateAmount->toArray());
+                } else {
+                    Log::error('❌ Failed to save RateHead');
+                }
+            }
+
+
+
+            // Step 5: Loop and store teacher-wise rate_assign
+            foreach ($teacherIds as $index => $teacherId) {
+                $question_comparison_count=$number_of_correction[$index];
+                $calculatedAmount =  $question_comparison_count * $rateAmount->default_rate;
+
+                if ($calculatedAmount <= 0) {
+                    //  DB::rollBack();
+                    return response()->json([
+                        'message' => "Invalid amount for teacher ID: $teacherId."
+                    ], 422);
+                }
+
+                Log::info('📘 Question Comparison Store', [
+                    'teacher_id' => $teacherId,
+                    'rate_head_id' => $rateHead->id,
+                    'session_id' => $session_info->id,
+                    'exam_type_id'=>$exam_type,
+                    'no_of_items' => $question_comparison_count,
+                    'total_amount' => $calculatedAmount,
+                ]);
+
+                RateAssign::create([
+                    'teacher_id' => $teacherId,
+                    'rate_head_id' => $rateHead->id,
+                    'session_id' => $session_info->id,
+                    'exam_type_id'=>$exam_type,
+                    'no_of_items' => $question_comparison_count,
+                    'total_amount' => $calculatedAmount,
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Question Committee data stored successfully.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::info($e->getMessage());
+            return response()->json([
+                'message' => 'Something went wrong.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeAdvisorStudent(Request $request)
+    {
+        $teacherIds = $request->input('advisorTeacherIds', []);
+        $studentCounts = $request->input('advisorTotal_students', []);
+        $sessionId = $request->sid;
+        $advisor_per_student_rate = $request->advisor_per_student_rate;
+        $exam_type=1;
+
+        Log::info('📥 Received Prepared Computerized Result Data', [
+            'session_id' => $sessionId,
+            'teacher_data' => $teacherIds,
+            'student_data' => $studentCounts,
+            'rate' => $advisor_per_student_rate
+        ]);
+
+
+        $errors = [];
+
+        // ✅ Validation
+        if (empty($teacherIds) || empty($studentCounts)) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => [
+                    'advisorTeacherIds' => 'Teacher IDs are required.',
+                    'advisorTotal_students' => 'Student counts are required.',
+                ]
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // ✅ Step 1: Create or fetch RateHead
+            $rateHead = RateHead::where('order_no', '13')
+                ->first();
+
+            if (!$rateHead) {
+                $rateHead = new RateHead();
+                $rateHead->order_no = 13;
+                $rateHead->head = 'Advisor Fee';
+                $rateHead->dist_type = 'Individual';
+                $rateHead->is_course = 0;
+                $rateHead->is_student_count = 1;
+                $rateHead->marge_with = null;
+                $rateHead->status = 1;
+                $rateHead->save();
+                Log::info('✅ RateHead Created or Fetched (Advisor-Student)', $rateHead->toArray());
+            }
+
+            Log::info('✅ RateHead confirmed', $rateHead->toArray());
+
+            // ✅ Step 2: Create or fetch Session
+            $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+
+            // ✅ Step 3: Create or fetch RateAmount
+            $rateAmount = RateAmount::firstOrNew([
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'exam_type_id' => $exam_type
+            ]);
+
+            if (!$rateAmount->exists) {
+                $rateAmount->default_rate = $advisor_per_student_rate; // Example rate per student
+                $rateAmount->saved = 1;
+                $rateAmount->save();
+
+                Log::info('✅ RateAmount Created (Advisor-Student)', $rateAmount->toArray());
+            }
+
+            // ✅ Step 4: Assign teachers
+            foreach ($teacherIds as $index => $teacherId) {
+                $studentCount = (int) ($studentCounts[$index] ?? 0);
+
+                if ($studentCount > 0) {
+                    //$amount = max($rateAmount->min_rate, $studentCount * $rateAmount->default_rate);
+                    $amount=$studentCount * $rateAmount->default_rate;
+
+
+                    Log::info('📘 Preparation Of Advisor Student', [
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $studentCount,
+                        'total_amount' => $amount,
+
+                        'total_students'=>$studentCount,
+                    ]);
+
+
+                    $rateAssign = RateAssign::create([
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $studentCount,
+                        'total_amount' => $amount,
+                        'total_students'=>$studentCount,
+                        'exam_type_id'=>$exam_type,
+                    ]);
+
+                    Log::info("✅ RateAssign Created for Teacher ID $teacherId", $rateAssign->toArray());
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Advisor-Student assignments saved successfully!',
+                'teacher_ids' => $teacherIds,
+                'student_counts' => $studentCounts
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ Error saving Advisor-Student data: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'An error occurred while saving Advisor-Student data.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeVerifiedFinalGraduationResult(Request $request)
+    {
+        $teacherIds = $request->input('verified_grade_teacher_ids', []);
+        $no_of_students = $request->input('verified_grade_amounts', []);
+        $sessionId = $request->sid;
+        $final_result_per_student_rate=$request->final_result_per_student_rate;
+        $exam_type=1;
+
+
+        Log::info('📥 Received Prepared Computerized Result Data', [
+            'session_id' => $sessionId,
+            'teacher_data' => $teacherIds,
+            'student_data' => $no_of_students,
+            'rate' => $final_result_per_student_rate
+        ]);
+
+
+        if (empty($teacherIds) || empty($no_of_students)) {
+            return response()->json([
+                'message' => 'Teacher IDs and amounts are required.'
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Step 1: Get or create RateHead
+            $rateHead = RateHead::where('order_no', '16')->first();
+
+            if (!$rateHead) {
+                $rateHead = RateHead::create([
+                    'order_no' => 16,
+                    'head' => 'Verified of Final Graduation Result',
+                    'dist_type' => 'Individual',
+                    'enable_min' => 0,
+                    'enable_max' => 0,
+                    'is_course' => 0,
+                    'is_student_count' => 1,
+                    'marge_with' => null,
+                    'status' => 1,
+                ]);
+                Log::info('✅ RateHead Created', $rateHead->toArray());
+            }
+
+            Log::info('✅ RateHead confirmed', $rateHead->toArray());
+            // Step 2: Get or create Session
+            $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+
+            // Step 3: Get or create RateAmount
+            $rateAmount = RateAmount::firstOrNew([
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'exam_type_id' => $exam_type
+            ]);
+
+            if (!$rateAmount->exists) {
+                $rateAmount->default_rate = $final_result_per_student_rate; // Set your rate per student
+                $rateAmount->saved = 1;
+                $rateAmount->save();
+
+                Log::info('✅ RateAmount Created', $rateAmount->toArray());
+            }
+
+            // Step 4: Assign each teacher
+            foreach ($teacherIds as $index => $teacherId) {
+                $studentCount = (int) ($no_of_students[$index] ?? 0);
+
+                if ($studentCount > 0) {
+                    //$totalAmount = max($rateAmount->min_rate, $studentCount * $rateAmount->default_rate);
+                    $totalAmount=$studentCount * $rateAmount->default_rate;
+
+
+                    Log::info('📘 Preparation Of Advisor Student', [
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $studentCount,
+                        'total_amount' => $totalAmount,
+
+                        'total_students'=>$studentCount,
+                    ]);
+
+                    $rateAssign = RateAssign::create([
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $studentCount,
+                        'total_amount' => $totalAmount,
+                        'total_students'=>$studentCount,
+                        'exam_type_id'=>$exam_type,
+                    ]);
+
+                    Log::info("✅ RateAssign created for Teacher ID $teacherId", $rateAssign->toArray());
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Verified Final Graduation Result data saved successfully!',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ Error saving Verified Final Graduation Result: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'An error occurred.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeConductedCentralOralExam(Request $request)
+    {
+        $teacherIds = $request->input('conducted_central_oral_examination_teacher_ids', []);
+        $no_of_students = $request->input('conducted_central_oral_examination_student_amounts', []);
+        $sessionId = $request->sid;
+        $central_examination_thesis_rate = $request->oral_central_exam_thesis_project;
+        $exam_type=1;
+
+        Log::info('📥 Received Prepared Computerized Result Data', [
+            'session_id' => $sessionId,
+            'teacher_data' => $teacherIds,
+            'student_data' => $no_of_students,
+            'rate' => $central_examination_thesis_rate
+        ]);
+
+        if (empty($teacherIds) || empty($no_of_students)) {
+            return response()->json([
+                'message' => 'Teacher IDs and amounts are required.'
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Step 1: Get or create RateHead
+            $rateHead = RateHead::where('order_no', '7.e')->first();
+
+            if (!$rateHead) {
+                $rateHead = RateHead::create([
+                    'order_no' => '7.e',
+                    'head' => 'Sessional',
+                    'sub_head' => 'Central Viva',
+                    'dist_type' => 'Individual',
+                    'enable_min' => 0,
+                    'enable_max' => 0,
+                    'is_course' => 0,
+                    'is_student_count' => 1,
+                    'marge_with' => null,
+                    'status' => 1,
+                ]);
+                Log::info('✅ RateHead Created', $rateHead->toArray());
+            }
+
+            Log::info('✅ RateHead confirmed', $rateHead->toArray());
+
+            // Step 2: Get or create Session
+            $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+
+            // Step 3: Get or create RateAmount
+            $rateAmount = RateAmount::firstOrNew([
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'exam_type_id' => $exam_type
+            ]);
+
+            if (!$rateAmount->exists) {
+                $rateAmount->default_rate = $central_examination_thesis_rate; // Set your rate per student
+                $rateAmount->saved = 1;
+                $rateAmount->save();
+
+                Log::info('✅ RateAmount Created', $rateAmount->toArray());
+            }
+
+            // Step 4: Assign each teacher
+            foreach ($teacherIds as $index => $teacherId) {
+                $studentCount = (int) ($no_of_students[$index] ?? 0);
+
+                if ($studentCount > 0) {
+                    //$totalAmount = max($rateAmount->min_rate, $studentCount * $rateAmount->default_rate);
+                    $totalAmount=$studentCount * $rateAmount->default_rate;
+
+                    Log::info('📘 Preparation Of Advisor Student', [
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $studentCount,
+                        'total_amount' => $totalAmount,
+
+                        'total_students'=>$studentCount,
+                    ]);
+                    $rateAssign = RateAssign::create([
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $studentCount,
+                        'total_amount' => $totalAmount,
+                        'total_students'=>$studentCount,
+                        'exam_type_id'=>$exam_type,
+                    ]);
+
+                    Log::info("✅ RateAssign created for Teacher ID $teacherId", $rateAssign->toArray());
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Verified Cetral Oral Examination saved successfully!',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ Error saving Verified Final Graduation Result: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'An error occurred.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 
 }
 

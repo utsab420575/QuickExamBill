@@ -33,7 +33,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="verified_computerized_grade_sheet_rate">Per Student Rate</label>
-                                <input type="number"  name="verified_computerized_grade_sheet_rate" step="any" class="form-control" placeholder="Enter per student rate" required>
+                                <input type="number"  name="verified_computerized_grade_sheet_rate" value="24" step="any" class="form-control" placeholder="Enter per student rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
@@ -69,6 +69,8 @@
                             <input type="number"
                                    name="verified_computerized_result_total_students"
                                    min="1"
+                                   steps="any"
+                                   value="{{$totalStudentInSession}}"
                                    class="form-control"
                                    required>
                         </div>
@@ -137,7 +139,15 @@
                             },
                             body: formData
                         })
-                            .then(response => response.json())  // <== Must be here
+                            .then(response => {
+                                if (!response.ok) {
+                                    // Return the error JSON and throw it
+                                    return response.json().then(err => {
+                                        throw new Error(err.message || 'Unknown error occurred.');
+                                    });
+                                }
+                                return response.json(); // if response is OK
+                            })
                             .then(data => {
                                 console.log("Server response:", data); // Debug log
                                 Swal.fire({
@@ -173,7 +183,7 @@
                                 console.error('Error:', error);
                                 Swal.fire({
                                     title: 'Error!',
-                                    text: 'Something went wrong. Please try again.',
+                                    text: error.message||'Something went wrong. Please try again.',
                                     icon: 'error'
                                 });
                             });

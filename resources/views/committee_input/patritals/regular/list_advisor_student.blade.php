@@ -18,7 +18,7 @@
         }
     </style>
 @endpush
-<form id="form-list-of-advisor-student" action="{{ route('committee.input.regular.advisor.student.store') }}" method="POST">
+<form id="form-list-of-advisor-student" action="{{ route('committee.input.advisor.student.store') }}" method="POST">
     @csrf
     <input type="hidden" value="{{$sid}}" name="sid">
     <div class="row mb-5">
@@ -34,7 +34,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="advisor_per_student_rate">Per Student Per Semester Rate</label>
-                                <input type="number"  name="advisor_per_student_rate" step="any" class="form-control" placeholder="Enter per student per semester rate" required>
+                                <input type="number"  name="advisor_per_student_rate" value="225" step="any" class="form-control" placeholder="Enter per student per semester rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">

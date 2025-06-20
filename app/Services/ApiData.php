@@ -272,6 +272,28 @@ class ApiData{
         return ['error' => 'Unable to fetch data', 'status_code' => $httpCode];
     }
 
+    public static function  getTotalStudentInSession($sid){
+        $response = Http::withHeaders([
+            'X-API-KEY' => 'EXAMBILL_98745012'
+        ])->get("https://ugr.duetbd.org/api/total-student-in-a-session-cse/{$sid}");
+
+        // Handle response
+        if ($response->failed()) {
+            Log::error('Total Student found failed', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            return [
+                'error' => 'Unable to fetch data',
+                'status_code' => $response->status(),
+            ];
+        }
+
+        $json= json_decode($response->body()); // Returns a stdClass object
+        return $json->studentCount ?? null; // Return only the count as an integer or null
+    }
+
 
 
 

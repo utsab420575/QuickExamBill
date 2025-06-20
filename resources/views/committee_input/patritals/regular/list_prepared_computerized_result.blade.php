@@ -159,7 +159,15 @@
                             },
                             body: formData
                         })
-                            .then(response => response.json())  // <== Must be here
+                            .then(response => {
+                                if (!response.ok) {
+                                    // Return the error JSON and throw it
+                                    return response.json().then(err => {
+                                        throw new Error(err.message || 'Unknown error occurred.');
+                                    });
+                                }
+                                return response.json(); // if response is OK
+                            })
                             .then(data => {
                                 console.log("Server response:", data); // Debug log
                                 Swal.fire({
@@ -195,7 +203,7 @@
                                 console.error('Error:', error);
                                 Swal.fire({
                                     title: 'Error!',
-                                    text: 'Something went wrong. Please try again.',
+                                    text: error.message||'Something went wrong. Please try again.',
                                     icon: 'error'
                                 });
                             });
