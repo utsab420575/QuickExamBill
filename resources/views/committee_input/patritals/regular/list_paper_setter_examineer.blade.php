@@ -211,7 +211,7 @@
                                 console.error('Error:', error);
                                 Swal.fire({
                                     title: 'Error!',
-                                    text: 'Something went wrong. Please try again.',
+                                    text: error.message||'Something went wrong. Please try again.',
                                     icon: 'error'
                                 });
                             });

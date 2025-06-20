@@ -211,18 +211,11 @@
 
 
                             })
-                            .catch(async error => {
-                                let errorMsg = 'Something went wrong.';
-                                if (error.response) {
-                                    const data = await error.response.json();
-                                    if (data.errors) {
-                                        errorMsg = Object.values(data.errors).flat().join('\n');
-                                    }
-                                }
-
+                            .catch(error => {
+                                console.error('Error:', error);
                                 Swal.fire({
                                     title: 'Error!',
-                                    text: errorMsg,
+                                    text: error.message || 'Something went wrong. Please try again.',
                                     icon: 'error'
                                 });
                             });

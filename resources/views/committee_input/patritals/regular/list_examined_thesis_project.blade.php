@@ -19,7 +19,7 @@
     </style>
 @endpush
 
-<form id="form-list-of-examined-thesis-project" action="{{ route('examined.thesis.project.store') }}" method="POST">
+<form id="form-list-of-examined-thesis-project" action="{{ route('committee.input.examined.thesis.project.store') }}" method="POST">
     @csrf
     <input type="hidden" name="sid" value="{{$sid}}">
     <div class="row mb-5">
@@ -34,7 +34,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="examined_thesis_project_rate">Per Student Per Result Rate</label>
-                                <input type="number"  name="examined_thesis_project_rate" step="any" class="form-control" placeholder="Enter per student per result rate" required>
+                                <input type="number"  name="examined_thesis_project_rate" step="any" value="2700" class="form-control" placeholder="Enter per student per result rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
@@ -241,7 +241,11 @@
                         })
                         .catch(error => {
                             console.error('Error:', error);
-                            Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+                            Swal.fire({
+                                title: 'Error!',
+                                text: error.message||'Something went wrong. Please try again.',
+                                icon: 'error'
+                            });
                         });
                 }
             });

@@ -4,6 +4,7 @@ use App\Http\Controllers\CommitteeInputController;
 use App\Http\Controllers\CommitteeInputReviewController;
 use App\Http\Controllers\ImportExportController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -67,15 +68,21 @@ Route::middleware('auth')->group(function () {
         Route::post('/regular/scrutinizers/sessional/grade/sheet/store','storeScrutinizersSessionalGradeSheet')->name('committee.input.scrutinizers.sessional.grade.sheet.store');
         Route::post('/regular/prepare/computerized/result/store','storePreparedComputerizedResult')->name('committee.input.prepare.computerized.result.store');
         Route::post('/regular/verified/computerized/grade/sheet/store', 'storeVerifiedComputerizedGradeSheet')->name('committee.input.verified.computerized.grade.sheet.store');
-        Route::post('/regular/conducted/central/oral/exam/store', 'storeConductedCentralOralExam')->name('conducted.central.oral.exam.store');
+        Route::post('/regular/conducted/central/oral/exam/store', 'storeConductedCentralOralExam')->name('committee.input.conducted.central.oral.exam.store');
 
         Route::post('/regular/stencil/cutting/committee/store', 'storeStencilCuttingCommittee')->name('committee.input.stencil.cutting.committee.store');
         Route::post('/regular/printing/question/committee/store', 'storePrintingQuestion')->name('committee.input.printing.question.committee.store');
         Route::post('/regular/comparison/committee/store', 'storeComparisonCommittee')->name('committee.input.comparison.committee.store');
         Route::post('/regular/advisor/student/store', 'storeAdvisorStudent')->name('committee.input.advisor.student.store');
-        Route::post('/regular/verified/final/graduation/result/store', 'storeVerifiedFinalGraduationResult')->name('verified.final.graduation.result.store');
-        Route::post('/regular/conducted/central/oral/exam/store', 'storeConductedCentralOralExam')->name('conducted.central.oral.exam.store');
-
+        Route::post('/regular/verified/final/graduation/result/store', 'storeVerifiedFinalGraduationResult')->name('committee.input.verified.final.graduation.result.store');
+        Route::post('/regular/conducted/central/oral/exam/store', 'storeConductedCentralOralExam')->name('committee.input.conducted.central.oral.exam.store');
+        Route::post('/regular/involved/survey/store', 'storeInvolvedSurvey')->name('committee.input.involved.survey.store');
+        Route::post('/regular/conducted/preliminary/viva/store', 'storeConductedPreliminaryViva')->name('committee.input.conducted.preliminary.viva.store');
+        Route::post('/regular/examined/thesis/project/store', 'storeExaminedThesisProject')->name('committee.input.examined.thesis.project.store');
+        Route::post('/regular/conducted/oral/examination/store','storeConductedOralExamination')->name('committee.input.conducted.oral.examination.store');
+        Route::post('/regular/supervised/thesis/project/store', 'storeSupervisedThesisProject')->name('committee.input.supervised.thesis.project.store');
+        Route::post('/regular/honorarium/coordinator/store', 'storeHonorariumCoordinator')->name('committee.input.honorarium.coordinator.store');
+        Route::post('/regular/honorarium/chairman/store', 'storeHonorariumChairman')->name('committee.input.honorarium.chairman.store');
     });
 
     //For Review Session
@@ -94,33 +101,23 @@ Route::middleware('auth')->group(function () {
         Route::post('/review/stencil/cutting/committee/store', 'storeStencilCuttingCommittee')->name('committee.input.review.stencil.cutting.committee.store');
         Route::post('/review/printing/question/committee/store', 'storePrintingQuestion')->name('committee.input.review.printing.question.committee.store');
         Route::post('/review/comparison/committee/store', 'storeComparisonCommittee')->name('committee.input.review.comparison.committee.store');
+        Route::post('/review/chairman/coordinator/store', 'storeHonorariumChairman')->name('committee.input.review.chairman.coordinator.store');
     });
 
 
-    //Regular SubForm
+    //For Report
+    //For Regular Session
+    Route::prefix('report')->controller(ReportController::class)->group(function () {
+        //show review session list form
+        Route::get('/regular/session', 'regularSessionShow')->name('report.regular.session');
+        Route::post('/regular/generate', 'regularReportGenerate')->name('report.regular.generate');
+    });
 
-
-
-/*
-    Route::post('/scrutinizers/sessional/grade/sheet/store', [StaffController::class, 'storeScrutinizersSessionalGradeSheet'])->name('scrutinizers.sessional.grade.sheet.store');
-    Route::post('/prepare/computerized/result/store', [StaffController::class, 'storePreparedComputerizedResult'])->name('prepare.computerized.result.store');
-    Route::post('/verified/computerized/result/store', [StaffController::class, 'storeVerifiedComputerizedResult'])->name('verified.computerized.result.store');
-    Route::post('/supervision/under/chairman/exam/committee/store', [StaffController::class, 'storeSupervisionUnderChairmanExamCommittee'])->name('supervision.under.chairman.exam.committee.store');
-    Route::post('/advisor/student/store', [StaffController::class, 'storeAdvisorStudent'])->name('advisor.student.store');
-    Route::post('/verified/final/graduation/result/store', [StaffController::class, 'storeVerifiedFinalGraduationResult'])->name('verified.final.graduation.result.store');*/
-
-    Route::post('/involved/survey/store', [StaffController::class, 'storeInvolvedSurvey'])->name('involved.survey.store');
-    Route::post('/conducted/preliminary/viva/store', [StaffController::class, 'storeConductedPreliminaryViva'])->name('conducted.preliminary.viva.store');
-    Route::post('/conducted/oral/examination/store', [StaffController::class, 'storeConductedOralExamination'])->name('conducted.oral.examination.store');
-    Route::post('/supervised/thesis/project/store', [StaffController::class, 'storeSupervisedThesisProject'])->name('supervised.thesis.project.store');
-    Route::post('/examined/thesis/project/store', [StaffController::class, 'storeExaminedThesisProject'])->name('examined.thesis.project.store');
-    Route::post('/honorarium/coordinator/committee/store', [StaffController::class, 'storeHonorariumCoordinatorCommittee'])->name('honorarium.coordinator.committee.store');
-    Route::post('/honorarium/chairman/committee/store', [StaffController::class, 'storeHonorariumChairmanCommittee'])->name('honorarium.chairman.committee.store');
-
-
-
-
-
+    //For Regular Session
+    Route::prefix('report')->controller(ReportController::class)->group(function () {
+        Route::get('/review/session', 'reviewSessionShow')->name('report.review.session');
+        Route::get('/review/generate', 'reviewReportGenerate')->name('report.review.generate');
+    });
 
 
 });

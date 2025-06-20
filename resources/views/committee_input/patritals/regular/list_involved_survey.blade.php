@@ -19,7 +19,7 @@
     </style>
 @endpush
 
-<form id="form-list-of-involved-survey" action="{{ route('involved.survey.store') }}" method="POST">
+<form id="form-list-of-involved-survey" action="{{ route('committee.input.involved.survey.store') }}" method="POST">
     @csrf
     <input type="hidden" name="sid" value="{{$sid}}">
     <div class="row mb-5">
@@ -34,7 +34,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="servey_rate">Per Student Servey Rate</label>
-                                <input type="number"  name="servey_rate" step="any" class="form-control" placeholder="Enter per student per servey rate" required>
+                                <input type="number"  name="servey_rate" value="900" step="any" class="form-control" placeholder="Enter per student per servey rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
@@ -201,7 +201,15 @@
                         },
                         body: formData
                     })
-                        .then(response => response.json())
+                        .then(response => {
+                            if (!response.ok) {
+                                // Return the error JSON and throw it
+                                return response.json().then(err => {
+                                    throw new Error(err.message || 'Unknown error occurred.');
+                                });
+                            }
+                            return response.json(); // if response is OK
+                        })
                         .then(data => {
                             console.log("Server response:", data); // Debug log
                             Swal.fire('Success!', data.message, 'success');
@@ -221,7 +229,11 @@
                         })
                         .catch(error => {
                             console.error('Error:', error);
-                            Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+                            Swal.fire({
+                                title: 'Error!',
+                                text: error.message||'Something went wrong. Please try again.',
+                                icon: 'error'
+                            });
                         });
                 }
             });

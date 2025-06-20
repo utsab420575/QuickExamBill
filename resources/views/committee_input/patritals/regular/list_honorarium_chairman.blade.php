@@ -1,4 +1,4 @@
-<form id="form-list-of-honorarium-chairman"   action="{{ route('honorarium.chairman.committee.store') }}" method="POST">
+<form id="form-list-of-honorarium-chairman"   action="{{ route('committee.input.honorarium.chairman.store') }}" method="POST">
     @csrf
     <input type="hidden" value="{{$sid}}" name="sid">
     <div class="row mb-5">
@@ -133,7 +133,7 @@
                                     // Other errors
                                     Swal.fire({
                                         title: 'Error!',
-                                        text: 'Something went wrong. Please try again.',
+                                        text: error.message||'Something went wrong. Please try again.',
                                         icon: 'error'
                                     });
                                 }

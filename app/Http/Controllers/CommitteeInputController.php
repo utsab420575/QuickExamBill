@@ -2686,6 +2686,733 @@ class CommitteeInputController extends Controller
         }
     }
 
+    public function storeInvolvedSurvey(Request $request)
+    {
+        $teacherIds = $request->input('involved_survey_teacher_ids'); // array
+        $no_of_students = $request->input('involved_survey_student_amounts');        // array (indexed)
+        $sessionId = $request->sid;
+        $servey_rate = $request->servey_rate;
+        $exam_type=1;
+
+        Log::info('📥 Received Involved Survey Data', [
+            'session_id' => $sessionId,
+            'teacher_data' => $teacherIds,
+            'student_data' => $no_of_students,
+            'rate' => $servey_rate
+        ]);
+
+        if (empty($teacherIds) || empty($no_of_students)) {
+            return response()->json([
+                'message' => 'Teacher IDs and amounts are required.'
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Step 1: Get or create RateHead
+            $rateHead = RateHead::where('order_no', '7.f')->first();
+
+            if (!$rateHead) {
+                $rateHead = RateHead::create([
+                    'order_no' => '7.f',
+                    'head' => 'Sessional',
+                    'sub_head' => 'Survey',
+                    'dist_type' => 'Individual',
+                    'is_course' => 0,
+                    'is_student_count' => 1,
+                    'marge_with' => null,
+                    'status' => 1,
+                ]);
+                Log::info('✅ RateHead Created', $rateHead->toArray());
+            }
+
+            Log::info('✅ RateHead confirmed', $rateHead->toArray());
+
+            // Step 2: Get or create Session
+            $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+
+            // Step 3: Get or create RateAmount
+            $rateAmount = RateAmount::firstOrNew([
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'exam_type_id' => $exam_type
+            ]);
+
+            if (!$rateAmount->exists) {
+                $rateAmount->default_rate = $servey_rate; // Set your rate per student
+                $rateAmount->saved = 1;
+                $rateAmount->save();
+
+                Log::info('✅ RateAmount Created', $rateAmount->toArray());
+            }
+            Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
+
+            // Step 4: Assign each teacher
+            foreach ($teacherIds as $index => $teacherId) {
+                $studentCount = (int) ($no_of_students[$index] ?? 0);
+
+                if ($studentCount > 0) {
+                    //$totalAmount = max($rateAmount->min_rate, $studentCount * $rateAmount->default_rate);
+                    $totalAmount=$studentCount * $rateAmount->default_rate;
+
+                    Log::info('📘 Preparation Of RateAssign', [
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $studentCount,
+                        'total_amount' => $totalAmount,
+
+                        'total_students'=>$studentCount,
+                    ]);
+                    $rateAssign = RateAssign::create([
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $studentCount,
+                        'total_amount' => $totalAmount,
+                        'total_students'=>$studentCount,
+                        'exam_type_id'=>$exam_type,
+                    ]);
+
+                    Log::info("✅ RateAssign created for Teacher ID $teacherId", $rateAssign->toArray());
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Involved Survey saved successfully!',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ Error saving Verified Final Graduation Result: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'An error occurred.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeConductedPreliminaryViva(Request $request)
+    {
+        $teacherIds = $request->input('conducted_preliminary_viva_teacher_ids'); // array
+        $no_of_students = $request->input('conducted_preliminary_viva_student_amounts');        // array (indexed)
+        $sessionId = $request->sid;
+        $viva_thesis_project_rate = $request->viva_thesis_project_rate;
+        $exam_type=1;
+
+
+        Log::info('📥 Received Conducted Priliminary Viva Data', [
+            'session_id' => $sessionId,
+            'teacher_data' => $teacherIds,
+            'student_data' => $no_of_students,
+            'rate' => $viva_thesis_project_rate
+        ]);
+
+        if (empty($teacherIds) || empty($no_of_students)) {
+            return response()->json([
+                'message' => 'Teacher IDs and amounts are required.'
+            ], 422);
+        }
+
+        // Step 1: Get or create Session
+        $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+        try {
+            DB::beginTransaction();
+
+            // Step 2: Get or create RateHead
+            $rateHead = RateHead::where('order_no', '6.c')->first();
+
+            if (!$rateHead) {
+                $rateHead = RateHead::create([
+                    'order_no' => '6.c',
+                    'head' => 'Project/Thesis',
+                    'sub_head' =>  'Initial Viva ' . ($session->year . '/' . $session->semester),
+                    'dist_type' => 'Individual',
+                    'is_course' => 0,
+                    'is_student_count' => 1,
+                    'marge_with' => null,
+                    'status' => 1,
+                ]);
+                Log::info('✅ RateHead Created', $rateHead->toArray());
+            }
+            Log::info('✅ RateHead confirmed', $rateHead->toArray());
+
+
+            // Step 3: Get or create RateAmount
+            $rateAmount = RateAmount::firstOrNew([
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'exam_type_id' => $exam_type
+            ]);
+
+            if (!$rateAmount->exists) {
+                $rateAmount->default_rate = $viva_thesis_project_rate; // Set your rate per student
+                $rateAmount->saved = 1;
+                $rateAmount->save();
+
+                Log::info('✅ RateAmount Created', $rateAmount->toArray());
+            }
+            Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
+
+            // Step 4: Assign each teacher
+            foreach ($teacherIds as $index => $teacherId) {
+                $studentCount = (int) ($no_of_students[$index] ?? 0);
+
+                if ($studentCount > 0) {
+                    //$totalAmount = max($rateAmount->min_rate, $studentCount * $rateAmount->default_rate);
+                    $totalAmount=$studentCount * $rateAmount->default_rate;
+
+                    Log::info('📘 Preparation Of RateAssign', [
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $studentCount,
+                        'total_amount' => $totalAmount,
+
+                        'total_students'=>$studentCount,
+                    ]);
+
+                    $rateAssign = RateAssign::create([
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $studentCount,
+                        'total_amount' => $totalAmount,
+                        'total_students'=>$studentCount,
+                        'exam_type_id'=>$exam_type,
+                    ]);
+
+                    Log::info("✅ RateAssign created for Teacher ID $teacherId", $rateAssign->toArray());
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Preliminary Viva saved successfully!',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ Error saving Verified Final Graduation Result: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'An error occurred.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeExaminedThesisProject(Request $request)
+    {
+        $teacherIds = $request->input('examined_thesis_project_teacher_ids', []);
+        $internal_no_of_students = $request->input('examined_internal_thesis_project_student_amounts', []);
+        $external_no_of_students = $request->input('examined_external_thesis_project_student_amounts', []);
+        $sessionId = $request->sid;
+        $examined_thesis_project_rate = $request->examined_thesis_project_rate;
+        $exam_type=1;
+
+
+        Log::info('📥 Received Examined Thesis Project Data', [
+            'session_id' => $sessionId,
+            'teacher_data' => $teacherIds,
+            'internal_no_of_students' => $internal_no_of_students,
+            'external_no_of_students' => $external_no_of_students,
+            'rate' => $examined_thesis_project_rate
+        ]);
+
+
+        if (empty($teacherIds)) {
+            return response()->json(['message' => 'No teacher data submitted.'], 422);
+        }
+
+        try {
+            // Step 1: Get or create Session
+            $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+            Log::info('✅ Session Info Created', $session->toArray());
+
+
+            DB::beginTransaction();
+
+            // 2. Get or Create RateHead
+            $rateHead = RateHead::where('order_no', '6.a')->first();
+            if (!$rateHead) {
+                $rateHead = RateHead::create([
+                    'order_no' => '6.a',
+                    'head' => 'Project/Thesis',
+                    'sub_head' => 'Examination',
+                    'dist_type' => 'Individual',
+                    'enable_min' => 0,
+                    'enable_max' => 0,
+                    'is_course' => 0,
+                    'is_student_count' => 1,
+                    'marge_with' => null,
+                    'status' => 1,
+                ]);
+                Log::info('✅ RateHead Created', $rateHead->toArray());
+            }
+            Log::info('✅ RateHead confirmed', $rateHead->toArray());
+
+
+            // 3. Get or Create RateAmount
+            $rateAmount = RateAmount::firstOrNew([
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'exam_type_id' => $exam_type
+            ]);
+
+            if (!$rateAmount->exists) {
+                $rateAmount->default_rate = $examined_thesis_project_rate;
+                $rateAmount->saved = 1;
+                $rateAmount->save();
+                Log::info('✅ RateAmount Created', $rateAmount->toArray());
+            }
+            Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
+
+            // 4. Create RateAssign for each teacher
+            foreach ($teacherIds as $index => $teacherId) {
+                $internal = (int) ($internal_no_of_students[$index] ?? 0);
+                $external = (int) ($external_no_of_students[$index] ?? 0);
+                $totalStudents = $internal + $external;
+
+                if ($totalStudents > 0) {
+                    // $totalAmount = max($rateAmount->min_rate, $totalStudents * $rateAmount->default_rate);
+                    $totalAmount=$totalStudents*$rateAmount->default_rate;
+
+                    Log::info('📘 Preparation Of RateAssign', [
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $totalStudents,
+                        'total_amount' => $totalAmount,
+                        'total_students'=>$totalStudents,
+                        'exam_type_id'=>$exam_type,
+                    ]);
+
+
+                    $rateAssign = RateAssign::create([
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $totalStudents,
+                        'total_amount' => $totalAmount,
+                        'total_students'=>$totalStudents,
+                        'exam_type_id'=>$exam_type,
+                    ]);
+
+                    Log::info("✅ RateAssign created for Teacher ID {$teacherId}", $rateAssign->toArray());
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Examined Thesis/Project data saved successfully!',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ Error storing Examined Thesis/Project: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'An error occurred while saving data.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeConductedOralExamination(Request $request)
+    {
+        $teacherIds = $request->input('conducted_oral_examination_teacher_ids'); // array
+        $no_of_students = $request->input('conducted_oral_examination_student_amounts');        // array (indexed)
+        $sessionId = $request->sid;
+        $oral_exam_thesis_project_rate = $request->oral_exam_thesis_project;
+        $exam_type=1;
+
+        Log::info('📥 Received Conducted Oral Data', [
+            'session_id' => $sessionId,
+            'teacher_data' => $teacherIds,
+            'no_of_students' => $no_of_students,
+            'rate' => $oral_exam_thesis_project_rate
+        ]);
+
+
+
+        if (empty($teacherIds) || empty($no_of_students)) {
+            return response()->json([
+                'message' => 'Teacher IDs and amounts are required.'
+            ], 422);
+        }
+
+        try {
+            // Step 1: Get or create Session
+            $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+            Log::info('session info',$session->toArray());
+
+            DB::beginTransaction();
+
+            // Step 2: Get or create RateHead
+            $rateHead = RateHead::where('order_no', '6.d')->first();
+
+            if (!$rateHead) {
+                $rateHead = RateHead::create([
+                    'order_no' => '6.d',
+                    'head' => 'Project/Thesis',
+                    'sub_head' => 'Final Viva ' . $session->year . '/' . $session->semester,
+                    'dist_type' => 'Individual',
+                    'enable_min' => 0,
+                    'enable_max' => 0,
+                    'is_course' => 0,
+                    'is_student_count' => 1,
+                    'marge_with' => null,
+                    'status' => 1,
+                ]);
+                Log::info('✅ RateHead Created', $rateHead->toArray());
+            }
+            Log::info('✅ RateHead confirmed', $rateHead->toArray());
+
+
+            // Step 3: Get or create RateAmount
+            $rateAmount = RateAmount::firstOrNew([
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'exam_type_id' => $exam_type
+            ]);
+
+            if (!$rateAmount->exists) {
+                $rateAmount->default_rate = $oral_exam_thesis_project_rate; // Set your rate per student
+                $rateAmount->saved = 1;
+                $rateAmount->save();
+
+                Log::info('✅ RateAmount Created', $rateAmount->toArray());
+            }
+            Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
+
+            // Step 4: Assign each teacher
+            foreach ($teacherIds as $index => $teacherId) {
+                $studentCount = (int) ($no_of_students[$index] ?? 0);
+
+                if ($studentCount > 0) {
+                    //$totalAmount = max($rateAmount->min_rate, $studentCount * $rateAmount->default_rate);
+                    $totalAmount=$studentCount * $rateAmount->default_rate;
+
+                    Log::info('📘 Preparation Of RateAssign', [
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $studentCount,
+                        'total_amount' => $totalAmount,
+                        'total_students'=>$studentCount,
+                        'exam_type_id'=>$exam_type,
+                    ]);
+
+                    $rateAssign = RateAssign::create([
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $studentCount,
+                        'total_amount' => $totalAmount,
+
+                        'total_students'=>$studentCount,
+                        'exam_type_id'=>$exam_type,
+                    ]);
+
+                    Log::info("✅ RateAssign created for Teacher ID $teacherId", $rateAssign->toArray());
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Conducted Oral Exam saved successfully!',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ Error saving Verified Final Graduation Result: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'An error occurred.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeSupervisedThesisProject(Request $request)
+    {
+        $teacherIds = $request->input('supervised_thesis_project_teacher_ids'); // array
+        $no_of_students = $request->input('supervised_thesis_project_student_amounts');        // array (indexed)
+        $sessionId = $request->sid;
+        $supervised_thesis_project_rate = $request->supervised_thesis_project_rate;
+        $exam_type=1;
+
+        Log::info('📥 Received Conducted Oral Data', [
+            'session_id' => $sessionId,
+            'teacher_data' => $teacherIds,
+            'no_of_students' => $no_of_students,
+            'rate' => $supervised_thesis_project_rate
+        ]);
+
+        if (empty($teacherIds) || empty($no_of_students)) {
+            return response()->json([
+                'message' => 'Teacher IDs and amounts are required.'
+            ], 422);
+        }
+
+        try {
+            // Step 1: Get or create Session
+            $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+            Log::info('session info',$session->toArray());
+
+            DB::beginTransaction();
+
+            // Step 2: Get or create RateHead
+            $rateHead = RateHead::where('order_no', '6.b')->first();
+
+            if (!$rateHead) {
+                $rateHead = RateHead::create([
+                    'order_no' => '6.b',
+                    'head' => 'Project/Thesis',
+                    'sub_head' => 'Supervising',
+                    'dist_type' => 'Individual',
+                    'enable_min' => 0,
+                    'enable_max' => 0,
+                    'is_course' => 0,
+                    'is_student_count' => 1,
+                    'marge_with' => null,
+                    'status' => 1,
+                ]);
+                Log::info('✅ RateHead Created', $rateHead->toArray());
+            }
+            Log::info('✅ RateHead confirmed', $rateHead->toArray());
+
+
+            // Step 3: Get or create RateAmount
+            $rateAmount = RateAmount::firstOrNew([
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'exam_type_id' => $exam_type
+            ]);
+
+            if (!$rateAmount->exists) {
+                $rateAmount->default_rate = $supervised_thesis_project_rate; // Set your rate per student
+                $rateAmount->saved = 1;
+                $rateAmount->save();
+
+                Log::info('✅ RateAmount Created', $rateAmount->toArray());
+            }
+            Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
+
+            // Step 4: Assign each teacher
+            foreach ($teacherIds as $index => $teacherId) {
+                $studentCount = (int) ($no_of_students[$index] ?? 0);
+
+                if ($studentCount > 0) {
+                    //$totalAmount = max($rateAmount->min_rate, $studentCount * $rateAmount->default_rate);
+                    $totalAmount=$studentCount * $rateAmount->default_rate;
+
+                    Log::info('📘 Preparation Of RateAssign', [
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $studentCount,
+                        'total_amount' => $totalAmount,
+                        'total_students'=>$studentCount,
+                        'exam_type_id'=>$exam_type,
+                    ]);
+
+                    $rateAssign = RateAssign::create([
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $studentCount,
+                        'total_amount' => $totalAmount,
+
+                        'total_students'=>$studentCount,
+                        'exam_type_id'=>$exam_type,
+                    ]);
+
+                    Log::info("✅ RateAssign created for Teacher ID $teacherId", $rateAssign->toArray());
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Supervised Thesis/Project saved successfully!',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ Error saving Supervised Thesis/Project: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'An error occurred.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeHonorariumCoordinator(Request $request)
+    {
+        // If validation passes, extract values
+        $teacherId = $request->input('coordinator_id');
+        $coordinator_rate = $request->input('coordinator_amount');
+        $sessionId=$request->input('sid');
+        $exam_type=1;
+
+        Log::info('📥 Received Coordinator Data', [
+            'session_id' => $sessionId,
+            'teacher_data' => $teacherId,
+            'rate' => $coordinator_rate
+        ]);
+
+        try {
+            // Step 1: Get or create session
+            $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+            Log::info('📘 Session Info:', $session->toArray());
+
+            DB::beginTransaction();
+
+            // Step 2: Get or create RateHead
+            $rateHead = RateHead::where('order_no', '14')->first();
+
+            if (!$rateHead) {
+                $rateHead = RateHead::create([
+                    'order_no' => '14',
+                    'head' => 'Course Co-ordinator Fee',
+                    'dist_type' => 'Individual',
+                    'is_course' => 0,
+                    'is_student_count' => 0,
+                    'marge_with' => null,
+                    'status' => 1,
+                ]);
+                Log::info('✅ RateHead Created:', $rateHead->toArray());
+            }
+            Log::info('✅ RateHead confirmed', $rateHead->toArray());
+
+            // Step 3: Get or create RateAmount
+            $rateAmount = RateAmount::firstOrNew([
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'exam_type_id' => $exam_type
+            ]);
+
+            if (!$rateAmount->exists) {
+                $rateAmount->default_rate = $coordinator_rate; // Set your rate per student
+                $rateAmount->save();
+                Log::info('✅ RateAmount Created', $rateAmount->toArray());
+            }
+            Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
+
+            // Step 4: Create RateAssign
+
+            Log::info('📘 Preparation Of RateAssign', [
+                'teacher_id' => $teacherId,
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'total_amount' => $coordinator_rate,
+                'exam_type_id'=>$exam_type,
+            ]);
+            $rateAssign = RateAssign::create([
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'teacher_id' => $teacherId,
+                'total_amount' => $coordinator_rate,
+                'exam_type_id'=>$exam_type,
+            ]);
+            Log::info('📝 RateAssign Created:', $rateAssign->toArray());
+
+            DB::commit();
+
+            return response()->json(['message' => 'Course Co-ordinator Honorarium saved successfully!']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ Error Storing Chairman Honorarium:', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Something went wrong!'], 500);
+        }
+    }
+
+    public function storeHonorariumChairman(Request $request)
+    {
+        // If validation passes, extract values
+        $teacherId = $request->input('chairman_id');
+        $chairman_rate = $request->input('chairman_amount');
+        $sessionId=$request->input('sid');
+        $exam_type=1;
+
+        Log::info('📥 Received Chairman Data', [
+            'session_id' => $sessionId,
+            'teacher_data' => $teacherId,
+            'rate' => $chairman_rate
+        ]);
+
+        try {
+            // Step 1: Get or create session
+            $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+            Log::info('📘 Session Info:', $session->toArray());
+
+            DB::beginTransaction();
+
+            // Step 2: Get or create RateHead
+            $rateHead = RateHead::where('order_no', '15')->first();
+
+            if (!$rateHead) {
+                $rateHead = RateHead::create([
+                    'order_no' => '15',
+                    'head' => 'Chairman Fee',
+                    'dist_type' => 'Individual',
+                    'is_course' => 0,
+                    'is_student_count' => 0,
+                    'marge_with' => null,
+                    'status' => 1,
+                ]);
+                Log::info('✅ RateHead Created:', $rateHead->toArray());
+            }
+            Log::info('✅ RateHead confirmed', $rateHead->toArray());
+
+            // Step 3: Get or create RateAmount
+            $rateAmount = RateAmount::firstOrNew([
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'exam_type_id' => $exam_type
+            ]);
+
+            if (!$rateAmount->exists) {
+                $rateAmount->default_rate = $chairman_rate; // Set your rate per student
+                $rateAmount->save();
+                Log::info('✅ RateAmount Created', $rateAmount->toArray());
+            }
+            Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
+
+            // Step 4: Create RateAssign
+
+            Log::info('📘 Preparation Of RateAssign', [
+                'teacher_id' => $teacherId,
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'total_amount' => $chairman_rate,
+                'exam_type_id'=>$exam_type,
+            ]);
+            $rateAssign = RateAssign::create([
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'teacher_id' => $teacherId,
+                'total_amount' => $chairman_rate,
+                'exam_type_id'=>$exam_type,
+            ]);
+            Log::info('📝 RateAssign Created:', $rateAssign->toArray());
+
+            DB::commit();
+
+            return response()->json(['message' => 'Course Co-ordinator Honorarium saved successfully!']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ Error Storing Chairman Honorarium:', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Something went wrong!'], 500);
+        }
+    }
+
+
+
 }
 
 

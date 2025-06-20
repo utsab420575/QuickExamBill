@@ -19,7 +19,7 @@
     </style>
 @endpush
 
-<form id="form-list-of-conducted-preliminary-viva" action="{{ route('conducted.preliminary.viva.store') }}" method="POST">
+<form id="form-list-of-conducted-preliminary-viva" action="{{ route('committee.input.conducted.preliminary.viva.store') }}" method="POST">
     @csrf
     <input type="hidden" name="sid" value="{{$sid}}">
     <div class="row mb-5">
@@ -34,7 +34,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="viva_thesis_project_rate">Per Student Per Result Rate</label>
-                                <input type="number"  name="viva_thesis_project_rate" step="any" class="form-control" placeholder="Enter per student per thesis/project rate" required>
+                                <input type="number"  name="viva_thesis_project_rate" step="any" value="100" class="form-control" placeholder="Enter per student per thesis/project rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
@@ -232,7 +232,11 @@
                         })
                         .catch(error => {
                             console.error('Error:', error);
-                            Swal.fire('Error!', 'Something went wrong. Please try again.', 'error');
+                            Swal.fire({
+                                title: 'Error!',
+                                text: error.message||'Something went wrong. Please try again.',
+                                icon: 'error'
+                            });
                         });
                 }
             });

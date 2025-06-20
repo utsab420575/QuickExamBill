@@ -19,7 +19,7 @@
     </style>
 @endpush
 
-<form id="form-list-of-verified-graduation-result" action="{{ route('verified.final.graduation.result.store') }}" method="POST">
+<form id="form-list-of-verified-graduation-result" action="{{ route('committee.input.verified.final.graduation.result.store') }}" method="POST">
     @csrf
     <input type="hidden" value="{{$sid}}" name="sid">
     <div class="row mb-5">

@@ -19,7 +19,7 @@
     </style>
 @endpush
 
-<form id="form-list-of-conducted-central-oral-examination" action="{{ route('conducted.central.oral.exam.store') }}" method="POST">
+<form id="form-list-of-conducted-central-oral-examination" action="{{ route('committee.input.conducted.central.oral.exam.store') }}" method="POST">
     @csrf
     <input type="hidden" value="{{$sid}}" name="sid">
     <div class="row mb-5">

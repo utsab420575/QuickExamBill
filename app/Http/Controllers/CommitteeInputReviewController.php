@@ -1411,4 +1411,84 @@ class CommitteeInputReviewController extends Controller
         }
     }
 
+    public function storeHonorariumChairman(Request $request)
+    {
+        // If validation passes, extract values
+        $teacherId = $request->input('chairman_id');
+        $chairman_rate = $request->input('chairman_amount');
+        $sessionId=$request->input('sid');
+        $exam_type=2;
+
+        Log::info('📥 Received Chairman Data', [
+            'session_id' => $sessionId,
+            'teacher_data' => $teacherId,
+            'rate' => $chairman_rate
+        ]);
+
+        try {
+            // Step 1: Get or create session
+            $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+            Log::info('📘 Session Info:', $session->toArray());
+
+            DB::beginTransaction();
+
+            // Step 2: Get or create RateHead
+            $rateHead = RateHead::where('order_no', '15')->first();
+
+            if (!$rateHead) {
+                $rateHead = RateHead::create([
+                    'order_no' => '15',
+                    'head' => 'Chairman Fee',
+                    'dist_type' => 'Individual',
+                    'is_course' => 0,
+                    'is_student_count' => 0,
+                    'marge_with' => null,
+                    'status' => 1,
+                ]);
+                Log::info('✅ RateHead Created:', $rateHead->toArray());
+            }
+            Log::info('✅ RateHead confirmed', $rateHead->toArray());
+
+            // Step 3: Get or create RateAmount
+            $rateAmount = RateAmount::firstOrNew([
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'exam_type_id' => $exam_type
+            ]);
+
+            if (!$rateAmount->exists) {
+                $rateAmount->default_rate = $chairman_rate; // Set your rate per student
+                $rateAmount->save();
+                Log::info('✅ RateAmount Created', $rateAmount->toArray());
+            }
+            Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
+
+            // Step 4: Create RateAssign
+
+            Log::info('📘 Preparation Of RateAssign', [
+                'teacher_id' => $teacherId,
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'total_amount' => $chairman_rate,
+                'exam_type_id'=>$exam_type,
+            ]);
+            $rateAssign = RateAssign::create([
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'teacher_id' => $teacherId,
+                'total_amount' => $chairman_rate,
+                'exam_type_id'=>$exam_type,
+            ]);
+            Log::info('📝 RateAssign Created:', $rateAssign->toArray());
+
+            DB::commit();
+
+            return response()->json(['message' => 'Course Co-ordinator Honorarium saved successfully!']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ Error Storing Chairman Honorarium:', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Something went wrong!'], 500);
+        }
+    }
+
 }

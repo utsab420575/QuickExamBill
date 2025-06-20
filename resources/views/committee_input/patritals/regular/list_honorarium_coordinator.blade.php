@@ -1,4 +1,4 @@
-<form id="form-list-of-honorarium-coordinator"   action="{{ route('honorarium.coordinator.committee.store') }}" method="POST">
+<form id="form-list-of-honorarium-coordinator"   action="{{ route('committee.input.honorarium.coordinator.store') }}" method="POST">
     @csrf
     <input type="hidden" value="{{$sid}}" name="sid">
     <div class="row mb-5">
@@ -12,7 +12,7 @@
                         <thead>
                         <tr>
                             <th style="width: 70%;">Teacher Name</th>
-                            <th style="width: 30%;">Honorarium Amount (৳)</th>
+                            <th style="width: 30%;">Honorarium Amount</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -121,23 +121,11 @@
                             })
                             .catch(error => {
                                 console.error('Error:', error);
-
-                                if (error.errors) {
-                                    // Laravel validation errors
-                                    const messages = Object.values(error.errors).flat().join('\n');
-                                    Swal.fire({
-                                        title: 'Validation Error!',
-                                        text: messages,
-                                        icon: 'warning'
-                                    });
-                                } else {
-                                    // Other errors
-                                    Swal.fire({
-                                        title: 'Error!',
-                                        text: 'Something went wrong. Please try again.',
-                                        icon: 'error'
-                                    });
-                                }
+                                Swal.fire({
+                                    title: 'Error!',
+                                    text: error.message||'Something went wrong. Please try again.',
+                                    icon: 'error'
+                                });
                             });
                     }
                 });

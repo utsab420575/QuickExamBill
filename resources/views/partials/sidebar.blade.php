@@ -58,13 +58,13 @@
                         </a>
                         <ul class="nav nav-children">
                             <li>
-                                <a class="nav-link" href="pages-signup.html">
+                                <a class="nav-link" href="">
                                     All Regular Session
                                 </a>
                             </li>
 
                             <li>
-                                <a class="nav-link" href="pages-signup.html">
+                                <a class="nav-link" href="">
                                     All Review Session
                                 </a>
                             </li>
@@ -78,13 +78,13 @@
                         </a>
                         <ul class="nav nav-children">
                             <li>
-                                <a class="nav-link" href="pages-signup.html">
+                                <a class="nav-link" href="{{route('report.regular.session')}}">
                                     All Regular Session
                                 </a>
                             </li>
 
                             <li>
-                                <a class="nav-link" href="pages-signup.html">
+                                <a class="nav-link" href="{{route('report.review.session')}}">
                                     All Review Session
                                 </a>
                             </li>

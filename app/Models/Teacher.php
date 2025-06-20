@@ -19,4 +19,8 @@ class Teacher extends Model
     public function department(){
         return $this->belongsTo(Department::class);
     }
+    public function rateAssigns()
+    {
+        return $this->hasMany(RateAssign::class);
+    }
 }
