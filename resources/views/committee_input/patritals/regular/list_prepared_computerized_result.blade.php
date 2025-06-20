@@ -17,7 +17,7 @@
         }
     </style>
 @endpush
-<form id="form-list-of-prepared-computerized-result" action="{{ route('prepare.computerized.result.store') }}" method="POST">
+<form id="form-list-of-prepared-computerized-result" action="{{ route('committee.input.prepare.computerized.result.store') }}" method="POST">
     @csrf
     <input type="hidden" id="sid" name="sid" value="{{$sid}}">
     <div class="row mb-5">
