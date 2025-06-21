@@ -37,7 +37,7 @@
         </header>
         <!-- start: page -->
 
-        @php
+        {{--@php
             $rate_head = \App\Models\RateHead::where('order_no', 1)->first();
             $session = \App\Models\Session::where('ugr_id', $sid)->where('exam_type_id', 2)->first();
             $rate_amount = $session
@@ -50,82 +50,18 @@
             <div class="alert alert-info">
                 Moderation Committee already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}. If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
             </div>
-        @endif
-
-        @php
-            $rate_head = \App\Models\RateHead::where('order_no', 2)->first();
-            $session = \App\Models\Session::where('ugr_id', $sid)->where('exam_type_id', 2)->first();
-            $rate_amount = $session
-                ? \App\Models\RateAmount::where('session_id', $session->id)->where('saved', 1)->first()
-                : null;
-        @endphp
-
-        @if($rate_amount)
-            @include('committee_input.patritals.review.list_paper_setter_examineer')
-        @else
-            <div class="alert alert-info">
-                List of Examiners/Paper Setter  Committee already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}. If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
-            </div>
-        @endif
+        @endif--}}
 
 
-        @php
-            $rate_head = \App\Models\RateHead::where('order_no', 2)->first();
-            $session = \App\Models\Session::where('ugr_id', $sid)->where('exam_type_id', 2)->first();
-            $rate_amount = $session
-                ? \App\Models\RateAmount::where('session_id', $session->id)->where('saved', 1)->first()
-                : null;
-        @endphp
+        @include('committee_input.patritals.review.list_moderation_committe')
 
-        @if($rate_amount)
-            @include('committee_input.patritals.review.list_scrutinizers')
-        @else
-            <div class="alert alert-info">
-                List of Scrutinizer  Committee already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}. If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
-            </div>
-        @endif
+        @include('committee_input.patritals.review.list_paper_setter_examineer')
 
+        @include('committee_input.patritals.review.list_scrutinizers')
 
-        @php
-            $rate_head = \App\Models\RateHead::where('order_no', '=','8.a')->first();
-            $session = \App\Models\Session::where('ugr_id', $sid)->where('exam_type_id', 2)->first();
-            $rate_amount = ($session && $rate_head)
-               ? \App\Models\RateAmount::where('session_id', $session->id)
-                   ->where('saved', 1)
-                   ->where('rate_head_id', $rate_head->id)
-                   ->where('exam_type_id', 2)
-                   ->first()
-               : null;
-        @endphp
+        @include('committee_input.patritals.review.list_preparation_theory_grade_sheet')
 
-        @if(!$rate_amount)
-            @include('committee_input.patritals.review.list_preparation_theory_grade_sheet')
-        @else
-            <div class="alert alert-info">
-                List of  Theory Grade Sheet  Committee already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}. If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
-            </div>
-        @endif
-
-        @php
-            $rate_head = \App\Models\RateHead::where('order_no', '=','10.a')->first();
-            $session = \App\Models\Session::where('ugr_id', $sid)->where('exam_type_id', 2)->first();
-            $rate_amount = ($session && $rate_head)
-               ? \App\Models\RateAmount::where('session_id', $session->id)
-                   ->where('saved', 1)
-                   ->where('rate_head_id', $rate_head->id)
-                   ->where('exam_type_id', 2)
-                   ->first()
-               : null;
-        @endphp
-
-        @if(!$rate_amount)
-            @include('committee_input.patritals.review.list_scrutinizing_theory_grade_sheet')
-        @else
-            <div class="alert alert-info">
-                List of Scrutinizing  Theory Grade Sheet  Committee already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}. If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
-            </div>
-        @endif
-
+        @include('committee_input.patritals.review.list_scrutinizing_theory_grade_sheet')
 
         @include('committee_input.patritals.review.list_stencil_cutting_question_paper')
         @include('committee_input.patritals.review.list_printing_question_paper')
