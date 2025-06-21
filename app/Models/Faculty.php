@@ -10,6 +10,6 @@ class Faculty extends Model
     use HasFactory;
     protected $guarded=[];
     public function departments(){
-        $this->hasMany(Department::class);
+        return $this->hasMany(Department::class);
     }
 }

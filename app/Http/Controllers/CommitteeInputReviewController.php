@@ -79,6 +79,7 @@ class CommitteeInputReviewController extends Controller
             /*  ->with('teacher_coordinator', $teacher_coordinator)*/
             ->with('session_info', $session_info)
             ->with('teachers', $teachers)
+            ->with('teacher_head', $teacher_head)
             ->with('groupedTeachers', $groupedTeachers)
             ->with('all_course_with_teacher', $all_course_with_teacher)
             ->with('all_course_with_class_test_teacher', $all_course_with_teacher)
@@ -419,13 +420,13 @@ class CommitteeInputReviewController extends Controller
                 $total_input_students = $noOfScripts[$courseId] ?? 0;
                 $no_of_scripts = $noOfScripts[$courseId] ?? 0;
 
-                $teacherCount = count($teacherIds);
+                $teacherCount = count($teacherIds);//this is used here because in review don't have specific teacher for a course
 
                 //hidden input
                 $courseno = $request->input("courseno.$courseId");
                 $coursetitle = $request->input("coursetitle.$courseId");
                 $registered_students_count = $request->input("registered_students_count.$courseId");
-                $teacher_count = $request->input("teacher_count.$courseId");
+               // $teacher_count = $request->input("teacher_count.$courseId");
 
 
                 Log::info('📘 Examiner Course-wise Input Data', [
@@ -437,7 +438,7 @@ class CommitteeInputReviewController extends Controller
                     'course_code' => $courseno,
                     'course_title' => $coursetitle,
                     'registered_students_count' => $registered_students_count,
-                    'hidden_teacher_count' => $teacher_count,
+                    'hidden_teacher_count' => $teacherCount,
                 ]);
 
                 if ($teacherCount > 0) {
@@ -459,7 +460,7 @@ class CommitteeInputReviewController extends Controller
                         'course_code' => $courseno,
                         'course_name' => $coursetitle,
                         'total_students' => $total_input_students,
-                        'total_teacher' => $teacher_count,
+                        'total_teacher' => $teacherCount,
                         'rate_head_id' => $rateHead_3->id,
                         'session_id' => $session_info->id,
                         'exam_type_id' => $exam_type,
@@ -480,7 +481,7 @@ class CommitteeInputReviewController extends Controller
                         'course_code'  => $courseno,
                         'course_name'   => $coursetitle,
                         'total_students' => $total_input_students,
-                        'total_teachers'  => $teacher_count,
+                        'total_teachers'  => $teacherCount,
                     ]);
                 }
             }

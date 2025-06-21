@@ -55,11 +55,12 @@
     </style>
 </head>
 <body>
-@php
-    $global_sum=0;
-@endphp
+
 @foreach($teachers as  $teacher)
 
+    @php
+        $global_sum=0;
+    @endphp
     {{-- Repeatable Header --}}
     <table class="header_table">
         <tr>
@@ -119,6 +120,7 @@
             //$assigns_order_1 = $teacher->rateAssigns->where('rateHead.order_no', '1');
             $assigns_order_1 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
+                       $assign->exam_type_id == 1 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '1';
             });
@@ -158,7 +160,8 @@
             //$assigns_order_2 = $teacher->rateAssigns->where('rateHead.order_no', '2');
             /* $assigns_order_2 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                  return $assign->session_id == $session_info->id &&
-                        $assign->rateHead &&
+            $assign->exam_type_id == 1 &&
+            $assign->rateHead &&
                         $assign->rateHead->order_no == '2';
              });*/
              $assigns_order_2 = App\Models\RateAssign::where('teacher_id', $teacher->id)
@@ -212,6 +215,7 @@
             //$assigns_order_3 = $teacher->rateAssigns->where('rateHead.order_no', '3');
              $assigns_order_3 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '3';
                });
@@ -259,6 +263,7 @@
             //$assigns_order_4 = $teacher->rateAssigns->where('rateHead.order_no', '4');
             $assigns_order_4 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '4';
                });
@@ -308,6 +313,7 @@
             //$assigns_order_5 = $teacher->rateAssigns->where('rateHead.order_no', '5');
             $assigns_order_5 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '5';
                });
@@ -358,6 +364,7 @@
             //$assign_6a = $teacher->rateAssigns->where('rateHead.order_no', '6.a')->first();
             $assign_6a = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                   return $assign->session_id == $session_info->id &&
+                         $assign->exam_type_id == 1 &&
                          $assign->rateHead &&
                          $assign->rateHead->order_no == '6.a';
               })->first();
@@ -376,7 +383,12 @@
             <td class="textstart">{{ $sub_head_6a }}</td>
             <td></td>
             <td>{{ $assign_6a->total_students ?? '' }}</td>
-            <td class="textend">{{ number_format($default_rate_6a, 2) }}</td>
+            <td class="textend">
+                @if(isset($default_rate_6a) && $assign_6a)
+                    {{ number_format($default_rate_6a, 2) }}
+                @endif
+            </td>
+           {{-- <td class="textend">{{ number_format($default_rate_6a, 2) }}</td>--}}
             <td class="textend">{{ isset($assign_6a->total_amount) ? number_format($assign_6a->total_amount, 2) : '' }}</td>
         </tr>
 
@@ -385,6 +397,7 @@
             //$assign_6b = $teacher->rateAssigns->where('rateHead.order_no', '6.b')->first();
              $assign_6b = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '6.b';
                })->first();
@@ -400,7 +413,12 @@
             <td class="textstart">{{ $sub_head_6b }}</td>
             <td></td>
             <td>{{ $assign_6b->total_students ?? '' }}</td>
-            <td class="textend">{{ number_format($default_rate_6b, 2) }}</td>
+            <td class="textend">
+                @if(isset($default_rate_6b) && $assign_6b)
+                    {{ number_format($default_rate_6b, 2) }}
+                @endif
+            </td>
+            {{--<td class="textend">{{ number_format($default_rate_6b, 2) }}</td>--}}
             <td class="textend">{{ isset($assign_6b->total_amount) ? number_format($assign_6b->total_amount, 2) : '' }}</td>
         </tr>
 
@@ -409,6 +427,7 @@
             //$assign_6c = $teacher->rateAssigns->where('rateHead.order_no', '6.c')->first();
              $assign_6c = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '6.c';
                })->first();
@@ -424,7 +443,12 @@
             <td class="textstart">{{ $sub_head_6c }}</td>
             <td></td>
             <td>{{ $assign_6c->total_students ?? '' }}</td>
-            <td class="textend">{{ number_format($default_rate_6c, 2) }}</td>
+            <td class="textend">
+                @if(isset($default_rate_6c) && $assign_6c)
+                    {{ number_format($default_rate_6c, 2) }}
+                @endif
+            </td>
+            {{--<td class="textend">{{ number_format($default_rate_6c, 2) }}</td>--}}
             <td class="textend">{{ isset($assign_6c->total_amount) ? number_format($assign_6c->total_amount, 2) : '' }}</td>
         </tr>
 
@@ -433,6 +457,7 @@
             //$assign_6d = $teacher->rateAssigns->where('rateHead.order_no', '6.d')->first();
              $assign_6d = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '6.d';
                })->first();
@@ -448,7 +473,12 @@
             <td class="textstart">{{ $sub_head_6d }}</td>
             <td></td>
             <td>{{ $assign_6d->total_students ?? '' }}</td>
-            <td class="textend">{{ number_format($default_rate_6d, 2) }}</td>
+            <td class="textend">
+                @if(isset($default_rate_6d) && $assign_6d)
+                    {{ number_format($default_rate_6d, 2) }}
+                @endif
+            </td>
+            {{--<td class="textend">{{ number_format($default_rate_6d, 2) }}</td>--}}
             <td class="textend">{{ isset($assign_6d->total_amount) ? number_format($assign_6d->total_amount, 2) : '' }}</td>
         </tr>
 
@@ -460,6 +490,7 @@
             //$assign_7e = $teacher->rateAssigns->where('rateHead.order_no', '7.e')->first();
              $assign_7e = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '7.e';
                })->first();
@@ -478,7 +509,12 @@
             <td class="textstart">{{ $sub_head_7e }}</td>
             <td></td>
             <td>{{ $assign_7e->total_students ?? '' }}</td>
-            <td class="textend">{{ number_format($default_rate_7e, 2) }}</td>
+            <td class="textend">
+                @if(isset($default_rate_7e) && $assign_7e)
+                    {{ number_format($default_rate_7e, 2) }}
+                @endif
+            </td>
+            {{--<td class="textend">{{ number_format($default_rate_7e, 2) }}</td>--}}
             <td class="textend">{{ isset($assign_7e->total_amount) ? number_format($assign_7e->total_amount, 2) : '' }}</td>
         </tr>
 
@@ -487,6 +523,7 @@
             //$assign_7f = $teacher->rateAssigns->where('rateHead.order_no', '7.f')->first();
             $assign_7f = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '7.f';
                })->first();
@@ -502,7 +539,12 @@
             <td class="textstart">{{ $sub_head_7f }}</td>
             <td></td>
             <td>{{ $assign_7f->total_students ?? '' }}</td>
-            <td class="textend">{{ number_format($default_rate_7f, 2) }}</td>
+            <td class="textend">
+                @if(isset($default_rate_7f) && $assign_7f)
+                    {{ number_format($default_rate_7f, 2) }}
+                @endif
+            </td>
+            {{--<td class="textend">{{ number_format($default_rate_7f, 2) }}</td>--}}
             <td class="textend">{{ isset($assign_7f->total_amount) ? number_format($assign_7f->total_amount, 2) : '' }}</td>
         </tr>
 
@@ -515,29 +557,32 @@
             //$assigns_order_8a = $teacher->rateAssigns->where('rateHead.order_no', '8.a');
             $assigns_order_8a = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '8.a';
                });
             //$assigns_order_8b = $teacher->rateAssigns->where('rateHead.order_no', '8.b');
              $assigns_order_8b = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '8.b';
                });
-            //$assigns_order_8c = $teacher->rateAssigns->where('rateHead.order_no', '8.c')->first();
+
              $assigns_order_8c = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '8.c';
                })->first();
 
-             //dd($assigns_order_8c);
-            //$assigns_order_8d = $teacher->rateAssigns->where('rateHead.order_no', '8.d')->first();
-            $assigns_order_8d = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
+
+            /*$assigns_order_8d = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->rateHead &&
+            $assign->exam_type_id == 1 &&
+            $assign->rateHead &&
                           $assign->rateHead->order_no == '8.d';
-               })->first();
+               })->first();*/
 
             $total_assigns_8a = $assigns_order_8a->count();
             $total_assigns_8b = $assigns_order_8b->count();
@@ -625,10 +670,21 @@
         <tr>
             <td class="textstart" colspan="2">{{ $head_8c }}</td>
             <td></td>
-            <td>{{ $assigns_order_8c->total_students ?? '' }}/{{ $assigns_order_8c->total_teachers ??'' }}</td>
+            @if($assigns_order_8c)
+                <td>
+                    {{ $assigns_order_8c->total_students ?? '' }}/{{ $assigns_order_8c->total_teachers ?? '' }}
+                </td>
+                <td class="textend">
+                    {{ is_numeric($rateAmount_8c_default_rate) ? number_format((float) $rateAmount_8c_default_rate, 2) : '' }}
+                </td>
+            @else
+                <td></td>
+                <td></td>
+            @endif
+           {{-- <td>{{ $assigns_order_8c->total_students ?? '' }}/{{ $assigns_order_8c->total_teachers ??'' }}</td>
             <td class="textend">
                 {{ is_numeric($rateAmount_8c_default_rate) ? number_format((float) $rateAmount_8c_default_rate, 2) : '' }}
-            </td>
+            </td>--}}
             <td class="textend">{{ isset($assigns_order_8c->total_amount) ? number_format((float)$assigns_order_8c->total_amount, 2) : '' }}</td>
         </tr>
 
@@ -638,6 +694,7 @@
         @php
             $assign_8_d = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
+                       $assign->exam_type_id == 1 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '8.d';
             });
@@ -692,6 +749,7 @@
             //$assigns_order_9 = $teacher->rateAssigns->where('rateHead.order_no', '9');
             $assigns_order_9 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '9';
                });
@@ -741,6 +799,7 @@
         @php
             $assign_10_a = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
+                       $assign->exam_type_id == 1 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '10.a';
             });
@@ -788,6 +847,7 @@
                 <td class="textend"></td>
                 <td class="textend"></td>
             </tr>
+        $assign->exam_type_id == 1 &&
         @endif
 
 
@@ -823,6 +883,7 @@
         @php
             $assign_10_b = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
+                       $assign->exam_type_id == 1 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '10.b';
             });
@@ -879,6 +940,7 @@
             //$assigns_order_11 = $teacher->rateAssigns->where('rateHead.order_no', '11')->first();
             $assigns_order_11 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                  return $assign->session_id == $session_info->id &&
+                        $assign->exam_type_id == 1 &&
                         $assign->rateHead &&
                         $assign->rateHead->order_no == '11';
              })->first();
@@ -910,6 +972,7 @@
             //$assign_12_a = $teacher->rateAssigns->where('rateHead.order_no', '12.a')->first();
              $assign_12_a = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '12.a';
                })->first();
@@ -946,6 +1009,7 @@
             //$assign_12_b = $teacher->rateAssigns->where('rateHead.order_no', '12.b')->first();
              $assign_12_b = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '12.b';
                })->first();
@@ -978,12 +1042,13 @@
             //$assign_13 = $teacher->rateAssigns->where('rateHead.order_no', '13')->first();
             $assign_13 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '13';
                })->first();
             $head_order_13 = $rateHead_order_13->head ?? 'Error';
             $rateAmount_13 = $rateAmount_order_13 ?? null;
-            $default_rate_13 = $rateAmount_16->default_rate ?? 0;
+            $default_rate_13 = $rateAmount_13->default_rate ?? 0;
 
             if ($assign_13 && $assign_13->total_amount) {
                 $global_sum += $assign_13->total_amount;
@@ -994,7 +1059,11 @@
             <td class="textstart" colspan="2">{{ $head_order_13 }}</td>
             <td></td>
             <td>{{ $assign_13->total_students ?? '' }}</td>
-            <td class="textend">{{ isset($default_rate_13) ? number_format($default_rate_13, 2) : '' }}</td>
+            @if($assign_13)
+                <td class="textend">{{ isset($default_rate_13) ? number_format($default_rate_13, 2) : '' }}</td>
+            @else
+                <td class="textend"></td>
+            @endif
             <td class="textend">{{ isset($assign_13->total_amount) ? number_format($assign_13->total_amount, 2) : '' }}</td>
         </tr>
 
@@ -1005,6 +1074,7 @@
             //$assigns_order_14 = $teacher->rateAssigns->where('rateHead.order_no', '14')->first();
              $assigns_order_14 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '14';
                })->first();
@@ -1029,6 +1099,7 @@
             //$assigns_order_15 = $teacher->rateAssigns->where('rateHead.order_no', '15')->first();
             $assigns_order_15 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '15';
                })->first();
@@ -1059,6 +1130,7 @@
             //$assign_16 = $teacher->rateAssigns->where('rateHead.order_no', '16')->first();
             $assign_16 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
+                          $assign->exam_type_id == 1 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '16';
                })->first();
@@ -1075,7 +1147,11 @@
             <td class="textstart" colspan="2">{{ $head_order_16 }}</td>
             <td></td>
             <td>{{ $assign_16->total_students ?? '' }}</td>
-            <td class="textend">{{ isset($default_rate_16) ? number_format($default_rate_16, 2) : '' }}</td>
+            <td class="textend">
+                @if(isset($default_rate_16) && $assign_16)
+                    {{ number_format($default_rate_16, 2) }}
+                @endif
+            </td>
             <td class="textend">{{ isset($assign_16->total_amount) ? number_format($assign_16->total_amount, 2) : '' }}</td>
         </tr>
 

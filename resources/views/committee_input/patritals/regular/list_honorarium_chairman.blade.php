@@ -19,7 +19,7 @@
                         {{-- Member Row --}}
                         <tr>
                             @php
-                                $selectedChairmanId = $teacher_head->teacher->id ?? null;
+                                $selectedChairmanEmail = $teacher_head->teacher->user->email ?? null;
                             @endphp
                             <td>
                                 <select name="chairman_id"
@@ -29,7 +29,13 @@
                                     @foreach($groupedTeachers as $deptFullName => $deptTeachers)
                                         <optgroup label="{{ $deptFullName }}">
                                             @foreach($deptTeachers as $teacher)
-                                                <option value="{{ $teacher->id }}" {{ $teacher->id == $selectedChairmanId ? 'selected' : '' }}>
+                                                @php
+                                                    $isSelected = isset($teacher->user->email, $selectedChairmanEmail) &&
+                                                                  $teacher->user->email === $selectedChairmanEmail;
+                                                @endphp
+                                                <option value="{{ $teacher->id }}"
+                                                    {{ $isSelected ? 'selected' : '' }}>
+
                                                     {{ $teacher->user->name }}- {{ $teacher->designation->designation }}  - {{ $teacher->department->shortname }}
                                                 </option>
                                             @endforeach

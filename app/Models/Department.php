@@ -11,6 +11,6 @@ class Department extends Model
     protected $guarded=[];
 
     public function faculty(){
-        $this->belongsTo(Department::class);
+        return $this->belongsTo(Department::class);
     }
 }

@@ -26,16 +26,7 @@ class ReportController extends Controller
     }
 
     //review session list show
-    public function reviewSessionShow(){
-        $sessions=ApiData::getReviewSessions();
-        if($sessions === null) {
-            return redirect()->back()->with([
-                'message' => 'Session Import Failed',
-                'alert-type' => 'error',
-            ]);
-        }
-        return view('report.session_view.review_session_list',compact('sessions'));
-    }
+
 
     public function regularReportGenerate(Request $request){
         $sid=$request->sid;

@@ -227,7 +227,7 @@ class ImportExportController extends Controller
 
             // Record the import history
             ImportHistory::create([
-                'table_name' => 'departmens',
+                'table_name' => 'departments',
                 'records_inserted' => $inserted,
                 'records_updated' => $updated,
                 'imported_by_name' => auth()->user()->name,

@@ -84,8 +84,13 @@
                                                                         class="form-control  populate"  required>
                                                                     <option value="">-- Select Teacher --</option>
                                                                     @foreach($teachers as $teacherOption)
+                                                                        @php
+                                                                            // Match by email between API teacher and  local DB teacher
+                                                                            $isSelected = isset($assignedTeacher->user->email, $teacherOption->user->email) &&
+                                                                                          $assignedTeacher->user->email === $teacherOption->user->email;
+                                                                        @endphp
                                                                         <option value="{{ $teacherOption->id }}"
-                                                                            {{ $assignedTeacher->id == $teacherOption->id ? 'selected' : '' }}>
+                                                                            {{ $isSelected ? 'selected' : '' }}>
                                                                             {{ $teacherOption->user->name }} - {{ $teacherOption->designation->designation }} -{{$teacherOption->department->shortname}}
                                                                         </option>
                                                                     @endforeach
@@ -101,8 +106,13 @@
                                                                         class="form-control populate" required>
                                                                     <option value="">-- Select Teacher --</option>
                                                                     @foreach($teachers as $teacherOption)
+                                                                        @php
+                                                                            // Match by email between API teacher and  local DB teacher
+                                                                            $isSelected = isset($assignedTeacher->user->email, $teacherOption->user->email) &&
+                                                                                          $assignedTeacher->user->email === $teacherOption->user->email;
+                                                                        @endphp
                                                                         <option value="{{ $teacherOption->id }}"
-                                                                            {{ $assignedTeacher->id == $teacherOption->id ? 'selected' : '' }}>
+                                                                            {{ $isSelected ? 'selected' : '' }}>
                                                                             {{ $teacherOption->user->name }} - {{ $teacherOption->designation->designation }}-{{$teacherOption->department->shortname}}
                                                                         </option>
                                                                     @endforeach

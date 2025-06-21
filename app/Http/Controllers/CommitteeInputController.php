@@ -81,10 +81,11 @@ class CommitteeInputController extends Controller
         //
         // give it internal database)
         $teacher_coordinator = ApiData::getCoOrdinator();
+        //return $teacher_coordinator->teacher->user->email;
 
         //active coordinator(we will give it internal database)
         $teacher_head = ApiData::getHead();
-        //return $teacher_head;
+        //return $teacher_head->teacher->user->email;
 
         //total student
         $totalStudentInSession=ApiData::getTotalStudentInSession($sid);
@@ -443,7 +444,7 @@ class CommitteeInputController extends Controller
                 $courseno = $request->input("courseno.$courseId");
                 $coursetitle = $request->input("coursetitle.$courseId");
                 $registered_students_count = $request->input("registered_students_count.$courseId");
-                $teacher_count = $request->input("teacher_count.$courseId");
+                $teacher_count = $request->input("teacher_count.$courseId");//teacher comes from database
 
 
                 Log::info('📘 Examiner Course-wise Input Data', [

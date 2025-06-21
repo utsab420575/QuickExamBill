@@ -44,7 +44,7 @@
                 ? \App\Models\RateAmount::where('session_id', $session->id)->where('saved', 1)->first()
                 : null;
         @endphp
-        @if(!$rate_amount)
+        @if($rate_amount)
             @include('committee_input.patritals.review.list_moderation_committe')
         @else
             <div class="alert alert-info">
@@ -60,7 +60,7 @@
                 : null;
         @endphp
 
-        @if(!$rate_amount)
+        @if($rate_amount)
             @include('committee_input.patritals.review.list_paper_setter_examineer')
         @else
             <div class="alert alert-info">
@@ -77,7 +77,7 @@
                 : null;
         @endphp
 
-        @if(!$rate_amount)
+        @if($rate_amount)
             @include('committee_input.patritals.review.list_scrutinizers')
         @else
             <div class="alert alert-info">

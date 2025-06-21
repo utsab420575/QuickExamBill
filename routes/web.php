@@ -5,6 +5,7 @@ use App\Http\Controllers\CommitteeInputReviewController;
 use App\Http\Controllers\ImportExportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ReportReviewController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -114,9 +115,9 @@ Route::middleware('auth')->group(function () {
     });
 
     //For Regular Session
-    Route::prefix('report')->controller(ReportController::class)->group(function () {
+    Route::prefix('report')->controller(ReportReviewController::class)->group(function () {
         Route::get('/review/session', 'reviewSessionShow')->name('report.review.session');
-        Route::get('/review/generate', 'reviewReportGenerate')->name('report.review.generate');
+        Route::post('/review/generate', 'reviewReportGenerate')->name('report.review.generate');
     });
 
 

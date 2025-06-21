@@ -95,12 +95,28 @@
                     <div class="row">
                         @foreach($chunks as $chunk)
                             <div class="col-md-6">
-                                @foreach($chunk as $teacherId => $singleAdvisor)
+                                @foreach($chunk as $apiTeacherId => $singleAdvisor)
+                                    @php
+                                        // Get the email of the teacher from the API response
+                                        $advisorEmail = $singleAdvisor->user->email ?? null;
+
+                                        // Match the API teacher's email with the local teacher list
+                                        //$teachers from controller ; it's not error here
+                                        $matchedTeacher = $teachers->first(function ($localTeacher) use ($advisorEmail) {
+                                            return isset($localTeacher->user->email) && $localTeacher->user->email === $advisorEmail;
+                                        });
+
+                                        // Use the local teacher's ID if matched, otherwise fall back to API ID
+                                        $localTeacherId = $matchedTeacher ? $matchedTeacher->id : $apiTeacherId;
+
+                                        // Use the matched local teacher's name, or fallback to API teacher's name or 'Unknown'
+                                        $displayName = $matchedTeacher->user->name ?? $singleAdvisor->user->name ?? 'Unknown';
+                                    @endphp
                                     <div class="form-group row pb-3">
-                                        <input type="hidden" name="advisorTeacherIds[]" value="{{ $teacherId }}">
+                                        <input type="hidden" name="advisorTeacherIds[]" value="{{ $localTeacherId }}">
 
                                         <div class="col-md-6">
-                                            <label>{{ getTeacherName($teacherId, $teachers) }}</label>
+                                            <label>{{ $displayName }}</label>
                                         </div>
 
                                         <div class="col-md-4">
