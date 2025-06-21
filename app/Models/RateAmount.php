@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class RateAmount extends Model
 {
@@ -23,5 +24,45 @@ class RateAmount extends Model
     {
         return $this->belongsTo(ExamType::class);
     }
+
+
+    public static function isRateAmountSaved($ugr_id, $exam_type_id, $order_no)
+    {
+        Log::info("Checking RateAmount saved status", [
+            'ugr_id' => $ugr_id,
+            'exam_type_id' => $exam_type_id,
+            'order_no' => $order_no,
+        ]);
+
+        $rate_head = RateHead::where('order_no', $order_no)->first();
+        $session = Session::where('ugr_id', $ugr_id)
+            ->where('exam_type_id', $exam_type_id)
+            ->first();
+
+        if (!$rate_head) {
+            Log::warning("RateHead not found", ['order_no' => $order_no]);
+            return false;
+        }
+
+        if (!$session) {
+            Log::warning("Session not found", ['ugr_id' => $ugr_id, 'exam_type_id' => $exam_type_id]);
+            return false;
+        }
+
+        $exists = self::where('session_id', $session->id)
+            ->where('rate_head_id', $rate_head->id)
+            ->where('exam_type_id', $exam_type_id)
+            ->where('saved', 1)
+            ->exists();
+
+        Log::info("RateAmount saved status", [
+            'session_id' => $session->id,
+            'rate_head_id' => $rate_head->id,
+            'exists' => $exists
+        ]);
+
+        return $exists;
+    }
+
 
 }
