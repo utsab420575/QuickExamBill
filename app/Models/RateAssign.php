@@ -23,4 +23,9 @@ class RateAssign extends Model
     {
         return $this->belongsTo(Session::class);
     }
+
+    public function examType()
+    {
+        return $this->belongsTo(ExamType::class);
+    }
 }

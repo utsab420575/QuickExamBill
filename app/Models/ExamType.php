@@ -23,4 +23,9 @@ class ExamType extends Model
     {
         return $this->hasMany(Session::class);
     }
+
+    public function rateAssigns()
+    {
+        return $this->hasMany(RateAssign::class);
+    }
 }

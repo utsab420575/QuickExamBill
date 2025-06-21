@@ -91,8 +91,8 @@
         </tr>
         <tr>
             <td colspan="2" class="pt-20"><strong>Name:</strong> {{ $teacher->user->name }}</td>
-            <td class="pt-20"><strong>Designation:</strong> {{ $teacher->designation->name }}</td>
-            <td class="pt-20"><strong>Department:</strong> ARCH, DUET</td>
+            <td class="pt-20"><strong>Designation:</strong> {{ $teacher->designation->designation }}</td>
+            <td class="pt-20"><strong>Department:</strong> {{ $teacher->department->shortname }},DUET</td>
         </tr>
         <tr>
             <td colspan="4" class="pt-30"><strong>Details of Examination Related Works</strong></td>
@@ -156,11 +156,16 @@
         {{-- Order = 2 --}}
         @php
             //$assigns_order_2 = $teacher->rateAssigns->where('rateHead.order_no', '2');
-             $assigns_order_2 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
+            /* $assigns_order_2 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                  return $assign->session_id == $session_info->id &&
                         $assign->rateHead &&
                         $assign->rateHead->order_no == '2';
-             });
+             });*/
+             $assigns_order_2 = App\Models\RateAssign::where('teacher_id', $teacher->id)
+                                ->where('session_id', $session_info->id)
+                                ->whereHas('rateHead', function ($q) {
+                                    $q->where('order_no', '2');
+                                })->get();
              $total_assigns = $assigns_order_2->count();
              $loopIndex = 0;
 
@@ -194,7 +199,8 @@
                 <td class="textstart" colspan="2" rowspan="1">{{ $head }}</td>
                 <td></td>
                 <td></td>
-                <td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>
+                {{--<td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>--}}
+                <td class="textend"></td>
                 <td class="textend"></td>
             </tr>
         @endif
@@ -227,7 +233,7 @@
                         <td class="textstart" colspan="2" rowspan="{{ $total_assigns }}">{{ $head }}</td>
                     @endif
                     <td>{{ $assign->course_code ?? '' }}</td>
-                    <td>{{$assign->total_students}}/{{ $assign->total_teacher ?? '' }}</td>
+                    <td>{{$assign->total_students}}/{{ $assign->total_teachers ?? '' }}</td>
                     <td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>
                     <td class="textend">{{ isset($assign->total_amount) ? number_format($assign->total_amount, 2) : '' }}</td>
                 </tr>
@@ -240,7 +246,8 @@
                 <td class="textstart" colspan="2" rowspan="1">{{ $head }}</td>
                 <td></td>
                 <td></td>
-                <td class="textend">{{ number_format($default_rate, 2) }}</td>
+                {{--<td class="textend">{{ number_format($default_rate, 2) }}</td>--}}
+                <td class="textend"></td>
                 <td class="textend"></td>
             </tr>
         @endif
@@ -286,7 +293,8 @@
                 <td class="textstart" colspan="2" rowspan="1">{{ $head }}</td>
                 <td></td>
                 <td></td>
-                <td class="textend">{{ number_format($default_rate, 2) }}</td>
+                {{--<td class="textend">{{ number_format($default_rate, 2) }}</td>--}}
+                <td class="textend"></td>
                 <td class="textend"></td>
             </tr>
         @endif
@@ -331,11 +339,12 @@
         @else
             {{-- Fallback row if no data --}}
             <tr>
-                <td rowspan="1">4</td>
+                <td rowspan="1">5</td>
                 <td class="textstart" colspan="2" rowspan="1">{{ $head }}</td>
                 <td></td>
                 <td></td>
-                <td class="textend">{{ number_format($default_rate, 2) }}</td>
+               {{-- <td class="textend">{{ number_format($default_rate, 2) }}</td>--}}
+                <td class="textend"></td>
                 <td class="textend"></td>
             </tr>
         @endif
@@ -563,7 +572,7 @@
                         <td class="textstart" rowspan="{{ $total_assigns_8a }}">{{ $sub_head_8a }}</td>
                     @endif
                     <td>{{ $assign->course_code ?? '' }}</td>
-                    <td>{{$assign->total_students}}/{{$assign->total_teacher}}</td>
+                    <td>{{$assign->total_students}}/{{$assign->total_teachers}}</td>
                     <td class="textend">{{ number_format((float)$rateAmount_8a_default_rate, 2) }}</td>
                     <td class="textend">{{ number_format((float)($assign->total_amount ?? 0), 2) }}</td>
                     @php $global_sum += $assign->total_amount ?? 0; @endphp
@@ -576,7 +585,8 @@
                 <td class="textstart">{{ $sub_head_8a }}</td>
                 <td></td>
                 <td></td>
-                <td class="textend">{{ number_format((float)$rateAmount_8a_default_rate, 2) }}</td>
+                {{--<td class="textend">{{ number_format((float)$rateAmount_8a_default_rate, 2) }}</td>--}}
+                <td class="textend"></td>
                 <td class="textend"></td>
             </tr>
         @endif
@@ -589,7 +599,7 @@
                         <td class="textstart" rowspan="{{ $total_assigns_8b }}">{{ $sub_head_8b }}</td>
                     @endif
                     <td>{{ $assign->course_code ?? '' }}</td>
-                    <td>{{$assign->total_students}}/{{$assign->total_teacher}}</td>
+                    <td>{{$assign->total_students}}/{{$assign->total_teachers}}</td>
                     <td class="textend">{{ number_format((float)$rateAmount_8b_default_rate, 2) }}</td>
                     <td class="textend">{{ number_format((float)($assign->total_amount ?? 0), 2) }}</td>
                     @php $global_sum += $assign->total_amount ?? 0; @endphp
@@ -600,7 +610,8 @@
                 <td class="textstart">{{ $sub_head_8b }}</td>
                 <td></td>
                 <td></td>
-                <td class="textend">{{ number_format((float)$rateAmount_8b_default_rate, 2) }}</td>
+                {{--<td class="textend">{{ number_format((float)$rateAmount_8b_default_rate, 2) }}</td>--}}
+                <td class="textend"></td>
                 <td class="textend"></td>
             </tr>
         @endif
@@ -614,7 +625,7 @@
         <tr>
             <td class="textstart" colspan="2">{{ $head_8c }}</td>
             <td></td>
-            <td>{{ $assigns_order_8c->total_students ?? '' }}/{{ $assigns_order_8c->total_teacher ??'' }}</td>
+            <td>{{ $assigns_order_8c->total_students ?? '' }}/{{ $assigns_order_8c->total_teachers ??'' }}</td>
             <td class="textend">
                 {{ is_numeric($rateAmount_8c_default_rate) ? number_format((float) $rateAmount_8c_default_rate, 2) : '' }}
             </td>
@@ -646,14 +657,16 @@
             @foreach ($assign_8_d as $assign)
                 @php
                     $global_sum += $assign->total_amount ?? 0;
-                    $total_student_all_course += $assign->total_students ?? 0;
+                   /* $total_student_all_course += $assign->total_students ?? 0;*/
+                    $total_student_all_course += $assign->no_of_items ?? 0;
                     $total_amount_all_course += $assign->total_amount ?? 0;
                 @endphp
             @endforeach
             <tr>
                 <td class="textstart" colspan="2">{{ $head }}</td>
                 <td>{{ $total_assigns }} courses</td>
-                <td>{{ $total_student_all_course }}/2</td>
+                {{--<td>{{ $total_student_all_course }}/2</td>--}}
+                <td>{{ $total_student_all_course }}</td>
                 <td class="textend">{{ number_format($default_rate_8_d, 2) }}</td>
                 <td class="textend">{{ number_format($total_amount_all_course, 2) }}</td>
             </tr>
@@ -663,7 +676,8 @@
                 <td class="textstart" colspan="2">{{ $head }}</td>
                 <td></td>
                 <td></td>
-                <td class="textend">{{ number_format($default_rate_8_d, 2) }}</td>
+                {{--<td class="textend">{{ number_format($default_rate_8_d, 2) }}</td>--}}
+                <td class="textend"></td>
                 <td class="textend"></td>
             </tr>
         @endif
@@ -699,7 +713,7 @@
                         <td class="textstart" colspan="2" rowspan="{{ $total_assigns }}">{{ $head }}</td>
                     @endif
                     <td>{{ $assign->course_code ?? '' }}</td>
-                    <td>{{$assign->total_students}}/{{$assign->total_teacher}}</td>
+                    <td>{{$assign->total_students}}/{{$assign->total_teachers}}</td>
                     <td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>
                     <td class="textend">{{ isset($assign->total_amount) ? number_format($assign->total_amount, 2) : '' }}</td>
                 </tr>
@@ -712,7 +726,8 @@
                 <td class="textstart" colspan="2" rowspan="1">{{ $head }}</td>
                 <td></td>
                 <td></td>
-                <td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>
+                {{--<td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>--}}
+                <td class="textend"></td>
                 <td class="textend"></td>
             </tr>
         @endif
@@ -746,7 +761,8 @@
             @foreach ($assign_10_a as $assign)
                 @php
                     $global_sum += $assign->total_amount ?? 0;
-                    $total_student_all_course += $assign->total_students ?? 0;
+                   /* $total_student_all_course += $assign->total_students ?? 0;*/
+                    $total_student_all_course += $assign->no_of_items ?? 0;
                     $total_amount_all_course += $assign->total_amount ?? 0;
                 @endphp
             @endforeach
@@ -755,7 +771,8 @@
                 <td class="textstart" rowspan="2">{{ $head }}</td>
                 <td class="textstart">(a) {{ $sub_head_10_a }}</td>
                 <td>{{ $total_assigns }} courses</td>
-                <td>{{ $total_student_all_course }}/2</td>
+                {{--<td>{{ $total_student_all_course }}/2</td>--}}
+                <td>{{ $total_student_all_course }}</td>
                 <td class="textend">{{ number_format($default_rate_10_a, 2) }}</td>
                 <td class="textend">{{ number_format($total_amount_all_course, 2) }}</td>
             </tr>
@@ -767,7 +784,8 @@
                 <td class="textstart">(a) {{ $sub_head_10_a }}</td>
                 <td></td>
                 <td></td>
-                <td class="textend">{{ number_format($default_rate_10_a, 2) }}</td>
+                {{--<td class="textend">{{ number_format($default_rate_10_a, 2) }}</td>--}}
+                <td class="textend"></td>
                 <td class="textend"></td>
             </tr>
         @endif
@@ -825,14 +843,16 @@
             @foreach ($assign_10_b as $assign)
                 @php
                     $global_sum += $assign->total_amount ?? 0;
-                    $total_student_all_course += $assign->total_students ?? 0;
+                    /*$total_student_all_course += $assign->total_students ?? 0;*/
+                    $total_student_all_course += $assign->no_of_items ?? 0;
                     $total_amount_all_course += $assign->total_amount ?? 0;
                 @endphp
             @endforeach
             <tr>
                 <td class="textstart">(b) {{ $sub_head_10_b }}</td>
                 <td>{{ $total_assigns }} courses</td>
-                <td>{{ $total_student_all_course }}/2</td>
+                {{--<td>{{ $total_student_all_course }}/2</td>--}}
+                <td>{{ $total_student_all_course }}</td>
                 <td class="textend">{{ number_format($default_rate_10_b, 2) }}</td>
                 <td class="textend">{{ number_format($total_amount_all_course, 2) }}</td>
             </tr>
@@ -842,7 +862,8 @@
                 <td class="textstart">(a) {{ $sub_head_10_b }}</td>
                 <td></td>
                 <td></td>
-                <td class="textend">{{ number_format($default_rate_10_b, 2) }}</td>
+               {{-- <td class="textend">{{ number_format($default_rate_10_b, 2) }}</td>--}}
+                <td class="textend"></td>
                 <td class="textend"></td>
             </tr>
         @endif
@@ -861,7 +882,8 @@
                         $assign->rateHead &&
                         $assign->rateHead->order_no == '11';
              })->first();
-            $head_order_11 = $rateHead_order_11->head ?? 'Error';
+            $total_assigns = $assigns_order_11 ? $assigns_order_11->count() : 0;
+            $head_order_11 = $rateHead_order_11->head ?? '';
             $default_rate = $rateAmount_order_11->default_rate ?? 0;
             if ($assigns_order_11 && $assigns_order_11->total_amount) {
                 $global_sum += $assigns_order_11->total_amount;
@@ -872,7 +894,11 @@
             <td class="textstart" colspan="2">{{ $head_order_11 }}</td>
             <td></td>
             <td>{{ $assigns_order_11->no_of_items ?? '' }}</td>
-            <td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>
+            <td class="textend">
+                @if($total_assigns > 0 && isset($rateAmount_order_11->default_rate))
+                    {{ $rateAmount_order_11->default_rate }}
+                @endif
+            </td>
             <td class="textend">{{ isset($assigns_order_11->total_amount) ? number_format($assigns_order_11->total_amount, 2) : '' }}</td>
         </tr>
 
@@ -887,6 +913,9 @@
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '12.a';
                })->first();
+
+            $total_assigns = $assign_12_a ? $assign_12_a->count() : 0;
+
             $rateAmount_12_a = $rateAmount_order_12_a ?? null;
             $head = $rateHead_order_12_a->head ?? '';
             $sub_head_12_a = $rateHead_order_12_a->sub_head ?? 'Error';
@@ -900,9 +929,15 @@
             <td rowspan="2">12</td>
             <td class="textstart" rowspan="2">{{ $head }}</td>
             <td class="textstart">(a) {{ $sub_head_12_a }}</td>
-            <td>{{ $assign_12_a->course_code ?? '' }}</td>
+           {{-- <td>{{ $assign_12_a->course_code ?? '' }}</td>--}}
+            <td></td>
             <td>{{ $assign_12_a->no_of_items ?? '' }}</td>
-            <td class="textend">{{ number_format($default_rate_12_a, 2) }}</td>
+            {{--<td class="textend">{{ number_format($default_rate_12_a, 2) }}</td>--}}
+            <td class="textend">
+                @if($total_assigns > 0 && isset($rateAmount_order_12_a->default_rate))
+                    {{ $rateAmount_order_12_a->default_rate }}
+                @endif
+            </td>
             <td class="textend">{{ isset($assign_12_a->total_amount) ? number_format($assign_12_a->total_amount, 2) : '' }}</td>
         </tr>
 
@@ -914,6 +949,8 @@
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '12.b';
                })->first();
+
+             $total_assigns = $assign_12_b ? $assign_12_b->count() : 0;
             $rateAmount_12_b = $rateAmount_order_12_b ?? null;
             $sub_head_12_b = $rateHead_order_12_b->sub_head ?? '6.B';
             $default_rate_12_b = $rateAmount_12_b->default_rate ?? 0;
@@ -924,9 +961,13 @@
         @endphp
         <tr>
             <td class="textstart">(b) {{ $sub_head_12_b }}</td>
-            <td>{{ $assign_12_b->course_code ?? '' }}</td>
+            <td></td>
             <td>{{ $assign_12_b->no_of_items ?? '' }}</td>
-            <td class="textend">{{ number_format($default_rate_12_b, 2) }}</td>
+            <td class="textend">
+                @if($total_assigns > 0 && isset($rateAmount_order_12_b->default_rate))
+                    {{ $rateAmount_order_12_b->default_rate }}
+                @endif
+            </td>
             <td class="textend">{{ isset($assign_12_b->total_amount) ? number_format($assign_12_b->total_amount, 2) : '' }}</td>
         </tr>
 

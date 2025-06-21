@@ -56,8 +56,12 @@ class ReportController extends Controller
             'designation',
             'rateAssigns',
         ])->whereHas('rateAssigns', function ($query) use ($session_info) {
-            $query->where('session_id', $session_info->id);
-        })->get();
+            $query->where('session_id', $session_info->id)
+                    ->where('exam_type_id', 1);
+        })
+            ->orderByRaw('department_id = 2 DESC') // ✅ Architecture first
+            ->orderBy('department_id')             // Then others by department
+            ->get();
 
         Log::info('👨‍🏫 Total teachers found for this session: ' . $teachers->count());
 
