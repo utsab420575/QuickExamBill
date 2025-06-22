@@ -37,37 +37,111 @@
         </header>
         <!-- start: page -->
 
-        {{--@php
-            $rate_head = \App\Models\RateHead::where('order_no', 1)->first();
-            $session = \App\Models\Session::where('ugr_id', $sid)->where('exam_type_id', 2)->first();
-            $rate_amount = $session
-                ? \App\Models\RateAmount::where('session_id', $session->id)->where('saved', 1)->first()
-                : null;
+        @php
+            use App\Models\RateAmount;
+            $session = \App\Models\Session::where('ugr_id', $sid)->where('exam_type_id', 1)->first();
+            $session_info=(object)$session_info;
         @endphp
-        @if($rate_amount)
+
+        @if(!RateAmount::isRateAmountSaved($sid, 2, '1'))
             @include('committee_input.patritals.review.list_moderation_committe')
         @else
             <div class="alert alert-info">
-                Moderation Committee already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}. If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
+                List of  Examination Committee already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
+                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
             </div>
-        @endif--}}
+        @endif
+
+        @if(!RateAmount::isRateAmountSaved($sid, 2, '2'))
+            @include('committee_input.patritals.review.list_paper_setter_examineer')
+        @else
+            <div class="alert alert-info">
+                List of Examiners Committee already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
+                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
+            </div>
+        @endif
 
 
-        @include('committee_input.patritals.review.list_moderation_committe')
+        @if(!RateAmount::isRateAmountSaved($sid, 2, '9'))
+            @include('committee_input.patritals.review.list_scrutinizers')
+        @else
+            <div class="alert alert-info">
+                List of  Scrutinizers already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
+                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
+            </div>
+        @endif
 
-        @include('committee_input.patritals.review.list_paper_setter_examineer')
+        @if(!RateAmount::isRateAmountSaved($sid, 2, '8.a'))
+            @include('committee_input.patritals.review.list_preparation_theory_grade_sheet')
+        @else
+            <div class="alert alert-info">
+                List of  Preparation Theory Grade already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
+                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
+            </div>
+        @endif
 
-        @include('committee_input.patritals.review.list_scrutinizers')
+        @if(!RateAmount::isRateAmountSaved($sid, 2, '10.a'))
+            @include('committee_input.patritals.review.list_scrutinizing_theory_grade_sheet')
+        @else
+            <div class="alert alert-info">
+                List of  Scrutinizing of Grade Sheet(Theoretical) already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
+                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
+            </div>
+        @endif
 
-        @include('committee_input.patritals.review.list_preparation_theory_grade_sheet')
 
-        @include('committee_input.patritals.review.list_scrutinizing_theory_grade_sheet')
+        @if(!RateAmount::isRateAmountSaved($sid, 2, '12.a'))
+            @include('committee_input.patritals.review.list_stencil_cutting_question_paper')
+        @else
+            <div class="alert alert-info">
+                List of  Stencill Cutting  already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
+                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
+            </div>
+        @endif
 
-        @include('committee_input.patritals.review.list_stencil_cutting_question_paper')
-        @include('committee_input.patritals.review.list_printing_question_paper')
-        @include('committee_input.patritals.review.list_comparison_question_paper')
+        @if(!RateAmount::isRateAmountSaved($sid, 2, '12.b'))
+            @include('committee_input.patritals.review.list_printing_question_paper')
+        @else
+            <div class="alert alert-info">
+                List of  Printing of Question paper already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
+                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
+            </div>
+        @endif
 
-        @include('committee_input.patritals.review.list_honorarium_chairman')
+        @if(!RateAmount::isRateAmountSaved($sid, 2, '11'))
+            @include('committee_input.patritals.review.list_comparison_question_paper')
+        @else
+            <div class="alert alert-info">
+                List of  Comparison,Correction,sketching already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
+                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
+            </div>
+        @endif
+        @if(!RateAmount::isRateAmountSaved($sid, 2, '15'))
+            @include('committee_input.patritals.review.list_honorarium_chairman')
+        @else
+            <div class="alert alert-info">
+                List of  Honorarium for Chairman already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
+                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
+            </div>
+        @endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

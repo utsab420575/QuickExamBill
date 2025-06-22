@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\CommitteeInputController;
 use App\Http\Controllers\CommitteeInputReviewController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ImportExportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReportReviewController;
+use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -119,6 +121,26 @@ Route::middleware('auth')->group(function () {
         Route::get('/review/session', 'reviewSessionShow')->name('report.review.session');
         Route::post('/review/generate', 'reviewReportGenerate')->name('report.review.generate');
     });
+
+    Route::controller(TeacherController::class)->group(function () {
+        Route::get('/teacher/all', 'AllTeacher')->name('teacher.all');
+        Route::get('/teacher/add', 'AddTeacher')->name('teacher.add');
+        Route::post('/teacher/store', 'StoreTeacher')->name('teacher.store');
+        Route::get('/teacher/edit/{id}', 'EditTeacher')->name('teacher.edit');
+        Route::post('/teacher/update', 'UpdateTeacher')->name('teacher.update');
+        Route::get('/teacher/delete/{id}', 'DeleteTeacher')->name('teacher.delete');
+    });
+
+    Route::controller(EmployeeController::class)->group(function () {
+        Route::get('/employee/all', 'Allemployee')->name('employee.all');
+        Route::get('/employee/add', 'Addemployee')->name('employee.add');
+        Route::post('/employee/store', 'Storeemployee')->name('employee.store');
+        Route::get('/employee/edit/{id}', 'Editemployee')->name('employee.edit');
+        Route::post('/employee/update', 'Updateemployee')->name('employee.update');
+        Route::get('/employee/delete/{id}', 'Deleteemployee')->name('employee.delete');
+    });
+
+
 
 
 });

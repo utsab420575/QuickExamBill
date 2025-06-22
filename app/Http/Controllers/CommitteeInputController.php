@@ -767,37 +767,68 @@ class CommitteeInputController extends Controller
 
             // ✅ Step 6: Save RateAssign per teacher
             foreach ($sessionalTeacherData as $courseId => $teacherIds) {
-                $hours = $noOfContactHour[$courseId] ?? [];
+                // Case 1: Common hour (multi-select)
+                if ($request->input("teacher_count.$courseId") == 0) {
+                    $contactHour = floatval($request->input("no_of_contact_hour.$courseId"));
 
-                foreach ($teacherIds as $index => $teacherId) {
-                    $contactHour = isset($hours[$index]) ? floatval($hours[$index]) : 0;
-                    $totalAmount = $contactHour * $rateAmount->default_rate * $total_week;
+                    foreach ($teacherIds as $teacherId) {
+                        $totalAmount = $contactHour * $rateAmount->default_rate * $total_week;
+                        if ($totalAmount < $rateAmount->min_rate) $totalAmount = $rateAmount->min_rate;
 
-                    if ($totalAmount < $rateAmount->min_rate) {
-                        $totalAmount = $rateAmount->min_rate;
+                        Log::info('📘 Sessional Teacher RateAssign From MultiSelect', [
+                            'teacher_id' => $teacherId,
+                            'course_id' => $courseId,
+                            'contact_hour' => $contactHour,
+                            'total_week' => $total_week,
+                            'total_amount' => $totalAmount,
+                        ]);
+                        RateAssign::create([
+                            'teacher_id' => $teacherId,
+                            'rate_head_id' => $rateHead->id,
+                            'session_id' => $session_info->id,
+                            'no_of_items' => $contactHour,
+                            'total_amount' => $totalAmount,
+                            'exam_type_id' => $exam_type,
+                            'course_code' => $request->input("courseno.$courseId"),
+                            'course_name' => $request->input("coursetitle.$courseId"),
+                            'total_students' => $total_week,
+                            'total_teachers' => count($teacherIds),
+                        ]);
                     }
+                }
+                else{
+                    $hours = $noOfContactHour[$courseId] ?? [];
 
-                    Log::info('📘 Sessional Teacher RateAssign', [
-                        'teacher_id' => $teacherId,
-                        'course_id' => $courseId,
-                        'contact_hour' => $contactHour,
-                        'total_week' => $total_week,
-                        'total_amount' => $totalAmount,
-                    ]);
+                    foreach ($teacherIds as $index => $teacherId) {
+                        $contactHour = isset($hours[$index]) ? floatval($hours[$index]) : 0;
+                        $totalAmount = $contactHour * $rateAmount->default_rate * $total_week;
 
-                    RateAssign::create([
-                        'teacher_id' => $teacherId,
-                        'rate_head_id' => $rateHead->id,
-                        'session_id' => $session_info->id,
-                        'no_of_items' => $contactHour,
-                        'total_amount' => $totalAmount,
-                        'exam_type_id' => $exam_type,
+                        if ($totalAmount < $rateAmount->min_rate) {
+                            $totalAmount = $rateAmount->min_rate;
+                        }
 
-                        'course_code' => $request->input("courseno.$courseId"),
-                        'course_name' => $request->input("coursetitle.$courseId"),
-                        'total_students' => $total_week,
-                        'total_teachers' => $request->input("teacher_count.$courseId"),
-                    ]);
+                        Log::info('📘 Sessional Teacher RateAssign', [
+                            'teacher_id' => $teacherId,
+                            'course_id' => $courseId,
+                            'contact_hour' => $contactHour,
+                            'total_week' => $total_week,
+                            'total_amount' => $totalAmount,
+                        ]);
+
+                        RateAssign::create([
+                            'teacher_id' => $teacherId,
+                            'rate_head_id' => $rateHead->id,
+                            'session_id' => $session_info->id,
+                            'no_of_items' => $contactHour,
+                            'total_amount' => $totalAmount,
+                            'exam_type_id' => $exam_type,
+
+                            'course_code' => $request->input("courseno.$courseId"),
+                            'course_name' => $request->input("coursetitle.$courseId"),
+                            'total_students' => $total_week,
+                            'total_teachers' => $request->input("teacher_count.$courseId"),
+                        ]);
+                    }
                 }
             }
 

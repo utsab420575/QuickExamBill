@@ -68,64 +68,33 @@
                                                 </tr>
                                                 </thead>
                                                 <tbody>
-
-                                                    @if($courseData->teacher_count == 0)
-
-                                                        <tr>
-                                                            <td>
-                                                                <label>Select Teachers:</label>
-                                                                <select name="sessional_course_teacher_ids[{{ $single_course->id }}][]"
-                                                                        multiple data-plugin-selectTwo
-                                                                        id="sessional_course_teacher_{{ $single_course->id }}_{{ $loop->index }}"
-                                                                        class="form-control populate" required>
-                                                                    <option value="" disabled>-- Select Teacher --</option>
-                                                                    @foreach($groupedTeachers as $deptFullName => $deptTeachers)
-                                                                        <optgroup label="{{ $deptFullName }}">
-                                                                            @foreach($deptTeachers as $teacher)
-                                                                                <option value="{{ $teacher->id }}">
-                                                                                    {{ $teacher->user->name }}  - {{ $teacher->department->shortname }}
-                                                                                </option>
-                                                                            @endforeach
-                                                                        </optgroup>
-                                                                    @endforeach
-                                                                </select>
-                                                            </td>
-                                                            <td>
-                                                                <label></label>
-                                                                <input name="no_of_contact_hour[{{ $single_course->id }}]" type="number" min="1" step="any" class="form-control"
-                                                                       value="{{ $single_course->credithour ? $single_course->credithour * 2 : '' }}"
-                                                                       required>
-                                                            </td>
-                                                        </tr>
-                                                    @else
-                                                        @foreach($single_course->teachers as $assignedTeacher)
-                                                            <tr>
-                                                                <td>
-                                                                    <select name="sessional_course_teacher_ids[{{ $single_course->id }}][]"
-                                                                            data-plugin-selectTwo
-                                                                            class="form-control populate" required>
-                                                                        <option value="">-- Select Teacher --</option>
-                                                                        @foreach($teachers as $teacherOption)
-                                                                            @php
-                                                                                // Match by email between API teacher and  local DB teacher
-                                                                                $isSelected = isset($assignedTeacher->user->email, $teacherOption->user->email) &&
-                                                                                              $assignedTeacher->user->email === $teacherOption->user->email;
-                                                                            @endphp
-                                                                            <option value="{{ $teacherOption->id }}"
-                                                                                {{ $isSelected ? 'selected' : '' }}>
-                                                                                {{ $teacherOption->user->name }} - {{ $teacherOption->designation->designation }} - {{ $teacherOption->department->shortname }}
-                                                                            </option>
-                                                                        @endforeach
-                                                                    </select>
-                                                                </td>
-                                                                <td>
-                                                                    <input name="no_of_contact_hour[{{ $single_course->id }}][]" type="number" min="1" step="any" class="form-control"
-                                                                           value="{{ $single_course->credithour ? $single_course->credithour * 2 : '' }}"
-                                                                           required>
-                                                                </td>
-                                                            </tr>
-                                                        @endforeach
-                                                    @endif
+                                                @foreach($single_course->teachers as $assignedTeacher)
+                                                    <tr>
+                                                        <td>
+                                                            <select name="sessional_course_teacher_ids[{{ $single_course->id }}][]"
+                                                                    data-plugin-selectTwo
+                                                                    class="form-control populate" required>
+                                                                <option value="">-- Select Teacher --</option>
+                                                                @foreach($teachers as $teacherOption)
+                                                                    @php
+                                                                        // Match by email between API teacher and  local DB teacher
+                                                                        $isSelected = isset($assignedTeacher->user->email, $teacherOption->user->email) &&
+                                                                                      $assignedTeacher->user->email === $teacherOption->user->email;
+                                                                    @endphp
+                                                                    <option value="{{ $teacherOption->id }}"
+                                                                        {{ $isSelected ? 'selected' : '' }}>
+                                                                        {{ $teacherOption->user->name }} - {{ $teacherOption->designation->designation }} - {{ $teacherOption->department->shortname }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </td>
+                                                        <td>
+                                                            <input name="no_of_contact_hour[{{ $single_course->id }}][]" type="number" min="1" step="any" class="form-control"
+                                                                   value="{{ $single_course->credithour ? $single_course->credithour * 2 : '' }}"
+                                                                   required>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
                                                 </tbody>
                                             </table>
                                         </div>

@@ -70,6 +70,44 @@
                             </li>
                         </ul>
                     </li>
+                    <li class="nav-parent">
+                        <a class="nav-link" href="#">
+                            <i class="bx bx-file" aria-hidden="true"></i>
+                            <span>Committee Teacher Manage</span>
+                        </a>
+                        <ul class="nav nav-children">
+                            <li>
+                                <a class="nav-link" href="">
+                                    All Teacher
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="nav-link" href="{{route('teacher.add')}}">
+                                    Add Teacher
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-parent">
+                        <a class="nav-link" href="#">
+                            <i class="bx bx-file" aria-hidden="true"></i>
+                            <span>Committee Employee Manage</span>
+                        </a>
+                        <ul class="nav nav-children">
+                            <li>
+                                <a class="nav-link" href="">
+                                    All Employee
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="nav-link" href="{{route('employee.add')}}">
+                                    Add Employee
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
 
                     <li class="nav-parent">
                         <a class="nav-link" href="#">
@@ -95,20 +133,6 @@
 
                 </ul>
             </nav>
-            <hr class="separator" />
-            <div class="sidebar-widget widget-tasks">
-                <div class="widget-header">
-                    <h6>Projects</h6>
-                    <div class="widget-toggle">+</div>
-                </div>
-                <div class="widget-content">
-                    <ul class="list-unstyled m-0">
-                        <li><a href="#">Porto HTML5 Template</a></li>
-                        <li><a href="#">Tucson Template</a></li>
-                        <li><a href="#">Porto Admin</a></li>
-                    </ul>
-                </div>
-            </div>
         </div>
         <script>
             // Maintain Scroll Position

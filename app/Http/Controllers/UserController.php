@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
+use App\Models\Designation;
+use App\Models\Employee;
+use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,8 +37,10 @@ class UserController extends Controller
 
     public function UserProfile(){
         $user = auth()->user();
+        $designations=Designation::all();
+        $departments=Department::all();
 
-        return view('user_profile.user_profile_view',compact('user'));
+        return view('user_profile.user_profile_view',compact('user','designations','departments'));
 
        /* if ($user->hasRole('teacher')) {
             return view('profile.teacher', compact('user'));
@@ -61,6 +67,11 @@ class UserController extends Controller
                 'max:255',
                 Rule::unique('users', 'email')->ignore(auth()->id()),
             ],
+
+            'address' => 'nullable|string|max:500',
+            'designation' => 'required|exists:designations,id',
+            'department' => 'required|exists:departments,id',
+
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
@@ -70,6 +81,7 @@ class UserController extends Controller
         $user->name = $request->name;
         $user->phone = $request->phone;
         $user->email = $request->email;
+
 
 
 
@@ -95,7 +107,80 @@ class UserController extends Controller
         $user->save();
         Log::info('User profile updated successfully', ['user_id' => $user->id]);
 
-        return redirect()->route('dashboard');
+        //if employee:
+        if ($user->employee) {
+            // Update existing employee
+            $employee = $user->employee;
+            $employee->employeename = $request->name;
+            $employee->phoneno = $request->phone;
+            $employee->preaddress = $request->address ?? null;
+            $employee->designation_id = $request->designation;
+            $employee->department_id = $request->department;
+            $employee->photo = $user->photo ?? null;
+            $employee->save();
+
+            Log::info('Employee updated', ['employee_id' => $employee->id]);
+            $notifications = [
+                "message" => 'Employee Updated Successfully',
+                "alert-type" => 'success',
+            ];
+        } elseif ($user->teacher) {
+            // Update existing teacher
+            $teacher = $user->teacher;
+            $teacher->teachername = $request->name;
+            $teacher->phoneno = $request->phone;
+            $teacher->preaddress = $request->address ?? null;
+            $teacher->designation_id = $request->designation;
+            $teacher->department_id = $request->department;
+            $teacher->photo = $user->photo ?? null;
+            $teacher->save();
+
+            Log::info('Teacher updated', ['teacher_id' => $teacher->id]);
+            $notifications = [
+                "message" => 'Teacher Updated Successfully',
+                "alert-type" => 'success',
+            ];
+        } else {
+            // Decide based on designation name
+            $designation = Designation::find($request->designation);
+            $isEmployee = in_array(strtolower($designation->designation), ['Officer', 'Staff']);
+
+            if ($isEmployee) {
+                $employee = new Employee();
+                $employee->employeename = $request->name;
+                $employee->phoneno = $request->phone;
+                $employee->preaddress = $request->address ?? null;
+                $employee->designation_id = $request->designation;
+                $employee->department_id = $request->department;
+                $employee->user_id = $user->id;
+                $employee->photo = $user->photo ?? null;
+                $employee->save();
+
+                Log::info('Employee created', ['employee_id' => $employee->id]);
+                $notifications = [
+                    "message" => 'Employee Added Successfully',
+                    "alert-type" => 'success',
+                ];
+            } else {
+                $teacher = new Teacher();
+                $teacher->teachername = $request->name;
+                $teacher->phoneno = $request->phone;
+                $teacher->preaddress = $request->address ?? null;
+                $teacher->designation_id = $request->designation;
+                $teacher->department_id = $request->department;
+                $teacher->user_id = $user->id;
+                $teacher->photo = $user->photo ?? null;
+                $teacher->save();
+
+                Log::info('Teacher created', ['teacher_id' => $teacher->id]);
+                $notifications = [
+                    "message" => 'Teacher Added Successfully',
+                    "alert-type" => 'success',
+                ];
+            }
+        }
+
+        return redirect()->back()->with($notifications);
     }
     public function UserPasswordChange(){
         return view('user_profile.change_password');
