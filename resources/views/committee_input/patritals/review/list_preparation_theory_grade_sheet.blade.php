@@ -1,20 +1,20 @@
 @push('styles')
     <style>
-        .card-list-of-prepare-theory-grade-sheet {
+        .card-list-of-prepares-theory-grade-sheet {
             background-color: white; /* starting point */
             transition: background-color 0.6s ease-in-out;
         }
 
-        .card-list-of-prepare-theory-grade-sheet.fade-highlight {
+        .card-list-of-prepares-theory-grade-sheet.fade-highlight {
             background-color: #28a745; /* strong green */
         }
 
-        .card-list-of-prepare-theory-grade-sheet.fade-out {
+        .card-list-of-prepares-theory-grade-sheet.fade-out {
             background-color: white;
         }
     </style>
 @endpush
-<form id="form-list-of-prepare-theory-grade-sheet" action="{{ route('committee.input.review.theory.grade.sheet.store') }}" method="POST">
+<form id="form-list-of-prepares-theory-grade-sheet" action="{{ route('committee.input.review.theory.grade.sheet.store') }}" method="POST">
     @csrf
     <input type="hidden" id="sid" name="sid" value="{{$sid}}">
     <div class="row mb-5">
@@ -59,13 +59,13 @@
                                             </h2>
                                         </header>
 
-                                        <div class="card-body card-list-of-prepare-theory-grade-sheet">
+                                        <div class="card-body card-list-of-prepares-theory-grade-sheet">
                                             <div class="row mb-3">
                                                 <div class="col-md-9">
-                                                    <label for="prepare_theory_grade_sheet_teacher_{{ $single_course->id }}_{{ $loop->index }}">Select Scrutinizers</label>
-                                                    <select name="prepare_theory_grade_sheet_teacher_ids[{{ $single_course->id }}][]"
+                                                    <label for="prepares_theory_grade_sheet_teacher_{{ $single_course->id }}_{{ $loop->index }}">Select Scrutinizers</label>
+                                                    <select name="prepares_theory_grade_sheet_teacher_ids[{{ $single_course->id }}][]"
                                                             multiple data-plugin-selectTwo
-                                                            id="prepare_theory_grade_sheet_teacher_{{ $single_course->id }}_{{ $loop->index }}"
+                                                            id="prepares_theory_grade_sheet_teacher_{{ $single_course->id }}_{{ $loop->index }}"
                                                             class="form-control  populate"  required>
                                                         <option value="" disabled>-- Select Teacher --</option>
                                                         @foreach($groupedTeachers as $deptFullName => $deptTeachers)
@@ -82,8 +82,8 @@
 
 
                                                 <div class="col-md-3">
-                                                    <label for="prepare_theory_grade_sheet_no_of_students">Per Script Rate</label>
-                                                    <input name="prepare_theory_grade_sheet_no_of_students[{{ $single_course->id }}]"
+                                                    <label for="prepares_theory_grade_sheet_no_of_students">Per Script Rate</label>
+                                                    <input name="prepares_theory_grade_sheet_no_of_students[{{ $single_course->id }}]"
                                                            type="number" min="1" step="any"
                                                            class="form-control"
                                                            value="{{ $courseData->registered_students_count }}"
@@ -96,7 +96,7 @@
                             @endif
 
                             <div class="text-end mt-3">
-                                <button id="submit-list-of-prepare-theory-grade-sheet" type="submit" class="btn btn-primary">
+                                <button id="submit-list-of-prepares-theory-grade-sheet" type="submit" class="btn btn-primary">
                                     Submit Theory Grade Sheet Committee
                                 </button>
                             </div>
@@ -112,7 +112,7 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const form = document.getElementById('form-list-of-prepare-theory-grade-sheet');
+            const form = document.getElementById('form-list-of-prepares-theory-grade-sheet');
 
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
@@ -153,13 +153,13 @@
                                     confirmButtonText: 'OK'
                                 });
 
-                                const submitBtn = document.getElementById('submit-list-of-prepare-theory-grade-sheet');
+                                const submitBtn = document.getElementById('submit-list-of-prepares-theory-grade-sheet');
                                 submitBtn.textContent = 'Already Saved';             // ✅ Change text
                                 submitBtn.disabled = true;                           // ✅ Disable button
                                 submitBtn.classList.remove('btn-primary');           // ✅ Remove old style
                                 submitBtn.classList.add('btn-success');              // ✅ Add success style
 
-                                const cards = document.querySelectorAll('.card-list-of-prepare-theory-grade-sheet');
+                                const cards = document.querySelectorAll('.card-list-of-prepares-theory-grade-sheet');
 
                                 cards.forEach(card => {
                                     card.classList.add('fade-highlight');

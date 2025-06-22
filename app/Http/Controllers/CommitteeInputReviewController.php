@@ -678,8 +678,8 @@ class CommitteeInputReviewController extends Controller
     }
     public function storeReviewTheoryGradeSheet(Request $request)
     {
-        $teacherData = $request->input('prepare_theory_grade_sheet_teacher_ids', []);
-        $studentData = $request->input('prepare_theory_grade_sheet_no_of_students', []);
+        $teacherData = $request->input('prepares_theory_grade_sheet_teacher_ids', []);
+        $studentData = $request->input('prepares_theory_grade_sheet_no_of_students', []);
         $sessionId=$request->sid;
         $theory_grade_sheet_rate=$request->theory_grade_sheet_rate;
         $exam_type=2;
@@ -694,11 +694,11 @@ class CommitteeInputReviewController extends Controller
 
         // ✅ Step 1: Basic validation
         if (empty($teacherData)) {
-            $errors['prepare_theory_grade_sheet_teacher_ids'] = 'You must select at least one teacher.';
+            $errors['prepares_theory_grade_sheet_teacher_ids'] = 'You must select at least one teacher.';
         }
 
         if (empty($studentData)) {
-            $errors['prepare_theory_grade_sheet_no_of_students'] = 'You must provide number of students.';
+            $errors['prepares_theory_grade_sheet_no_of_students'] = 'You must provide number of students.';
         }
 
 

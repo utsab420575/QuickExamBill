@@ -21,7 +21,7 @@
 @section('content')
     <section role="main" class="content-body">
         <header class="page-header">
-            <h2>Light Sidebar Layout</h2>
+            <h2>Review Session All Form(Session:{{$session_info['session']}}-{{$session_info['year']}}/{{$session_info['semester']}})</h2>
             <div class="right-wrapper text-end">
                 <ol class="breadcrumbs">
                     <li>
@@ -29,8 +29,8 @@
                             <i class="bx bx-home-alt"></i>
                         </a>
                     </li>
-                    <li><span>Layouts</span></li>
-                    <li><span>Light Sidebar</span></li>
+                    <li><span>Committee Input</span></li>
+                    <li><span>Review Session Session</span></li>
                 </ol>
                 <a class="sidebar-right-toggle" data-open="sidebar-right"><i class="fas fa-chevron-left"></i></a>
             </div>

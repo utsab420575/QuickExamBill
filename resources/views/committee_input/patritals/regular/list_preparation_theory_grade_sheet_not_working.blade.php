@@ -1,30 +1,27 @@
 @push('styles')
     <style>
-        .card-list-of-prepared-computerized-result {
+        .card-list-of-prepare-theory-grade-sheet {
             background-color: white; /* starting point */
             transition: background-color 0.6s ease-in-out;
         }
 
-        .card-list-of-prepared-computerized-result.fade-highlight {
+        .card-list-of-prepare-theory-grade-sheet.fade-highlight {
             background-color: #28a745; /* strong green */
         }
 
-        .card-list-of-prepared-computerized-result.fade-out {
+        .card-list-of-prepare-theory-grade-sheet.fade-out {
             background-color: white;
-        }
-        select.is-invalid {
-            border-color: red;
         }
     </style>
 @endpush
-<form id="form-list-of-prepared-computerized-result" action="{{ route('committee.input.prepare.computerized.result.store') }}" method="POST">
+<form id="form-list-of-prepare-theory-grade-sheet" action="{{ route('committee.input.regular.theory.grade.sheet.store') }}" method="POST">
     @csrf
     <input type="hidden" id="sid" name="sid" value="{{$sid}}">
     <div class="row mb-5">
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
                 <header class="card-header">
-                    <h2 class="card-title">List of Teachers Prepared Computerized Result (@ **/- per student per subject)
+                    <h2 class="card-title">List of Teachers for the Preparation of Grade Sheet(Theoritical (@**/- per student per subject))
                     </h2>
                 </header>
 
@@ -32,8 +29,8 @@
                     <div class="row mb-2">
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
-                                <label for="prepare_computerized_result_rate">Per Student Per Subject Rate</label>
-                                <input type="number"  name="prepare_computerized_result_rate" value="" step="any" class="form-control" placeholder="Enter per student per subject rate" required>
+                                <label for="theory_grade_sheet_rate">Per Student Per Subject Rate</label>
+                                <input type="number"  name="theory_grade_sheet_rate" value="45" step="any" class="form-control" placeholder="Enter per student per subject rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
@@ -42,16 +39,10 @@
                         </div>
                     </div>
 
-
                     <div class="row">
                         <div class="col-md-12">
-                            @if(isset($all_theory_sessional_courses_with_student_count->courses))
-                                @php
-                                    $courses = ($session_info->year != 6 && $session_info->semester != 3)
-                                        ? $all_theory_sessional_courses_with_student_count->courses
-                                        : $all_course_with_teacher->courses;
-                                @endphp
-                                @foreach($courses as $courseData)
+                            @if(isset($all_course_with_teacher->courses))
+                                @foreach($all_course_with_teacher->courses as $courseData)
                                     @php
                                         $single_course = $courseData->courseObject;
                                     @endphp
@@ -68,13 +59,13 @@
                                             </h2>
                                         </header>
 
-                                        <div class="card-body card-list-of-prepared-computerized-result">
+                                        <div class="card-body card-list-of-prepare-theory-grade-sheet">
                                             <div class="row mb-3">
                                                 <div class="col-md-9">
-                                                    <label for="prepared_computerized_result_teacher_{{ $single_course->id }}_{{ $loop->index }}">Select Scrutinizers</label>
-                                                    <select name="prepared_computerized_result_teacher_ids[{{ $single_course->id }}][]"
+                                                    <label for="prepare_theory_grade_sheet_teacher_{{ $single_course->id }}_{{ $loop->index }}">Select Teacher</label>
+                                                    <select name="prepare_theory_grade_sheet_teacher_ids[{{ $single_course->id }}][]"
                                                             multiple data-plugin-selectTwo
-                                                            id="prepared_computerized_result_teacher_{{ $single_course->id }}_{{ $loop->index }}"
+                                                            id="prepare_theory_grade_sheet_teacher_{{ $single_course->id }}_{{ $loop->index }}"
                                                             class="form-control  populate"  required>
                                                         <option value="" disabled>-- Select Teacher --</option>
                                                         @foreach($groupedTeachers as $deptFullName => $deptTeachers)
@@ -91,8 +82,8 @@
 
 
                                                 <div class="col-md-3">
-                                                    <label for="prepared_computerized_result_no_of_students">Per Script Rate</label>
-                                                    <input name="prepared_computerized_result_no_of_students[{{ $single_course->id }}]"
+                                                    <label for="prepare_theory_grade_sheet_no_of_students">No of student</label>
+                                                    <input name="prepare_theory_grade_sheet_no_of_students[{{ $single_course->id }}]"
                                                            type="number" min="1" step="any"
                                                            class="form-control"
                                                            value="{{ $courseData->registered_students_count }}"
@@ -105,8 +96,8 @@
                             @endif
 
                             <div class="text-end mt-3">
-                                <button id="submit-list-of-prepared-computerized-result" type="submit" class="btn btn-primary">
-                                    Submit Prepare Computerized Result Committee
+                                <button id="submit-list-of-prepare-theory-grade-sheet" type="submit" class="btn btn-primary">
+                                    Submit Theory Grade Sheet Committee
                                 </button>
                             </div>
                         </div>
@@ -119,33 +110,14 @@
 
 
 @push('scripts')
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const form = document.getElementById('form-list-of-prepared-computerized-result');
+            const form = document.getElementById('form-list-of-prepare-theory-grade-sheet');
 
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
-                // ✅ Validate teacher selections(we're done it by using required)
-                /* const teacherSelects = form.querySelectorAll('select[name^="teachers"]');
-                let allSelected = true;
 
-                teacherSelects.forEach(select => {
-                    if (select.selectedOptions.length === 0) {
-                        allSelected = false;
-                        select.classList.add('is-invalid'); // red border if invalid
-                    } else {
-                        select.classList.remove('is-invalid');
-                    }
-                });
-
-                if (!allSelected) {
-                    Swal.fire({
-                        title: 'Missing Teacher',
-                        text: 'Please select at least one teacher for each course.',
-                        icon: 'warning'
-                    });
-                    return; // ❌ stop form submission
-                }*/
                 Swal.fire({
                     title: 'Are you sure?',
                     text: "Do you want to save the committee data?",
@@ -182,13 +154,13 @@
                                     confirmButtonText: 'OK'
                                 });
 
-                                const submitBtn = document.getElementById('submit-list-of-prepared-computerized-result');
+                                const submitBtn = document.getElementById('submit-list-of-prepare-theory-grade-sheet');
                                 submitBtn.textContent = 'Already Saved';             // ✅ Change text
                                 submitBtn.disabled = true;                           // ✅ Disable button
                                 submitBtn.classList.remove('btn-primary');           // ✅ Remove old style
                                 submitBtn.classList.add('btn-success');              // ✅ Add success style
 
-                                const cards = document.querySelectorAll('.card-list-of-prepared-computerized-result');
+                                const cards = document.querySelectorAll('.card-list-of-prepare-theory-grade-sheet');
 
                                 cards.forEach(card => {
                                     card.classList.add('fade-highlight');

@@ -85,7 +85,7 @@
 
 
                                                 <div class="col-md-3">
-                                                    <label for="scrutinizers_no_of_students">Per Script Rate</label>
+                                                    <label for="scrutinizers_no_of_students">No of student</label>
                                                     <input name="scrutinizers_no_of_students[{{ $single_course->id }}]"
                                                            type="number" min="1" step="any"
                                                            class="form-control"
