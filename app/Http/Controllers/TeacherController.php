@@ -94,4 +94,16 @@ class TeacherController extends Controller
         return redirect()->route('dashboard')->with($notifications);
     }
 
+    public function AllTeacher(){
+        $teachers=Teacher::all();
+        return view('teacher.all_teacher',compact('teachers'));
+    }
+
+    public function EditTeacher($id){
+        $teacher=Teacher::find($id);
+        $designations=Designation::all();
+        $departments=Department::all();
+        return view('teacher.edit_teacher',compact('teacher','designations','departments'));
+    }
+
 }

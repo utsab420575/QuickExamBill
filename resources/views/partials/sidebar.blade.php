@@ -19,7 +19,8 @@
                     </li>
                     <li class="nav-parent">
                         <a class="nav-link" href="#">
-                            <i class="bx bx-cart-alt" aria-hidden="true"></i>
+                            {{--<i class="bx bx-cart-alt" aria-hidden="true"></i>--}}
+                            <i class="fa-solid fa-file-import" aria-hidden="true"></i>
                             <span>Import/Export Manage</span>
                         </a>
                         <ul class="nav nav-children">
@@ -33,7 +34,7 @@
 
                     <li class="nav-parent">
                         <a class="nav-link" href="#">
-                            <i class="bx bx-file" aria-hidden="true"></i>
+                            <i class="fa-solid fa-money-check-dollar" aria-hidden="true"></i>
                             <span>Committee Input Manage</span>
                         </a>
                         <ul class="nav nav-children">
@@ -72,12 +73,12 @@
                     </li>
                     <li class="nav-parent">
                         <a class="nav-link" href="#">
-                            <i class="bx bx-file" aria-hidden="true"></i>
+                            <i class="fa-solid fa-user-tie"  aria-hidden="true"></i>
                             <span>Committee Teacher Manage</span>
                         </a>
                         <ul class="nav nav-children">
                             <li>
-                                <a class="nav-link" href="">
+                                <a class="nav-link" href="{{route('teacher.all')}}">
                                     All Teacher
                                 </a>
                             </li>
@@ -91,12 +92,12 @@
                     </li>
                     <li class="nav-parent">
                         <a class="nav-link" href="#">
-                            <i class="bx bx-file" aria-hidden="true"></i>
+                            <i class="fa-solid fa-users" aria-hidden="true"></i>
                             <span>Committee Employee Manage</span>
                         </a>
                         <ul class="nav nav-children">
                             <li>
-                                <a class="nav-link" href="">
+                                <a class="nav-link" href="{{route('employee.all')}}">
                                     All Employee
                                 </a>
                             </li>
