@@ -165,6 +165,15 @@ class RoleController extends Controller
     }// End Method
 
 
+
+
+
+
+
+
+
+    ///////////////////////////////////////////////////////////////////Role Permission/////////////////////////////////////////////////////
+
     public function AddRolesPermission(){
         //need all role and all permission
         $roles = Role::all();
@@ -186,7 +195,7 @@ class RoleController extends Controller
             ]
         }*/
         $permissions = Permission::all()->groupBy('group_name');
-        return view('backend.pages.roles.add_roles_permission',compact('roles','permissions'));
+        return view('access_control.role_permission.add_roles_permission',compact('roles','permissions'));
     }// End Method
 
     public function StoreRolesPermission(Request $request){
@@ -225,18 +234,19 @@ class RoleController extends Controller
 
         return redirect()->route('roles.permission.all')->with($notification);
     }
-
     public function AllRolesPermission(){
         $roles = Role::with('permissions')->get();
         //return($roles);
-        return view('backend.pages.roles.all_roles_permission', compact('roles'));
+        return view('access_control.role_permission.all_roles_permission', compact('roles'));
     } // End Method
+
+
 
     public function EditRolePermissions($id){
 
         $role = Role::findOrFail($id);
         $permissions = Permission::all()->groupBy('group_name');
-        return view('backend.pages.roles.edit_roles_permission',compact('role','permissions','permissions'));
+        return view('access_control.role_permission.edit_roles_permission',compact('role','permissions','permissions'));
 
     } // End Method
 
@@ -291,4 +301,6 @@ class RoleController extends Controller
         return redirect()->back()->with($notification);
 
     }// End Method
+
+
 }

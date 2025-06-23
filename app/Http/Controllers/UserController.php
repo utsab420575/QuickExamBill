@@ -112,61 +112,36 @@ class UserController extends Controller
         $user->save();
         Log::info('User profile updated successfully', ['user_id' => $user->id]);
 
-        //if employee:
-        if ($user->employee) {
-            // Update existing employee
-            $employee = $user->employee;
-            $employee->employeename = $request->name;
-            $employee->phoneno = $request->phone;
-            $employee->preaddress = $request->address ?? null;
-            $employee->designation_id = $request->designation;
-            $employee->department_id = $request->department;
-            $employee->photo = $user->photo ?? null;
-            $employee->save();
+        $roles = $user->roles->pluck('name')->toArray();
+        $designation = Designation::find($request->designation);
+        $designationName = strtolower($designation->designation ?? '');
 
-            Log::info('Employee updated', ['employee_id' => $employee->id]);
-            $notifications = [
-                "message" => 'Employee Updated Successfully',
-                "alert-type" => 'success',
-            ];
-        } elseif ($user->teacher) {
-            // Update existing teacher
-            $teacher = $user->teacher;
-            $teacher->teachername = $request->name;
-            $teacher->phoneno = $request->phone;
-            $teacher->preaddress = $request->address ?? null;
-            $teacher->designation_id = $request->designation;
-            $teacher->department_id = $request->department;
-            $teacher->photo = $user->photo ?? null;
-            $teacher->save();
+// Log for debugging
+        Log::info('Role check for update/insert', [
+            'user_id' => $user->id,
+            'roles' => $roles,
+            'has_teacher' => $user->teacher ? true : false,
+            'has_employee' => $user->employee ? true : false,
+            'designation' => $designationName,
+        ]);
 
-            Log::info('Teacher updated', ['teacher_id' => $teacher->id]);
-            $notifications = [
-                "message" => 'Teacher Updated Successfully',
-                "alert-type" => 'success',
-            ];
-        } else {
-            // Decide based on designation name
-            $designation = Designation::find($request->designation);
-            $isEmployee = in_array(strtolower($designation->designation), ['Officer', 'Staff']);
+// If user is Teacher
+        if (in_array('Teacher', $roles)) {
+            if ($user->teacher) {
+                // Update existing Teacher
+                $teacher = $user->teacher;
+                $teacher->teachername = $request->name;
+                $teacher->phoneno = $request->phone;
+                $teacher->preaddress = $request->address ?? null;
+                $teacher->designation_id = $request->designation;
+                $teacher->department_id = $request->department;
+                $teacher->photo = $user->photo ?? null;
+                $teacher->save();
 
-            if ($isEmployee) {
-                $employee = new Employee();
-                $employee->employeename = $request->name;
-                $employee->phoneno = $request->phone;
-                $employee->preaddress = $request->address ?? null;
-                $employee->designation_id = $request->designation;
-                $employee->department_id = $request->department;
-                $employee->user_id = $user->id;
-                $employee->photo = $user->photo ?? null;
-                $employee->save();
-
-                Log::info('Employee created', ['employee_id' => $employee->id]);
-                $notifications = [
-                    "message" => 'Employee Added Successfully',
-                    "alert-type" => 'success',
-                ];
+                Log::info('Teacher updated', ['teacher_id' => $teacher->id]);
+                $notifications = ['message' => 'Teacher Updated Successfully', 'alert-type' => 'success'];
             } else {
+                // Insert new Teacher
                 $teacher = new Teacher();
                 $teacher->teachername = $request->name;
                 $teacher->phoneno = $request->phone;
@@ -178,11 +153,45 @@ class UserController extends Controller
                 $teacher->save();
 
                 Log::info('Teacher created', ['teacher_id' => $teacher->id]);
-                $notifications = [
-                    "message" => 'Teacher Added Successfully',
-                    "alert-type" => 'success',
-                ];
+                $notifications = ['message' => 'Teacher Added Successfully', 'alert-type' => 'success'];
             }
+        }
+
+// If user is Employee
+        elseif (in_array('Employee', $roles)) {
+            if ($user->employee) {
+                // Update existing Employee
+                $employee = $user->employee;
+                $employee->employeename = $request->name;
+                $employee->phoneno = $request->phone;
+                $employee->preaddress = $request->address ?? null;
+                $employee->designation_id = $request->designation;
+                $employee->department_id = $request->department;
+                $employee->photo = $user->photo ?? null;
+                $employee->save();
+
+                Log::info('Employee updated', ['employee_id' => $employee->id]);
+                $notifications = ['message' => 'Employee Updated Successfully', 'alert-type' => 'success'];
+            } else {
+                // Insert new Employee
+                $employee = new Employee();
+                $employee->employeename = $request->name;
+                $employee->phoneno = $request->phone;
+                $employee->preaddress = $request->address ?? null;
+                $employee->designation_id = $request->designation;
+                $employee->department_id = $request->department;
+                $employee->user_id = $user->id;
+                $employee->photo = $user->photo ?? null;
+                $employee->save();
+
+                Log::info('Employee created', ['employee_id' => $employee->id]);
+                $notifications = ['message' => 'Employee Added Successfully', 'alert-type' => 'success'];
+            }
+        }
+        else {
+            // If no matching role
+            Log::warning('User has no Teacher or Employee role', ['user_id' => $user->id]);
+            $notifications = ['message' => 'No applicable role found for update/insert.', 'alert-type' => 'warning'];
         }
 
         return redirect()->back()->with($notifications);

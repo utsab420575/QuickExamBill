@@ -9,8 +9,10 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use Spatie\Permission\Models\Role;
 
 class RegisteredUserController extends Controller
 {
@@ -46,6 +48,16 @@ class RegisteredUserController extends Controller
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
         ]);
+
+        $teacherRole = Role::where('name', 'Teacher')->first();
+        if ($teacherRole) {
+            $user->assignRole($teacherRole);
+            Log::info("Assigned 'Teacher' role to: {$user->email}");
+        } else {
+            Log::warning("Role 'Teacher' not found. Skipped role assignment for: {$user->email}");
+        }
+
+
 
         event(new Registered($user));
 

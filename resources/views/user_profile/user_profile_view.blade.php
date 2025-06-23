@@ -109,18 +109,10 @@
                                 </div>
 
 
-                                <div class="row mb-4">
-                                    <div class="form-group col">
-                                        <label for="address">Enter Address</label>
-                                        <textarea class="form-control" rows="3" id="address" name="address">{{ $user->teacher->preaddress ?? '' }}</textarea>
-                                        @error('address')
-                                        <span class="text-danger"> {{ $message }} </span>
-                                        @enderror
-                                    </div>
-                                </div>
 
 
-                                <div class="row mb-4">
+
+                                {{--<div class="row mb-4">
                                     <div class="form-group col">
                                         <label for="designation">Enter Designation</label>
                                         <select class="form-control" name="designation" id="designation" required>
@@ -145,6 +137,57 @@
                                             @foreach($departments as $department)
                                                 <option value="{{$department->id}}"  {{ isset($user->teacher) && $user->teacher->department_id == $department->id ? 'selected' : '' }}>
                                                     {{$department->fullname}}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('department')
+                                        <span class="text-danger"> {{ $message }} </span>
+                                        @enderror
+                                    </div>
+                                </div>--}}
+
+                                @php
+                                    $isTeacher = $user->hasRole('Teacher');
+                                    $model = $isTeacher ? $user->teacher : $user->employee;
+                                @endphp
+
+                                <div class="row mb-4">
+                                    <div class="form-group col">
+                                        <label for="address">Enter Address</label>
+                                        <textarea class="form-control" rows="3" id="address" name="address">{{ $model->preaddress ?? '' }}</textarea>
+                                        @error('address')
+                                        <span class="text-danger"> {{ $message }} </span>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="row mb-4">
+                                    <div class="form-group col">
+                                        <label for="designation">Enter Designation</label>
+                                        <select class="form-control" name="designation" id="designation" required>
+                                            <option value="" selected disabled>Select Designation</option>
+                                            @foreach($designations as $designation)
+                                                <option value="{{ $designation->id }}"
+                                                    {{ $model && $model->designation_id == $designation->id ? 'selected' : '' }}>
+                                                    {{ $designation->designation }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('designation')
+                                        <span class="text-danger"> {{ $message }} </span>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="row mb-4">
+                                    <div class="form-group col">
+                                        <label for="department">Enter Department</label>
+                                        <select class="form-control" name="department" id="department" required>
+                                            <option value="" selected disabled>Select Department</option>
+                                            @foreach($departments as $department)
+                                                <option value="{{ $department->id }}"
+                                                    {{ $model && $model->department_id == $department->id ? 'selected' : '' }}>
+                                                    {{ $department->fullname }}
                                                 </option>
                                             @endforeach
                                         </select>

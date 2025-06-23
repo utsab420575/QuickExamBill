@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\ImageManager;
+use Spatie\Permission\Models\Role;
 
 class TeacherController extends Controller
 {
@@ -71,6 +72,15 @@ class TeacherController extends Controller
                 $image->toJpeg()->save($path . $name_gen);
                 $user->photo = 'upload/user_image/' . $name_gen;
             }
+
+            $teacherRole = Role::where('name', 'Teacher')->first();
+            if ($teacherRole) {
+                $user->assignRole($teacherRole);
+                Log::info("Assigned 'Teacher' role to: {$user->email}");
+            } else {
+                Log::warning("Role 'Teacher' not found. Skipped role assignment for: {$user->email}");
+            }
+
 
             $user->save();
             Log::info('User saved', ['user_id' => $user->id]);

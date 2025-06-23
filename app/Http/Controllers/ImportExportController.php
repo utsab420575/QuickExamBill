@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Spatie\Permission\Models\Role;
 
 class ImportExportController extends Controller
 {
@@ -44,7 +45,10 @@ class ImportExportController extends Controller
 
             foreach ($users as $userData) {
                 $user = User::where('email', $userData['email'])->first();
-
+                Log::info("User and UserData", [
+                    'userData' => $userData,
+                    'user' => $user ? $user->toArray() : 'no data',
+                ]);
                 if ($user) {
                     $user->update([
                         'name' => $userData['name'],
@@ -54,14 +58,27 @@ class ImportExportController extends Controller
                     $updated++;
                     Log::info("User updated: {$user->email}");
                 } else {
-                    User::create([
+                    $user = User::create([
                         'name' => $userData['name'],
                         'email' => $userData['email'],
                         'password' => $userData['password'], // already hashed
                         'phone' => $userData['phoneno'],
                     ]);
                     $inserted++;
-                    Log::info("User inserted: {$userData['email']}");
+                    //Log::info("User inserted: {$userData['email']}");
+                    Log::info('User:', $user ? $user->toArray() : null);
+                }
+
+
+                // Assign 'Teacher' role if user has no role
+                if ($user->roles()->count() === 0) {
+                    $teacherRole = Role::where('name', 'Teacher')->first();
+                    if ($teacherRole) {
+                        $user->assignRole($teacherRole);
+                        Log::info("Assigned 'Teacher' role to: {$user->email}");
+                    } else {
+                        Log::warning("Role 'Teacher' not found. Skipped role assignment for: {$user->email}");
+                    }
                 }
             }
 

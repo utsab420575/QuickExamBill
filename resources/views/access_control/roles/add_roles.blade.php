@@ -25,11 +25,7 @@
             <div class="col-lg-8 col-xl-8">
                 <div class="card">
                     <div class="card-body">
-
-
                         <!-- end timeline content-->
-
-                        <div class="tab-pane" id="settings">
                             <form id="myForm" method="post" action="{{ route('roles.store') }}"
                                   enctype="multipart/form-data">
                                 @csrf
@@ -58,7 +54,6 @@
                                     </button>
                                 </div>
                             </form>
-                        </div>
                         <!-- end settings content-->
 
 
