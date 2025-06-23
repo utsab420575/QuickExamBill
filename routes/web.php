@@ -45,14 +45,7 @@ Route::middleware('auth')->group(function () {
         Route::post('import/table/teachers','ImportTeacherTable')->name('import.table.teachers');
     });
 
-    Route::controller(ImportExportController::class)->group(function(){
-        Route::get('import/table/all','ImportAllTable')->name('import.table.all');
-        Route::post('import/table/users','ImportUserTable')->name('import.table.users');
-        Route::post('import/table/faculties','ImportFacultyTable')->name('import.table.faculties');
-        Route::post('import/table/departments','ImportDepartmentTable')->name('import.table.departments');
-        Route::post('import/table/designations','ImportDesignationTable')->name('import.table.designations');
-        Route::post('import/table/teachers','ImportTeacherTable')->name('import.table.teachers');
-    });
+
 
 
     //For Regular Session

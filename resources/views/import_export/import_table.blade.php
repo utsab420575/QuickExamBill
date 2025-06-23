@@ -2,7 +2,7 @@
 @section('content')
     <section role="main" class="content-body">
         <header class="page-header">
-            <h2>Accordions</h2>
+            <h2>Import Data</h2>
 
             <div class="right-wrapper text-end">
                 <ol class="breadcrumbs">
@@ -12,9 +12,9 @@
                         </a>
                     </li>
 
-                    <li><span>UI Elements</span></li>
+                    <li><span>Import</span></li>
 
-                    <li><span>Accordions</span></li>
+                    <li><span>Tables</span></li>
 
                 </ol>
 
