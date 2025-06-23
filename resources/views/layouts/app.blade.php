@@ -186,6 +186,40 @@
     @endif
 </script>
 
+{{--Sweetalert--}}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('click', function (event) {
+            // Check if the clicked element or its parent has the 'delete' class
+            const target = event.target.closest('.delete');
+            if (target) {
+                event.preventDefault(); // Prevent default action
+
+                // Get the deletion URL
+                const deleteUrl = target.getAttribute('href');
+
+                // Show SweetAlert2 confirmation
+                Swal.fire({
+                    title: "Are you sure?",
+                    text: "This action cannot be undone!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, delete it!",
+                    cancelButtonText: "Cancel",
+                    confirmButtonColor: "#d33",
+                    cancelButtonColor: "#3085d6",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Redirect to the deletion URL
+                        window.location.href = deleteUrl;
+                    }
+                });
+            }
+        });
+    });
+</script>
+
+
 
 @stack('scripts')
 </body>

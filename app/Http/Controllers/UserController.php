@@ -86,6 +86,11 @@ class UserController extends Controller
 
 
         if ($request->file('photo')) {
+            // Delete old photo if exists
+            if ($user->photo && file_exists(public_path($user->photo))) {
+                unlink(public_path($user->photo));
+            }
+
             $recive_image = $request->file('photo');
             $name_gen = hexdec(uniqid()) . '.' . $recive_image->getClientOriginalExtension();
 

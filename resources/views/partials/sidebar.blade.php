@@ -52,6 +52,8 @@
                         </ul>
                     </li>
 
+
+
                     <li class="nav-parent">
                         <a class="nav-link" href="#">
                             <i class="bx bx-file" aria-hidden="true"></i>
@@ -71,6 +73,10 @@
                             </li>
                         </ul>
                     </li>
+
+
+
+
                     <li class="nav-parent">
                         <a class="nav-link" href="#">
                             <i class="fa-solid fa-user-tie"  aria-hidden="true"></i>
@@ -112,7 +118,7 @@
 
                     <li class="nav-parent">
                         <a class="nav-link" href="#">
-                            <i class="bx bx-file" aria-hidden="true"></i>
+                            <i class="fa-solid fa-file-pdf"  aria-hidden="true"></i>
                             <span>Committee Report Manage</span>
                         </a>
                         <ul class="nav nav-children">
@@ -129,6 +135,63 @@
                             </li>
                         </ul>
                     </li>
+
+
+                    {{--Permission Management--}}
+                    <li class="nav-parent">
+                        <a class="nav-link" href="#">
+                            <i class="fa-solid fa-toolbox" aria-hidden="true"></i>
+                            <span> Roles And Permission</span>
+                        </a>
+                        <ul class="nav nav-children">
+                            <li>
+                                <a class="nav-link" href="{{route('permission.all')}}">
+                                    All Permission
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="nav-link" href="{{route('roles.all')}}">
+                                    All Roles
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="nav-link" href="{{route('roles.permissions.add')}}">
+                                    Roles in Permission
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="nav-link" href="{{route('roles.permission.all')}}">
+                                    All Roles in Permission
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+
+                    {{--Role Assignment To Model(User)--}}
+                    <li class="nav-parent">
+                        <a class="nav-link" href="#">
+                            <i class="fa-solid fa-lock-open" aria-hidden="true"></i>
+                            <span> Setting Admin User </span>
+                        </a>
+                        <ul class="nav nav-children">
+                            <li>
+                                <a class="nav-link" href="{{route('role.assignments.all')}}">
+                                    All User
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="nav-link" href="{{route('role.assignments.add')}}">
+                                    Add User
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
 
 
 
