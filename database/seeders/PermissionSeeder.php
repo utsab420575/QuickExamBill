@@ -118,6 +118,25 @@ class PermissionSeeder extends Seeder
             ['name' => 'role.permission.edit', 'group_name' => 'role_permission'],
             ['name' => 'role.permission.update', 'group_name' => 'role_permission'],
             ['name' => 'role.permission.delete', 'group_name' => 'role_permission'],
+
+            // Role Assignment
+            ['name' => 'role.assignments.all', 'group_name' => 'role_assignment'],
+            ['name' => 'role.assignments.add', 'group_name' => 'role_assignment'],
+            ['name' => 'role.assignments.store', 'group_name' => 'role_assignment'],
+            ['name' => 'role.assignments.edit', 'group_name' => 'role_assignment'],
+            ['name' => 'role.assignments.update', 'group_name' => 'role_assignment'],
+            ['name' => 'role.assignments.delete', 'group_name' => 'role_assignment'],
+
+
+            //menu
+            $permissions[] = ['name' => 'import.menu', 'group_name' => 'menu'],
+            $permissions[] = ['name' => 'committee_input.menu', 'group_name' => 'menu'],
+            $permissions[] = ['name' => 'committee_record.menu', 'group_name' => 'menu'],
+            $permissions[] = ['name' => 'teacher.menu', 'group_name' => 'menu'],
+            $permissions[] = ['name' => 'employee.menu', 'group_name' => 'menu'],
+            $permissions[] = ['name' => 'report.menu', 'group_name' => 'menu'],
+            $permissions[] = ['name' => 'role_permission.menu', 'group_name' => 'menu'],
+            $permissions[] = ['name' => 'role_assign.menu', 'group_name' => 'menu'],
         ];
 
         foreach ($permissions as $permission) {
