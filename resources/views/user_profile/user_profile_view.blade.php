@@ -38,7 +38,11 @@
                             {{--<img src="{{asset('backend/assets/img/!logged-user.jpg')}}" class="rounded img-fluid" alt="John Doe">--}}
                             <div class="thumb-info-title">
                                 <span class="thumb-info-inner">{{$user->name}}</span>
-                                <span class="thumb-info-type">Super Admin</span>
+                                @if($user->roles->isNotEmpty())
+                                    <span class="thumb-info-type">{{ $user->roles->first()->name }}</span>
+                                @else
+                                    <span class="thumb-info-type">No Role</span>
+                                @endif
                             </div>
                         </div>
 

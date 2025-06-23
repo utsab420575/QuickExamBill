@@ -60,6 +60,7 @@
                                                 <option value="role"> Role</option>
                                                 <option value="role_permission"> Role Permission</option>
                                                 <option value="role_assignment"> Role Assignment For User</option>
+                                                <option value="menu"> Menu</option>
                                             </select>
 
                                         </div>

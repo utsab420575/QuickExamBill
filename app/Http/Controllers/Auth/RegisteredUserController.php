@@ -49,6 +49,7 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+
         $teacherRole = Role::where('name', 'Teacher')->first();
         if ($teacherRole) {
             $user->assignRole($teacherRole);
