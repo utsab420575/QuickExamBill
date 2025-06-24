@@ -2388,7 +2388,7 @@ class CommitteeInputController extends Controller
         $advisor_per_student_rate = $request->advisor_per_student_rate;
         $exam_type=1;
 
-        Log::info('📥 Received Prepared Computerized Result Data', [
+        Log::info('📥 Received Prepared Advisor Result Data', [
             'session_id' => $sessionId,
             'teacher_data' => $teacherIds,
             'student_data' => $studentCounts,

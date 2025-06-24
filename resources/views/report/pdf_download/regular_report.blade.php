@@ -17,6 +17,7 @@
         .header_table, .body_table_1, .footer_table_1 {
             width: 100%;
             border-collapse: collapse;
+
         }
 
         .header_table td {
@@ -66,42 +67,81 @@
             $global_sum=0;
     @endphp
     {{-- Repeatable Header --}}
-    <table class="header_table">
+    <table class="header_table " style=" table-layout: fixed;">
+        <colgroup>
+            <col style="width: 15%;">
+            <col style="width: 35%;">
+            <col style="width: 20%;">
+            <col style="width: 30%;">
+        </colgroup>
+
+        <!-- Header with Logo and University Info -->
         <tr>
-            <td style="width: 10%; text-align: left;">
+            <td colspan="1" style="text-align: right; padding: 20px 0px 0px 0px;">
                 <img src="{{ public_path('images/logo_duet.png') }}" style="width: 50px;">
             </td>
-            <td colspan="3">
+            <td colspan="3" style="text-align: left; padding: 20px 0 0 35px;">
                 <strong>Dhaka University of Engineering & Technology, Gazipur</strong><br>
+                <span style="display: inline-block; margin-left:100px; margin-top: 5px;">
                 Gazipur-1707
+            </span>
             </td>
         </tr>
+
+        <!-- Section Title -->
         <tr>
-            <td colspan="4" style="padding-top: 10px;padding-bottom: 10px;">
-                <span style="margin-left: 40px;">(Examination Related Remuneration)</span>
+            <td colspan="4" style="padding: 10px 0;">
+                <div style="margin-left: 5px; font-weight: bold;">
+                    (Examination Related Remuneration)
+                </div>
             </td>
         </tr>
+
+        <!-- Session Info -->
+        @php
+            $ordinals = [1 => '1st', 2 => '2nd', 3 => '3rd', 4 => '4th', 5 => '5th'];
+            $yearText = $ordinals[$session_info->year] ?? $session_info->year . 'th';
+            $semesterText = $ordinals[$session_info->semester] ?? $session_info->semester . 'th';
+        @endphp
         <tr>
-            <td style="text-align: left;">B.Arch.</td>
-            @php
-                $ordinals = [1 => '1st', 2 => '2nd', 3 => '3rd', 4 => '4th', 5 => '5th'];
-            @endphp
+            <td style="text-align: right;padding-right: 10px;">
+                B.Arch.
+            </td>
+            <td>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>{{ $yearText }} year {{ $semesterText }} semester</span>
+                    <span style="font-weight: bold; padding-left: 10px;">Regular</span>
+                </div>
+            </td>
+            <td style="text-align: left;padding-left: 20px;">
+                {{ $session_info->session }}
+            </td>
             <td style="text-align: left;">
-                {{ $ordinals[$session_info->year] ?? $session_info->year . 'th' }} year
-                {{ $ordinals[$session_info->semester] ?? $session_info->semester . 'th' }} semester
-                <span style="float:right; font-weight: bold;">Regular</span>
+                (Held on: _____________)
             </td>
-            <td>{{ $session_info->session }}</td>
-            <td>(Held on: Sep, 2024)</td>
         </tr>
+
+        <!-- Teacher Info -->
         <tr>
-            <td colspan="2" class="pt-20"><strong>Name:</strong> {{ $teacher->user->name }}</td>
-            <td class="pt-20"><strong>Designation:</strong> {{ $teacher->designation->designation }}</td>
-            <td class="pt-20"><strong>Department:</strong> {{ $teacher->department->shortname }},DUET</td>
+            <td colspan="1" style="padding-top: 15px; text-align: left;padding-left: 10px;">
+                <strong>Name:</strong> {{ $teacher->user->name }}
+            </td>
+            <td colspan="2" style="padding-top: 15px;padding-right:5px;">
+                <strong>Designation:</strong> {{ $teacher->designation->designation }}
+            </td>
+            <td style="padding-top: 15px;">
+                <strong>Department:</strong> {{ $teacher->department->shortname }}, DUET
+            </td>
         </tr>
+
+        <!-- Section Header -->
         <tr>
-            <td colspan="4" class="pt-30"><strong>Details of Examination Related Works</strong></td>
+            <td colspan="4" style="padding-top: 30px; font-weight: bold;">
+                Details of Examination Related Works
+            </td>
         </tr>
+
+
     </table>
 
     {{-- Body Table --}}
