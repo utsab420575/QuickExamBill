@@ -19,7 +19,7 @@ use Spatie\Permission\Models\Role;
 class EmployeeController extends Controller
 {
     public function AddEmployee(){
-        $designations = Designation::whereIn('designation', ['Officer', 'Staff'])->get();
+        $designations = Designation::whereIn('designation', ['Officer', 'Staff','Admin'])->get();
         $departments=Department::all();
         return view('employee.add_employee',compact('designations','departments'));
     }

@@ -59,7 +59,11 @@
 @foreach($teachers as  $teacher)
 
     @php
-        $global_sum=0;
+            // Skip other teachers if the user is a teacher
+            if (auth()->user()->hasRole('Teacher') && auth()->user()->id !== $teacher->user_id) {
+                continue;
+            }
+            $global_sum=0;
     @endphp
     {{-- Repeatable Header --}}
     <table class="header_table">
