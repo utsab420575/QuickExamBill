@@ -27,6 +27,59 @@ class CommitteeInputController extends Controller
         return view('committee_input.session_view.regular_session_list',compact('sessions'));
     }
 
+    private function getOrCreateRateAmount($rateHeadId, $sessionId, $examTypeId, array $allData)
+    {
+        $rateAmount = RateAmount::where([
+            'rate_head_id' => $rateHeadId,
+            'session_id' => $sessionId,
+            'exam_type_id' => $examTypeId,
+        ])->first();
+
+        Log::info('Fetched RateAmount:', $rateAmount ? $rateAmount->toArray() : ['rateAmount' => null]);
+
+        if (!$rateAmount) {
+            $rateAmount = new RateAmount();
+            $rateAmount->fill($allData);
+            $rateAmount->rate_head_id = $rateHeadId;
+            $rateAmount->session_id = $sessionId;
+            $rateAmount->exam_type_id = $examTypeId;
+            $rateAmount->saved = 1;
+
+            if ($rateAmount->save()) {
+                Log::info("✅ RateAmount created for rate_head_id {$rateHeadId}", $rateAmount->toArray());
+            } else {
+                Log::error("❌ Failed to save RateAmount for rate_head_id {$rateHeadId}");
+            }
+        }
+
+        Log::info('Confirmed Rate Amount', $rateAmount ? $rateAmount->toArray() : ['rateAmount' => null]);
+        return $rateAmount;
+    }
+
+
+    private function getOrCreateRateHead($orderNo, array $allData)
+    {
+        $rateHead = RateHead::where('order_no', $orderNo)->first();
+
+        if ($rateHead) {
+            Log::info("📄 RateHead found for order_no {$orderNo}", $rateHead->toArray());
+        }
+        if (!$rateHead) {
+            $rateHead = new RateHead();
+            $rateHead->fill($allData);
+            $rateHead->order_no = $orderNo;
+
+            if ($rateHead->save()) {
+                Log::info("✅ RateHead created for order_no {$orderNo}", $rateHead->toArray());
+            } else {
+                Log::error("❌ Failed to create RateHead for order_no {$orderNo}");
+            }
+        }
+
+        Log::info("📄 RateHead Confirmed {$orderNo}", $rateHead->toArray());
+
+        return $rateHead;
+    }
 
 
     public function regularSessionForm(Request $request)
@@ -164,54 +217,33 @@ class CommitteeInputController extends Controller
         DB::beginTransaction();
 
         try {
-            // Step 3: Ensure RateHead exists
-            $rateHead = RateHead::where('order_no', 1)->first();
-            Log::info('rateHead', $rateHead ? $rateHead->toArray() : ['rateHead' => null]);
-            if (!$rateHead) {
-                $rateHead = new RateHead();
-                $rateHead->head = 'Moderation';
-                $rateHead->order_no = 1;
-                $rateHead->dist_type = 'Individual';
-                $rateHead->enable_min = 1;
-                $rateHead->enable_max = 1;
-                $rateHead->is_course = 0;
-                $rateHead->is_student_count = 0;
-                $rateHead->marge_with = null;
-                $rateHead->status = 1;
-                $rateHead->save();
-                if ($rateHead->save()) {
-                    Log::info('✅ New RateHead created', $rateHead->toArray());
-                } else {
-                    Log::error('❌ Failed to save RateHead');
-                }
-            }
+            $rateHead = $this->getOrCreateRateHead(1, [
+                'head' => 'Moderation',
+                'dist_type' => 'Individual',
+                'enable_min' => 1,
+                'enable_max' => 1,
+                'is_course' => 0,
+                'is_student_count' => 0,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
+
 
             //ensure session exist
             $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
 
 
             // Step 4: Ensure  RateAmount exists(Rate Amount Exist for Rate Head=1)
-            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
-                ->where('session_id', $session_info->id)
-                ->where('exam_type_id',$exam_type)
-                ->first();
-
-            Log::info('rateAmount', $rateAmount ? $rateAmount->toArray() : ['rateAmount' => null]);
-            if (!$rateAmount) {
-                $rateAmount = new RateAmount();
-                $rateAmount->default_rate = 0;
-                $rateAmount->min_rate = $min_rate;
-                $rateAmount->max_rate = $max_rate;
-                $rateAmount->session_id = $session_info->id;
-                $rateAmount->rate_head_id = $rateHead->id;
-                $rateAmount->exam_type_id = $exam_type;
-                $rateAmount->saved = 1;
-                if ($rateAmount->save()) {
-                    Log::info('✅ New RateAmount created', $rateAmount->toArray());
-                } else {
-                    Log::error('❌ Failed to save RateHead');
-                }
-            }
+            $rateAmount = $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session_info->id,
+                $exam_type,
+                [
+                    'default_rate' => 0,
+                    'min_rate' => $min_rate,
+                    'max_rate' => $max_rate,
+                ]
+            );
 
             // Step 4.5: Delete old RateAssign entries for this session, exam, and rate head
             RateAssign::where('session_id', $session_info->id)
@@ -300,95 +332,70 @@ class CommitteeInputController extends Controller
         try {
             DB::beginTransaction();
 
-            // RateHead 2 - Paper Setters
-            $rateHead_2 = RateHead::where('order_no', 2)->first();
-            Log::info('rateHead2', $rateHead_2 ? $rateHead_2->toArray() : ['rateHead2' => null]);
-            if (!$rateHead_2) {
-                $rateHead_2 = new RateHead();
-                $rateHead_2->head = 'Paper Setters';
-                $rateHead_2->order_no = 2;
-                $rateHead_2->dist_type = 'Individual';
-                $rateHead_2->enable_min = 0;
-                $rateHead_2->enable_max = 0;
-                $rateHead_2->is_course = 1;
-                $rateHead_2->is_student_count = 0;
-                $rateHead_2->marge_with = null;
-                $rateHead_2->status = 1;
-                if ($rateHead_2->save()) {
-                    Log::info('✅ New RateHead created', $rateHead_2->toArray());
-                } else {
-                    Log::error('❌ Failed to save RateHead');
-                }
-            }
+            $rateHead_2 = $this->getOrCreateRateHead(2, [
+                'head' => 'Paper Setters',
+                'dist_type' => 'Individual',
+                'enable_min' => 0,
+                'enable_max' => 0,
+                'is_course' => 1,
+                'is_student_count' => 0,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
+
 
             // RateHead 3 - Examiner
-            $rateHead_3 = RateHead::where('order_no', 3)->first();
-            Log::info('rateHead3', $rateHead_2 ? $rateHead_2->toArray() : ['rateHead3' => null]);
-            if (!$rateHead_3) {
-                $rateHead_3 = new RateHead();
-                $rateHead_3->head = 'Examiner';
-                $rateHead_3->order_no = 3;
-                $rateHead_3->dist_type = 'Share';
-                $rateHead_3->enable_min = 1;
-                $rateHead_3->enable_max = 0;
-                $rateHead_3->is_course = 1;
-                $rateHead_3->is_student_count = 1;
-                $rateHead_3->marge_with = null;
-                $rateHead_3->status = 1;
-                if ($rateHead_3->save()) {
-                    Log::info('✅ New RateHead3 created', $rateHead_3->toArray());
-                } else {
-                    Log::error('❌ Failed to save RateHead3');
-                }
-            }
+            $rateHead_3 = $this->getOrCreateRateHead(3, [
+                'head' => 'Examiner',
+                'dist_type' => 'Share',
+                'enable_min' => 1,
+                'enable_max' => 0,
+                'is_course' => 1,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
             // Ensure Session exists
             $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
 
-            // RateAmount for RateHead 2
-            $rateAmount_2 = RateAmount::where('rate_head_id', $rateHead_2->id)
-                ->where('session_id', $session_info->id)
-                ->where('exam_type_id',$exam_type)
-                ->first();
+            // RateAmount for RateHead 2 - Paper Setter
+            $rateAmount_2 = $this->getOrCreateRateAmount(
+                $rateHead_2->id,
+                $session_info->id,
+                $exam_type,
+                [
+                    'default_rate' => $paper_setter_rate,
+                    'min_rate' => null,
+                    'max_rate' => null,
+                ]
+            );
 
-            Log::info('rateAmount2', $rateAmount_2 ? $rateAmount_2->toArray() : ['rateAmount_2' => null]);
-            if (!$rateAmount_2) {
-                $rateAmount_2 = new RateAmount();
-                $rateAmount_2->default_rate = $paper_setter_rate;
-                //null for min_rate , max_rate
-                $rateAmount_2->session_id = $session_info->id;
-                $rateAmount_2->rate_head_id = $rateHead_2->id;
-                $rateAmount_2->exam_type_id = $exam_type;
-                $rateAmount_2->saved = 1;
-                if ($rateAmount_2->save()) {
-                    Log::info('✅ New RateAmount created', $rateAmount_2->toArray());
-                } else {
-                    Log::error('❌ Failed to save RateAmount');
-                }
-            }
-
-            // RateAmount for RateHead 3
-            $rateAmount_3 = RateAmount::where('rate_head_id', $rateHead_3->id)
-                ->where('session_id', $session_info->id)
-                ->first();
-
-            if (!$rateAmount_3) {
-                $rateAmount_3 = new RateAmount();
-                $rateAmount_3->default_rate = $script_rate;
-                $rateAmount_3->min_rate = $examiner_min_rate;
-                //max rate null(not defined)
-                $rateAmount_3->session_id = $session_info->id;
-                $rateAmount_3->rate_head_id = $rateHead_3->id;
-                $rateAmount_3->exam_type_id = $exam_type;
-                $rateAmount_3->saved = 1;
-                if ($rateAmount_3->save()) {
-                    Log::info('✅ New RateAmount created', $rateAmount_3->toArray());
-                } else {
-                    Log::error('❌ Failed to save RateHead');
-                }
-            }
+            // RateAmount for RateHead 3 - Examiner
+            $rateAmount_3 = $this->getOrCreateRateAmount(
+                $rateHead_3->id,
+                $session_info->id,
+                $exam_type,
+                [
+                    'default_rate' => $script_rate,
+                    'min_rate' => $examiner_min_rate,
+                    'max_rate' => null,
+                ]
+            );
 
 
+
+            // Delete old paper setter entries (rate_head_2)
+            RateAssign::where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead_2->id)
+                ->delete();
+
+            // Delete old examiner entries (rate_head_3)
+            RateAssign::where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead_3->id)
+                ->delete();
             /*"paper_setters":
                {
                     "1": ["110", "120"],
@@ -400,6 +407,10 @@ class CommitteeInputController extends Controller
             // Store Paper Setters
             foreach ($paperSetterData as $courseId => $teacherIds) {
                 //loop for $teacherIds [120, 140] $teacherId=120,$teacherId=140
+
+                $no_of_scripts = $noOfScripts[$courseId] ?? 0;
+                $teacherCount = count($teacherIds);
+
                 foreach ($teacherIds as $teacherId) {
                     $rateAssign = new RateAssign();
                     $rateAssign->teacher_id = $teacherId;
@@ -415,8 +426,9 @@ class CommitteeInputController extends Controller
                     // Add hidden course-related data
                     $rateAssign->course_code = $request->input("courseno.$courseId");
                     $rateAssign->course_name = $request->input("coursetitle.$courseId");
-                    $rateAssign->total_students = $request->input("registered_students_count.$courseId");
-                    $rateAssign->total_teachers = $request->input("teacher_count.$courseId");
+                   /* $rateAssign->total_students = $request->input("registered_students_count.$courseId");*/
+                    $rateAssign->total_students =$no_of_scripts;
+                    $rateAssign->total_teachers = $teacherCount;
 
 
 
@@ -443,7 +455,9 @@ class CommitteeInputController extends Controller
 
             // Store Examiners
             foreach ($examinerData as $courseId => $teacherIds) {
-                $total_input_students = $noOfScripts[$courseId] ?? 0;
+                //this is for total_students column
+                $total_students = $noOfScripts[$courseId] ?? 0;
+                //this is for each member item
                 $no_of_scripts = $noOfScripts[$courseId] ?? 0;
 
                 $teacherCount = count($teacherIds);
@@ -451,7 +465,7 @@ class CommitteeInputController extends Controller
                 //hidden input
                 $courseno = $request->input("courseno.$courseId");
                 $coursetitle = $request->input("coursetitle.$courseId");
-                $registered_students_count = $request->input("registered_students_count.$courseId");
+               // $registered_students_count = $request->input("registered_students_count.$courseId");
                 $teacher_count = $request->input("teacher_count.$courseId");//teacher comes from database
 
                 // Fallback if teacher_count is not provided or invalid
@@ -462,12 +476,12 @@ class CommitteeInputController extends Controller
                 Log::info('📘 Examiner Course-wise Input Data', [
                     'course_id' => $courseId,
                     'teacher_ids' => $teacherIds,
-                    'total_input_students' => $total_input_students,
+                    'total_input_students' => $no_of_scripts,
                     'no_of_scripts' => $no_of_scripts,
                     'teacher_count' => $teacherCount,
                     'course_code' => $courseno,
                     'course_title' => $coursetitle,
-                    'registered_students_count' => $registered_students_count,
+                    'registered_students_count' => $no_of_scripts,
                     'hidden_teacher_count' => $teacher_count,
                 ]);
 
@@ -489,7 +503,7 @@ class CommitteeInputController extends Controller
                         'teacher_id' => $teacherId,
                         'course_code' => $courseno,
                         'course_name' => $coursetitle,
-                        'total_students' => $total_input_students,
+                        'total_students' => $total_students,
                         'total_teacher' => $teacher_count,
                         'rate_head_id' => $rateHead_3->id,
                         'session_id' => $session_info->id,
@@ -510,7 +524,7 @@ class CommitteeInputController extends Controller
                         // Add hidden course-related data
                         'course_code'  => $courseno,
                         'course_name'   => $coursetitle,
-                        'total_students' => $total_input_students,
+                        'total_students' => $total_students,
                         'total_teachers'  => $teacher_count,
                     ]);
                 }
@@ -574,47 +588,29 @@ class CommitteeInputController extends Controller
         try {
             DB::beginTransaction();
 
-            $rateHead = RateHead::where('order_no', 4)->first();
-            if (!$rateHead) {
-                $rateHead = new RateHead();
-                $rateHead->head = 'Class Test';
-                $rateHead->order_no = 4;
-                $rateHead->dist_type = 'Share';
-                $rateHead->enable_min = 0;
-                $rateHead->enable_max = 0;
-                $rateHead->is_course = 1;
-                $rateHead->is_student_count = 1;
-                $rateHead->marge_with = null;
-                $rateHead->status = 1;
-
-                if ($rateHead->save()) {
-                    Log::info('✅ New RateHead created', $rateHead->toArray());
-                } else {
-                    Log::error('❌ Failed to save RateHead');
-                }
-            }
+            $rateHead = $this->getOrCreateRateHead(4, [
+                'head' => 'Class Test',
+                'dist_type' => 'Share',
+                'enable_min' => 0,
+                'enable_max' => 0,
+                'is_course' => 1,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
             $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
 
-            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
-                ->where('session_id', $session_info->id)
-                ->where('exam_type_id', $exam_type)
-                ->first();
-
-            if (!$rateAmount) {
-                $rateAmount = new RateAmount();
-                $rateAmount->rate_head_id = $rateHead->id;
-                $rateAmount->session_id = $session_info->id;
-                $rateAmount->default_rate = $class_test_rate;
-                $rateAmount->exam_type_id = $exam_type;
-                $rateAmount->saved = 1;
-
-                if ($rateAmount->save()) {
-                    Log::info('✅ New RateAmount created', $rateAmount->toArray());
-                } else {
-                    Log::error('❌ Failed to save RateAmount');
-                }
-            }
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session_info->id,
+                $exam_type,
+                [
+                    'default_rate' => $class_test_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
 
             foreach ($classTestTeacherData as $courseId => $teacherIds) {
                 $courseno = $request->input("courseno.$courseId");
@@ -727,51 +723,31 @@ class CommitteeInputController extends Controller
             DB::beginTransaction();
 
             // ✅ Step 3: Create or fetch RateHead
-            $rateHead = RateHead::where('order_no', 5)->first();
-            if (!$rateHead) {
-                $rateHead = new RateHead();
-                $rateHead->head = 'Laboratory/Survey works';
-                $rateHead->order_no = 5;
-                $rateHead->dist_type = 'Share';
-                $rateHead->enable_min = 1;
-                $rateHead->enable_max = 0;
-                $rateHead->is_course = 1;
-                $rateHead->is_student_count = 0;
-                $rateHead->marge_with = null;
-                $rateHead->status = 1;
-
-                if ($rateHead->save()) {
-                    Log::info('✅ New RateHead created', $rateHead->toArray());
-                } else {
-                    Log::error('❌ Failed to save RateHead');
-                }
-            }
+            $rateHead = $this->getOrCreateRateHead(5, [
+                'head' => 'Laboratory/Survey works',
+                'dist_type' => 'Share',
+                'enable_min' => 1,
+                'enable_max' => 0,
+                'is_course' => 1,
+                'is_student_count' => 0,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
             // ✅ Step 4: Get or create session info
             $session_info = LocalData::getOrCreateRegularSession($sessionId, $exam_type);
 
             // ✅ Step 5: Get or create RateAmount
-            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
-                ->where('session_id', $session_info->id)
-                ->where('exam_type_id', $exam_type)
-                ->first();
-
-            if (!$rateAmount) {
-                $rateAmount = new RateAmount();
-                $rateAmount->rate_head_id = $rateHead->id;
-                $rateAmount->session_id = $session_info->id;
-                $rateAmount->default_rate = $sessional_per_hour_rate;
-                $rateAmount->min_rate = $sessional_examiner_min_rate;
-                $rateAmount->exam_type_id = $exam_type;
-                $rateAmount->saved = 1;
-
-                if ($rateAmount->save()) {
-                    Log::info('✅ New RateAmount created', $rateAmount->toArray());
-                } else {
-                    Log::error('❌ Failed to save RateAmount');
-                }
-            }
-
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session_info->id,
+                $exam_type,
+                [
+                    'default_rate' => $sessional_per_hour_rate,
+                    'min_rate'     => $sessional_examiner_min_rate,
+                    'max_rate'     => null,
+                ]
+            );
             // ✅ Step 6: Save RateAssign per teacher
             foreach ($sessionalTeacherData as $courseId => $teacherIds) {
                 // Case 1: Common hour (multi-select)
@@ -918,22 +894,16 @@ class CommitteeInputController extends Controller
         try {
             DB::beginTransaction();
 
-            Log::info('🔍 Fetching or creating RateHead for Scrutinizer');
-            $rateHead = RateHead::where('order_no', 9)->first();
-
-            if (!$rateHead) {
-                $rateHead = new RateHead();
-                $rateHead->order_no = 9;
-                $rateHead->head = 'Scrutinizing(Answre Script)';
-                $rateHead->dist_type = 'Share';
-                $rateHead->enable_min = 1;
-                $rateHead->enable_max = 0;
-                $rateHead->is_course = 1;
-                $rateHead->is_student_count = 1;
-                $rateHead->marge_with = null;
-                $rateHead->status = 1;
-                $rateHead->save();
-            }
+            $rateHead = $this->getOrCreateRateHead(9, [
+                'head' => 'Scrutinizing(Answre Script)',
+                'dist_type' => 'Share',
+                'enable_min' => 1,
+                'enable_max' => 0,
+                'is_course' => 1,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
 
             Log::debug('✅ RateHead confirmed', $rateHead->toArray());
@@ -941,21 +911,16 @@ class CommitteeInputController extends Controller
             $session_info = LocalData::getOrCreateRegularSession($sessionId, $exam_type);
             Log::info('✅ Session ensured', ['session_id' => $session_info->id]);
 
-            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
-                ->where('session_id', $session_info->id)
-                ->where('exam_type_id', $exam_type)
-                ->first();
-
-            if (!$rateAmount) {
-                $rateAmount = new RateAmount();
-                $rateAmount->rate_head_id = $rateHead->id;
-                $rateAmount->session_id = $session_info->id;
-                $rateAmount->exam_type_id = $exam_type;
-                $rateAmount->default_rate = $scrutinize_script_rate;
-                $rateAmount->min_rate = $scrutinize_min_rate;
-                $rateAmount->saved = 1;
-                $rateAmount->save();
-            }
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session_info->id,
+                $exam_type,
+                [
+                    'default_rate' => $scrutinize_script_rate,
+                    'min_rate'     => $scrutinize_min_rate,
+                    'max_rate'     => null,
+                ]
+            );
 
             Log::debug('✅ RateAmount confirmed', $rateAmount->toArray());
 
@@ -1078,24 +1043,17 @@ class CommitteeInputController extends Controller
             DB::beginTransaction();
 
             // ✅ Step 2: RateHead creation
-            $rateHead = RateHead::where('order_no', '8.a')->first();
-
-            Log::info('🔍 Fetching or creating RateHead for Grade Sheet');
-            if (!$rateHead) {
-                $rateHead = new RateHead();
-                $rateHead->order_no = '8.a';
-                $rateHead->head = 'Gradesheet Preparation';
-                $rateHead->sub_head = 'Theoretical';
-                $rateHead->dist_type = 'Share';
-                $rateHead->enable_min = 0;
-                $rateHead->enable_max = 0;
-                $rateHead->is_course = 1;
-                $rateHead->is_student_count = 1;
-                $rateHead->marge_with = null;
-                $rateHead->status = 1;
-                $rateHead->save();
-                Log::info('✅ New RateHead created:', $rateHead->toArray());
-            }
+            $rateHead = $this->getOrCreateRateHead('8.a', [
+                'head' => 'Gradesheet Preparation',
+                'sub_head' => 'Theoretical',
+                'dist_type' => 'Share',
+                'enable_min' => 0,
+                'enable_max' => 0,
+                'is_course' => 1,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
             Log::debug('✅ RateHead confirmed', $rateHead->toArray());
 
@@ -1104,22 +1062,16 @@ class CommitteeInputController extends Controller
             Log::info('✅ Session ensured', ['session_id' => $session_info->id]);
 
             // ✅ Step 4: RateAmount
-            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
-                ->where('session_id', $session_info->id)
-                ->where('exam_type_id', $exam_type)
-                ->first();
-
-            if (!$rateAmount) {
-                $rateAmount = new RateAmount();
-                $rateAmount->rate_head_id = $rateHead->id;
-                $rateAmount->session_id = $session_info->id;
-                $rateAmount->default_rate = $theory_grade_sheet_rate;  // ₹24 per script (example rate)
-                $rateAmount->exam_type_id = $exam_type;
-                $rateAmount->saved = 1;
-                $rateAmount->save();
-
-                Log::info('✅ RateAmount created (grade sheet):', $rateAmount->toArray());
-            }
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session_info->id,
+                $exam_type,
+                [
+                    'default_rate' => $theory_grade_sheet_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
 
 
             foreach ($teacherData as $courseId => $teacherIds) {
@@ -1233,46 +1185,33 @@ class CommitteeInputController extends Controller
             DB::beginTransaction();
 
             // ✅ Step 1: Create or fetch RateHead
-            $rateHead = RateHead::where('order_no', '8.b')->first();
-            if (!$rateHead) {
-                $rateHead = new RateHead();
-                $rateHead->order_no = '8.b';
-                $rateHead->head = 'Gradesheet Preparation';
-                $rateHead->sub_head = 'Sessional';
-                $rateHead->dist_type = 'Share';
-                $rateHead->enable_min = 0;
-                $rateHead->enable_max = 0;
-                $rateHead->is_course = 1;
-                $rateHead->is_student_count = 1;
-                $rateHead->marge_with = null;
-                $rateHead->status = 1;
-                $rateHead->save();
-
-                Log::info('✅ New RateHead created:', $rateHead->toArray());
-            }
+            $rateHead = $this->getOrCreateRateHead('8.b', [
+                'head' => 'Gradesheet Preparation',
+                'sub_head' => 'Sessional',
+                'dist_type' => 'Share',
+                'enable_min' => 0,
+                'enable_max' => 0,
+                'is_course' => 1,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
             Log::debug('✅ RateHead confirmed', $rateHead->toArray());
 
             // ✅ Ensure Session exists
             $session_info = LocalData::getOrCreateRegularSession($sessionId ,$exam_type);
 
-            // ✅ Step 3: Create or fetch RateAmount(need to work)
-            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
-                ->where('session_id', $session_info->id)
-                ->where('exam_type_id', $exam_type)
-                ->first();
-
-            if (!$rateAmount) {
-                $rateAmount = new RateAmount();
-                $rateAmount->rate_head_id = $rateHead->id;
-                $rateAmount->session_id = $session_info->id;
-                $rateAmount->default_rate = $sessional_grade_sheet_rate; // Example rate
-                $rateAmount->exam_type_id = $exam_type;
-                $rateAmount->saved = 1;
-                $rateAmount->save();
-
-                Log::info('✅ New RateAmount created (Sessional):', $rateAmount->toArray());
-            }
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session_info->id,
+                $exam_type,
+                [
+                    'default_rate' => $sessional_grade_sheet_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
 
             // ✅ Loop through course-wise teacher assignments
             foreach ($teacherData as $courseId => $teacherIds) {
@@ -1398,23 +1337,17 @@ class CommitteeInputController extends Controller
             DB::beginTransaction();
 
             // Step 2: Create or fetch RateHead
-            $rateHead = RateHead::where('order_no', '10.a')->first();
-            if (!$rateHead) {
-                $rateHead = new RateHead();
-                $rateHead->head = 'Gradesheet Scrutinizing';
-                $rateHead->order_no = '10.a';
-                $rateHead->sub_head = 'Theoretical';
-                $rateHead->dist_type = 'Share';
-                $rateHead->enable_min = 0;
-                $rateHead->enable_max = 0;
-                $rateHead->is_course = 1;
-                $rateHead->is_student_count = 1;
-                $rateHead->marge_with = null;
-                $rateHead->status = 1;
-                $rateHead->save();
-
-                Log::info('✅ RateHead created or found:', $rateHead->toArray());
-            }
+            $rateHead = $this->getOrCreateRateHead('10.a', [
+                'head' => 'Gradesheet Scrutinizing',
+                'sub_head' => 'Theoretical',
+                'dist_type' => 'Share',
+                'enable_min' => 0,
+                'enable_max' => 0,
+                'is_course' => 1,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
             Log::debug('✅ RateHead confirmed', $rateHead->toArray());
             // Step 3: Ensure session
@@ -1423,23 +1356,17 @@ class CommitteeInputController extends Controller
 
 
             // Step 4: Create or fetch RateAmount
-            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
-                ->where('session_id', $session_info->id)
-                ->where('exam_type_id', $exam_type)
-                ->first();
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session_info->id,
+                $exam_type,
+                [
+                    'default_rate' => $scrutinize_theory_grade_sheet_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
 
-
-            if (!$rateAmount) {
-                $rateAmount = new RateAmount();
-                $rateAmount->rate_head_id = $rateHead->id;
-                $rateAmount->session_id = $session_info->id;
-                $rateAmount->default_rate = $scrutinize_theory_grade_sheet_rate;  // ₹24 per script (example rate)
-                $rateAmount->exam_type_id = $exam_type;
-                $rateAmount->saved = 1;
-                $rateAmount->save();
-
-                Log::info('✅ RateAmount created (grade sheet):', $rateAmount->toArray());
-            }
 
 
             // Step 5: RateAssign per teacher
@@ -1559,46 +1486,33 @@ class CommitteeInputController extends Controller
 
 
             // Step 2: Create or fetch RateHead
-            $rateHead = RateHead::where('order_no', '10.b')->first();
-            if (!$rateHead) {
-                $rateHead = new RateHead();
-                $rateHead->head = 'GradeSheet Scrutinizing (Sessional)';
-                $rateHead->order_no = '10.b';
-                $rateHead->sub_head = 'Sessional';
-                $rateHead->dist_type = 'Share';
-                $rateHead->enable_min = 0;
-                $rateHead->enable_max = 0;
-                $rateHead->is_course = 1;
-                $rateHead->is_student_count = 1;
-                $rateHead->marge_with = null;
-                $rateHead->status = 1;
-                $rateHead->save();
-
-                Log::info('✅ RateHead created or found:', $rateHead->toArray());
-            }
+            $rateHead = $this->getOrCreateRateHead('10.b', [
+                'head' => 'GradeSheet Scrutinizing (Sessional)',
+                'sub_head' => 'Sessional',
+                'dist_type' => 'Share',
+                'enable_min' => 0,
+                'enable_max' => 0,
+                'is_course' => 1,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
 
             // Step 3: Ensure session
             $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
 
             // Step 4: Create or fetch RateAmount
-            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
-                ->where('session_id', $session_info->id)
-                ->where('exam_type_id', $exam_type)
-                ->first();
-
-
-            if (!$rateAmount) {
-                $rateAmount = new RateAmount();
-                $rateAmount->rate_head_id = $rateHead->id;
-                $rateAmount->session_id = $session_info->id;
-                $rateAmount->default_rate = $scrutinize_sessional_grade_sheet_rate;  // ₹24 per script (example rate)
-                $rateAmount->exam_type_id = $exam_type;
-                $rateAmount->saved = 1;
-                $rateAmount->save();
-
-                Log::info('✅ RateAmount created (grade sheet):', $rateAmount->toArray());
-            }
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session_info->id,
+                $exam_type,
+                [
+                    'default_rate' => $scrutinize_sessional_grade_sheet_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
 
             // Step 5: Assign rates per teacher
             foreach ($teacherData as $courseId => $teacherIds) {
@@ -1720,22 +1634,16 @@ class CommitteeInputController extends Controller
 
 
             // Step 2: Create or fetch RateHead
-            $rateHead = RateHead::where('order_no', '8.d')->first();
-            if (!$rateHead) {
-                $rateHead = new RateHead();
-                $rateHead->head = 'Prepared Computerized Result';
-                $rateHead->order_no = '8.d';
-                $rateHead->dist_type = 'Share';
-                $rateHead->enable_min = 0;
-                $rateHead->enable_max = 0;
-                $rateHead->is_course = 1;
-                $rateHead->is_student_count = 1;
-                $rateHead->marge_with = null;
-                $rateHead->status = 1;
-                $rateHead->save();
-
-                Log::info('✅ RateHead created or found:', $rateHead->toArray());
-            }
+            $rateHead = $this->getOrCreateRateHead('8.d', [
+                'head' => 'Prepared Computerized Result',
+                'dist_type' => 'Share',
+                'enable_min' => 0,
+                'enable_max' => 0,
+                'is_course' => 1,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
             Log::info('✅ RateHead confirmed', $rateHead->toArray());
 
@@ -1743,23 +1651,16 @@ class CommitteeInputController extends Controller
             $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
 
             // Step 4: Create or fetch RateAmount
-            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
-                ->where('session_id', $session_info->id)
-                ->where('exam_type_id', $exam_type)
-                ->first();
-
-
-            if (!$rateAmount) {
-                $rateAmount = new RateAmount();
-                $rateAmount->rate_head_id = $rateHead->id;
-                $rateAmount->session_id = $session_info->id;
-                $rateAmount->default_rate = $prepare_computerized_result_rate;  // ₹24 per script (example rate)
-                $rateAmount->exam_type_id = $exam_type;
-                $rateAmount->saved = 1;
-                $rateAmount->save();
-
-                Log::info('✅ RateAmount created (computerized result):', $rateAmount->toArray());
-            }
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session_info->id,
+                $exam_type,
+                [
+                    'default_rate' => $prepare_computerized_result_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
 
             // Step 5: Assign to teachers
             foreach ($teacherData as $courseId => $teacherIds) {
@@ -1866,22 +1767,16 @@ class CommitteeInputController extends Controller
             DB::beginTransaction();
 
             // Step 1: RateHead
-            $rateHead = RateHead::firstOrNew([
-                'order_no' => '8.c',
+            $rateHead = $this->getOrCreateRateHead('8.c', [
+                'head' => 'Grade Sheeets/GPA Verification',
+                'dist_type' => 'Share',
+                'enable_min' => 0,
+                'enable_max' => 0,
+                'is_course' => 0,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
             ]);
-
-            if(!$rateHead->exist){
-                $rateHead->head = 'Grade Sheeets/GPA Verification';
-                $rateHead->dist_type = 'Share';
-                $rateHead->enable_min = 0;
-                $rateHead->enable_max = 0;
-                $rateHead->is_course = 0;
-                $rateHead->is_student_count = 1;
-                $rateHead->marge_with = null;
-                $rateHead->status = 1;
-                $rateHead->save();
-                Log::info('✅ RateHead created or found:', $rateHead->toArray());
-            }
 
 
             Log::info('✅ RateHead created or updated.', $rateHead->toArray());
@@ -1890,19 +1785,16 @@ class CommitteeInputController extends Controller
             $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
 
             // Step 3: RateAmount
-            $rateAmount = RateAmount::firstOrNew([
-                'rate_head_id' => $rateHead->id,
-                'session_id' => $session_info->id,
-                'exam_type_id' => $exam_type,
-            ]);
-
-            if (!$rateAmount->exists) {
-                $rateAmount->default_rate = $verified_computerized_grade_sheet_rate; // Set your rate here
-                $rateAmount->exam_type_id = $exam_type;
-                $rateAmount->saved = 1;
-                $rateAmount->save();
-                Log::info('✅ RateAmount created.', $rateAmount->toArray());
-            }
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session_info->id,
+                $exam_type,
+                [
+                    'default_rate' => $verified_computerized_grade_sheet_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
 
             // Step 4: Assign to teachers
             $total_teacher=count($teacherIds);
@@ -2012,25 +1904,15 @@ class CommitteeInputController extends Controller
 
         try {
             // Step 3: Ensure RateHead exists
-            $rateHead = RateHead::where('order_no', '12.a')->first();
-            Log::info('rateHead', $rateHead ? $rateHead->toArray() : ['rateHead' => null]);
-            if (!$rateHead) {
-                $rateHead = new RateHead();
-                $rateHead->head = 'Question';
-                $rateHead->sub_head='Stencil Cutting';
-                $rateHead->order_no = '12.a';
-                $rateHead->is_course = 1;
-                $rateHead->dist_type = 'Individual';
-                $rateHead->is_student_count = 1;
-                $rateHead->marge_with = null;
-                $rateHead->status = 1;
-                $rateHead->save();
-                if ($rateHead->save()) {
-                    Log::info('✅ New RateHead created', $rateHead->toArray());
-                } else {
-                    Log::error('❌ Failed to save RateHead');
-                }
-            }
+            $rateHead = $this->getOrCreateRateHead('12.a', [
+                'head' => 'Question',
+                'sub_head' => 'Stencil Cutting',
+                'dist_type' => 'Individual',
+                'is_course' => 1,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
             //ensure session exist
             $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
@@ -2040,25 +1922,16 @@ class CommitteeInputController extends Controller
 
 
             // Step 4: Ensure  RateAmount exists(Rate Amount Exist for Rate Head=1)
-            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
-                ->where('session_id', $session_info->id)
-                ->where('exam_type_id',$exam_type)
-                ->first();
-
-            Log::info('rateAmount', $rateAmount ? $rateAmount->toArray() : ['rateAmount' => null]);
-            if (!$rateAmount) {
-                $rateAmount = new RateAmount();
-                $rateAmount->default_rate = $per_stencil_cutting_rate;
-                $rateAmount->session_id = $session_info->id;
-                $rateAmount->rate_head_id = $rateHead->id;
-                $rateAmount->exam_type_id = $exam_type;
-                $rateAmount->saved = 1;
-                if ($rateAmount->save()) {
-                    Log::info('✅ New RateAmount created', $rateAmount->toArray());
-                } else {
-                    Log::error('❌ Failed to save RateHead');
-                }
-            }
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session_info->id,
+                $exam_type,
+                [
+                    'default_rate' => $per_stencil_cutting_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
 
 
 
@@ -2150,25 +2023,15 @@ class CommitteeInputController extends Controller
         DB::beginTransaction();
         try {
             // Step 3: Ensure RateHead exists
-            $rateHead = RateHead::where('order_no', '12.b')->first();
-            Log::info('rateHead', $rateHead ? $rateHead->toArray() : ['rateHead' => null]);
-            if (!$rateHead) {
-                $rateHead = new RateHead();
-                $rateHead->head = 'Question';
-                $rateHead->sub_head='Printing';
-                $rateHead->order_no = '12.b';
-                $rateHead->is_course = 0;
-                $rateHead->dist_type = 'Individual';
-                $rateHead->is_student_count = 1;
-                $rateHead->marge_with = null;
-                $rateHead->status = 1;
-                $rateHead->save();
-                if ($rateHead->save()) {
-                    Log::info('✅ New RateHead created', $rateHead->toArray());
-                } else {
-                    Log::error('❌ Failed to save RateHead');
-                }
-            }
+            $rateHead = $this->getOrCreateRateHead('12.b', [
+                'head' => 'Question',
+                'sub_head' => 'Printing',
+                'is_course' => 0,
+                'dist_type' => 'Individual',
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
             //ensure session exist
             $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
@@ -2178,25 +2041,16 @@ class CommitteeInputController extends Controller
 
 
             // Step 4: Ensure  RateAmount exists(Rate Amount Exist for Rate Head=1)
-            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
-                ->where('session_id', $session_info->id)
-                ->where('exam_type_id',$exam_type)
-                ->first();
-
-            Log::info('rateAmount', $rateAmount ? $rateAmount->toArray() : ['rateAmount' => null]);
-            if (!$rateAmount) {
-                $rateAmount = new RateAmount();
-                $rateAmount->default_rate = $per_printing_question_paper_rate;
-                $rateAmount->session_id = $session_info->id;
-                $rateAmount->rate_head_id = $rateHead->id;
-                $rateAmount->exam_type_id = $exam_type;
-                $rateAmount->saved = 1;
-                if ($rateAmount->save()) {
-                    Log::info('✅ New RateAmount created', $rateAmount->toArray());
-                } else {
-                    Log::error('❌ Failed to save RateHead');
-                }
-            }
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session_info->id,
+                $exam_type,
+                [
+                    'default_rate' => $per_printing_question_paper_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
 
 
 
@@ -2292,24 +2146,15 @@ class CommitteeInputController extends Controller
 
         try {
             // Step 3: Ensure RateHead exists
-            $rateHead = RateHead::where('order_no', 11)->first();
-            Log::info('rateHead', $rateHead ? $rateHead->toArray() : ['rateHead' => null]);
-            if (!$rateHead) {
-                $rateHead = new RateHead();
-                $rateHead->head = 'Question Typing,Sketching & Misc.';
-                $rateHead->order_no = '11';
-                $rateHead->is_course = 1;
-                $rateHead->dist_type = 'Individual';
-                $rateHead->is_student_count = 1;
-                $rateHead->marge_with = null;
-                $rateHead->status = 1;
-                $rateHead->save();
-                if ($rateHead->save()) {
-                    Log::info('✅ New RateHead created', $rateHead->toArray());
-                } else {
-                    Log::error('❌ Failed to save RateHead');
-                }
-            }
+            $rateHead = $this->getOrCreateRateHead('11', [
+                'head' => 'Question Typing,Sketching & Misc.',
+                'is_course' => 1,
+                'dist_type' => 'Individual',
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
+
 
             //ensure session exist
             $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
@@ -2319,25 +2164,16 @@ class CommitteeInputController extends Controller
 
 
             // Step 4: Ensure  RateAmount exists(Rate Amount Exist for Rate Head=1)
-            $rateAmount = RateAmount::where('rate_head_id', $rateHead->id)
-                ->where('session_id', $session_info->id)
-                ->where('exam_type_id',$exam_type)
-                ->first();
-
-            Log::info('rateAmount', $rateAmount ? $rateAmount->toArray() : ['rateAmount' => null]);
-            if (!$rateAmount) {
-                $rateAmount = new RateAmount();
-                $rateAmount->default_rate = $per_comparsion_rate;
-                $rateAmount->session_id = $session_info->id;
-                $rateAmount->rate_head_id = $rateHead->id;
-                $rateAmount->exam_type_id = $exam_type;
-                $rateAmount->saved = 1;
-                if ($rateAmount->save()) {
-                    Log::info('✅ New RateAmount created', $rateAmount->toArray());
-                } else {
-                    Log::error('❌ Failed to save RateHead');
-                }
-            }
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session_info->id,
+                $exam_type,
+                [
+                    'default_rate' => $per_comparsion_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
 
 
 
@@ -2420,21 +2256,14 @@ class CommitteeInputController extends Controller
             DB::beginTransaction();
 
             // ✅ Step 1: Create or fetch RateHead
-            $rateHead = RateHead::where('order_no', '13')
-                ->first();
-
-            if (!$rateHead) {
-                $rateHead = new RateHead();
-                $rateHead->order_no = 13;
-                $rateHead->head = 'Advisor Fee';
-                $rateHead->dist_type = 'Individual';
-                $rateHead->is_course = 0;
-                $rateHead->is_student_count = 1;
-                $rateHead->marge_with = null;
-                $rateHead->status = 1;
-                $rateHead->save();
-                Log::info('✅ RateHead Created or Fetched (Advisor-Student)', $rateHead->toArray());
-            }
+            $rateHead = $this->getOrCreateRateHead('13', [
+                'head' => 'Advisor Fee',
+                'dist_type' => 'Individual',
+                'is_course' => 0,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
             Log::info('✅ RateHead confirmed', $rateHead->toArray());
 
@@ -2442,19 +2271,16 @@ class CommitteeInputController extends Controller
             $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
 
             // ✅ Step 3: Create or fetch RateAmount
-            $rateAmount = RateAmount::firstOrNew([
-                'rate_head_id' => $rateHead->id,
-                'session_id' => $session->id,
-                'exam_type_id' => $exam_type
-            ]);
-
-            if (!$rateAmount->exists) {
-                $rateAmount->default_rate = $advisor_per_student_rate; // Example rate per student
-                $rateAmount->saved = 1;
-                $rateAmount->save();
-
-                Log::info('✅ RateAmount Created (Advisor-Student)', $rateAmount->toArray());
-            }
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session->id,
+                $exam_type,
+                [
+                    'default_rate' => $advisor_per_student_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
 
             // ✅ Step 4: Assign teachers
             foreach ($teacherIds as $index => $teacherId) {
@@ -2535,41 +2361,33 @@ class CommitteeInputController extends Controller
             DB::beginTransaction();
 
             // Step 1: Get or create RateHead
-            $rateHead = RateHead::where('order_no', '16')->first();
-
-            if (!$rateHead) {
-                $rateHead = RateHead::create([
-                    'order_no' => 16,
-                    'head' => 'Verified of Final Graduation Result',
-                    'dist_type' => 'Individual',
-                    'enable_min' => 0,
-                    'enable_max' => 0,
-                    'is_course' => 0,
-                    'is_student_count' => 1,
-                    'marge_with' => null,
-                    'status' => 1,
-                ]);
-                Log::info('✅ RateHead Created', $rateHead->toArray());
-            }
+            $rateHead = $this->getOrCreateRateHead(16, [
+                'head' => 'Verified of Final Graduation Result',
+                'dist_type' => 'Individual',
+                'enable_min' => 0,
+                'enable_max' => 0,
+                'is_course' => 0,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
             Log::info('✅ RateHead confirmed', $rateHead->toArray());
             // Step 2: Get or create Session
             $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
 
             // Step 3: Get or create RateAmount
-            $rateAmount = RateAmount::firstOrNew([
-                'rate_head_id' => $rateHead->id,
-                'session_id' => $session->id,
-                'exam_type_id' => $exam_type
-            ]);
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session->id,
+                $exam_type,
+                [
+                    'default_rate' => $final_result_per_student_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
 
-            if (!$rateAmount->exists) {
-                $rateAmount->default_rate = $final_result_per_student_rate; // Set your rate per student
-                $rateAmount->saved = 1;
-                $rateAmount->save();
-
-                Log::info('✅ RateAmount Created', $rateAmount->toArray());
-            }
 
             // Step 4: Assign each teacher
             foreach ($teacherIds as $index => $teacherId) {
@@ -2645,23 +2463,17 @@ class CommitteeInputController extends Controller
             DB::beginTransaction();
 
             // Step 1: Get or create RateHead
-            $rateHead = RateHead::where('order_no', '7.e')->first();
-
-            if (!$rateHead) {
-                $rateHead = RateHead::create([
-                    'order_no' => '7.e',
-                    'head' => 'Sessional',
-                    'sub_head' => 'Central Viva',
-                    'dist_type' => 'Individual',
-                    'enable_min' => 0,
-                    'enable_max' => 0,
-                    'is_course' => 0,
-                    'is_student_count' => 1,
-                    'marge_with' => null,
-                    'status' => 1,
-                ]);
-                Log::info('✅ RateHead Created', $rateHead->toArray());
-            }
+            $rateHead = $this->getOrCreateRateHead('7.e', [
+                'head' => 'Sessional',
+                'sub_head' => 'Central Viva',
+                'dist_type' => 'Individual',
+                'enable_min' => 0,
+                'enable_max' => 0,
+                'is_course' => 0,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
             Log::info('✅ RateHead confirmed', $rateHead->toArray());
 
@@ -2669,19 +2481,16 @@ class CommitteeInputController extends Controller
             $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
 
             // Step 3: Get or create RateAmount
-            $rateAmount = RateAmount::firstOrNew([
-                'rate_head_id' => $rateHead->id,
-                'session_id' => $session->id,
-                'exam_type_id' => $exam_type
-            ]);
-
-            if (!$rateAmount->exists) {
-                $rateAmount->default_rate = $central_examination_thesis_rate; // Set your rate per student
-                $rateAmount->saved = 1;
-                $rateAmount->save();
-
-                Log::info('✅ RateAmount Created', $rateAmount->toArray());
-            }
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session->id,
+                $exam_type,
+                [
+                    'default_rate' => $central_examination_thesis_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
 
             // Step 4: Assign each teacher
             foreach ($teacherIds as $index => $teacherId) {
@@ -2755,21 +2564,15 @@ class CommitteeInputController extends Controller
             DB::beginTransaction();
 
             // Step 1: Get or create RateHead
-            $rateHead = RateHead::where('order_no', '7.f')->first();
-
-            if (!$rateHead) {
-                $rateHead = RateHead::create([
-                    'order_no' => '7.f',
-                    'head' => 'Sessional',
-                    'sub_head' => 'Survey',
-                    'dist_type' => 'Individual',
-                    'is_course' => 0,
-                    'is_student_count' => 1,
-                    'marge_with' => null,
-                    'status' => 1,
-                ]);
-                Log::info('✅ RateHead Created', $rateHead->toArray());
-            }
+            $rateHead = $this->getOrCreateRateHead('7.f', [
+                'head' => 'Sessional',
+                'sub_head' => 'Survey',
+                'dist_type' => 'Individual',
+                'is_course' => 0,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
             Log::info('✅ RateHead confirmed', $rateHead->toArray());
 
@@ -2777,19 +2580,16 @@ class CommitteeInputController extends Controller
             $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
 
             // Step 3: Get or create RateAmount
-            $rateAmount = RateAmount::firstOrNew([
-                'rate_head_id' => $rateHead->id,
-                'session_id' => $session->id,
-                'exam_type_id' => $exam_type
-            ]);
-
-            if (!$rateAmount->exists) {
-                $rateAmount->default_rate = $servey_rate; // Set your rate per student
-                $rateAmount->saved = 1;
-                $rateAmount->save();
-
-                Log::info('✅ RateAmount Created', $rateAmount->toArray());
-            }
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session->id,
+                $exam_type,
+                [
+                    'default_rate' => $servey_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
             Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
 
             // Step 4: Assign each teacher
@@ -2867,38 +2667,31 @@ class CommitteeInputController extends Controller
             DB::beginTransaction();
 
             // Step 2: Get or create RateHead
-            $rateHead = RateHead::where('order_no', '6.c')->first();
+            $rateHead = $this->getOrCreateRateHead('6.c', [
+                'head' => 'Project/Thesis',
+                'sub_head' => 'Initial Viva ' . ($session->year . '/' . $session->semester),
+                'dist_type' => 'Individual',
+                'is_course' => 0,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
-            if (!$rateHead) {
-                $rateHead = RateHead::create([
-                    'order_no' => '6.c',
-                    'head' => 'Project/Thesis',
-                    'sub_head' =>  'Initial Viva ' . ($session->year . '/' . $session->semester),
-                    'dist_type' => 'Individual',
-                    'is_course' => 0,
-                    'is_student_count' => 1,
-                    'marge_with' => null,
-                    'status' => 1,
-                ]);
-                Log::info('✅ RateHead Created', $rateHead->toArray());
-            }
             Log::info('✅ RateHead confirmed', $rateHead->toArray());
 
 
             // Step 3: Get or create RateAmount
-            $rateAmount = RateAmount::firstOrNew([
-                'rate_head_id' => $rateHead->id,
-                'session_id' => $session->id,
-                'exam_type_id' => $exam_type
-            ]);
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session->id,
+                $exam_type,
+                [
+                    'default_rate' => $viva_thesis_project_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
 
-            if (!$rateAmount->exists) {
-                $rateAmount->default_rate = $viva_thesis_project_rate; // Set your rate per student
-                $rateAmount->saved = 1;
-                $rateAmount->save();
-
-                Log::info('✅ RateAmount Created', $rateAmount->toArray());
-            }
             Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
 
             // Step 4: Assign each teacher
@@ -2981,38 +2774,32 @@ class CommitteeInputController extends Controller
             DB::beginTransaction();
 
             // 2. Get or Create RateHead
-            $rateHead = RateHead::where('order_no', '6.a')->first();
-            if (!$rateHead) {
-                $rateHead = RateHead::create([
-                    'order_no' => '6.a',
-                    'head' => 'Project/Thesis',
-                    'sub_head' => 'Examination',
-                    'dist_type' => 'Individual',
-                    'enable_min' => 0,
-                    'enable_max' => 0,
-                    'is_course' => 0,
-                    'is_student_count' => 1,
-                    'marge_with' => null,
-                    'status' => 1,
-                ]);
-                Log::info('✅ RateHead Created', $rateHead->toArray());
-            }
+            $rateHead = $this->getOrCreateRateHead('6.a', [
+                'head' => 'Project/Thesis',
+                'sub_head' => 'Examination',
+                'dist_type' => 'Individual',
+                'enable_min' => 0,
+                'enable_max' => 0,
+                'is_course' => 0,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
             Log::info('✅ RateHead confirmed', $rateHead->toArray());
 
 
             // 3. Get or Create RateAmount
-            $rateAmount = RateAmount::firstOrNew([
-                'rate_head_id' => $rateHead->id,
-                'session_id' => $session->id,
-                'exam_type_id' => $exam_type
-            ]);
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session->id,
+                $exam_type,
+                [
+                    'default_rate' => $examined_thesis_project_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
 
-            if (!$rateAmount->exists) {
-                $rateAmount->default_rate = $examined_thesis_project_rate;
-                $rateAmount->saved = 1;
-                $rateAmount->save();
-                Log::info('✅ RateAmount Created', $rateAmount->toArray());
-            }
             Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
 
             // 4. Create RateAssign for each teacher
@@ -3096,40 +2883,31 @@ class CommitteeInputController extends Controller
             DB::beginTransaction();
 
             // Step 2: Get or create RateHead
-            $rateHead = RateHead::where('order_no', '6.d')->first();
-
-            if (!$rateHead) {
-                $rateHead = RateHead::create([
-                    'order_no' => '6.d',
-                    'head' => 'Project/Thesis',
-                    'sub_head' => 'Final Viva ' . $session->year . '/' . $session->semester,
-                    'dist_type' => 'Individual',
-                    'enable_min' => 0,
-                    'enable_max' => 0,
-                    'is_course' => 0,
-                    'is_student_count' => 1,
-                    'marge_with' => null,
-                    'status' => 1,
-                ]);
-                Log::info('✅ RateHead Created', $rateHead->toArray());
-            }
+            $rateHead = $this->getOrCreateRateHead('6.d', [
+                'head' => 'Project/Thesis',
+                'sub_head' => 'Final Viva ' . $session->year . '/' . $session->semester,
+                'dist_type' => 'Individual',
+                'enable_min' => 0,
+                'enable_max' => 0,
+                'is_course' => 0,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
             Log::info('✅ RateHead confirmed', $rateHead->toArray());
 
 
             // Step 3: Get or create RateAmount
-            $rateAmount = RateAmount::firstOrNew([
-                'rate_head_id' => $rateHead->id,
-                'session_id' => $session->id,
-                'exam_type_id' => $exam_type
-            ]);
-
-            if (!$rateAmount->exists) {
-                $rateAmount->default_rate = $oral_exam_thesis_project_rate; // Set your rate per student
-                $rateAmount->saved = 1;
-                $rateAmount->save();
-
-                Log::info('✅ RateAmount Created', $rateAmount->toArray());
-            }
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session->id,
+                $exam_type,
+                [
+                    'default_rate' => $oral_exam_thesis_project_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
             Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
 
             // Step 4: Assign each teacher
@@ -3210,40 +2988,32 @@ class CommitteeInputController extends Controller
             DB::beginTransaction();
 
             // Step 2: Get or create RateHead
-            $rateHead = RateHead::where('order_no', '6.b')->first();
-
-            if (!$rateHead) {
-                $rateHead = RateHead::create([
-                    'order_no' => '6.b',
-                    'head' => 'Project/Thesis',
-                    'sub_head' => 'Supervising',
-                    'dist_type' => 'Individual',
-                    'enable_min' => 0,
-                    'enable_max' => 0,
-                    'is_course' => 0,
-                    'is_student_count' => 1,
-                    'marge_with' => null,
-                    'status' => 1,
-                ]);
-                Log::info('✅ RateHead Created', $rateHead->toArray());
-            }
+            $rateHead = $this->getOrCreateRateHead('6.b', [
+                'head' => 'Project/Thesis',
+                'sub_head' => 'Supervising',
+                'dist_type' => 'Individual',
+                'enable_min' => 0,
+                'enable_max' => 0,
+                'is_course' => 0,
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
             Log::info('✅ RateHead confirmed', $rateHead->toArray());
 
 
             // Step 3: Get or create RateAmount
-            $rateAmount = RateAmount::firstOrNew([
-                'rate_head_id' => $rateHead->id,
-                'session_id' => $session->id,
-                'exam_type_id' => $exam_type
-            ]);
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session->id,
+                $exam_type,
+                [
+                    'default_rate' => $supervised_thesis_project_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
 
-            if (!$rateAmount->exists) {
-                $rateAmount->default_rate = $supervised_thesis_project_rate; // Set your rate per student
-                $rateAmount->saved = 1;
-                $rateAmount->save();
-
-                Log::info('✅ RateAmount Created', $rateAmount->toArray());
-            }
             Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
 
             // Step 4: Assign each teacher
@@ -3317,34 +3087,29 @@ class CommitteeInputController extends Controller
             DB::beginTransaction();
 
             // Step 2: Get or create RateHead
-            $rateHead = RateHead::where('order_no', '14')->first();
+            $rateHead = $this->getOrCreateRateHead('14', [
+                'head' => 'Course Co-ordinator Fee',
+                'dist_type' => 'Individual',
+                'is_course' => 0,
+                'is_student_count' => 0,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
-            if (!$rateHead) {
-                $rateHead = RateHead::create([
-                    'order_no' => '14',
-                    'head' => 'Course Co-ordinator Fee',
-                    'dist_type' => 'Individual',
-                    'is_course' => 0,
-                    'is_student_count' => 0,
-                    'marge_with' => null,
-                    'status' => 1,
-                ]);
-                Log::info('✅ RateHead Created:', $rateHead->toArray());
-            }
             Log::info('✅ RateHead confirmed', $rateHead->toArray());
 
             // Step 3: Get or create RateAmount
-            $rateAmount = RateAmount::firstOrNew([
-                'rate_head_id' => $rateHead->id,
-                'session_id' => $session->id,
-                'exam_type_id' => $exam_type
-            ]);
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session->id,
+                $exam_type,
+                [
+                    'default_rate' => $coordinator_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
 
-            if (!$rateAmount->exists) {
-                $rateAmount->default_rate = $coordinator_rate; // Set your rate per student
-                $rateAmount->save();
-                Log::info('✅ RateAmount Created', $rateAmount->toArray());
-            }
             Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
 
             // Step 4: Create RateAssign
@@ -3397,34 +3162,28 @@ class CommitteeInputController extends Controller
             DB::beginTransaction();
 
             // Step 2: Get or create RateHead
-            $rateHead = RateHead::where('order_no', '15')->first();
+            $rateHead =$this->getOrCreateRateHead('15', [
+                'head' => 'Chairman Fee',
+                'dist_type' => 'Individual',
+                'is_course' => 0,
+                'is_student_count' => 0,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
 
-            if (!$rateHead) {
-                $rateHead = RateHead::create([
-                    'order_no' => '15',
-                    'head' => 'Chairman Fee',
-                    'dist_type' => 'Individual',
-                    'is_course' => 0,
-                    'is_student_count' => 0,
-                    'marge_with' => null,
-                    'status' => 1,
-                ]);
-                Log::info('✅ RateHead Created:', $rateHead->toArray());
-            }
             Log::info('✅ RateHead confirmed', $rateHead->toArray());
 
             // Step 3: Get or create RateAmount
-            $rateAmount = RateAmount::firstOrNew([
-                'rate_head_id' => $rateHead->id,
-                'session_id' => $session->id,
-                'exam_type_id' => $exam_type
-            ]);
-
-            if (!$rateAmount->exists) {
-                $rateAmount->default_rate = $chairman_rate; // Set your rate per student
-                $rateAmount->save();
-                Log::info('✅ RateAmount Created', $rateAmount->toArray());
-            }
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session->id,
+                $exam_type,
+                [
+                    'default_rate' => $chairman_rate, // Set the chairman rate
+                    'min_rate'     => null,           // Optional, can be adjusted if needed
+                    'max_rate'     => null,           // Optional, can be adjusted if needed
+                ]
+            );
             Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
 
             // Step 4: Create RateAssign

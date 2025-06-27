@@ -18,8 +18,7 @@
         }
     </style>
 @endpush
-<form id="form-list-of-examiner-paper-setter"
-      action="{{ route('committee.input.regular.examiner.paper.setter.store') }}" method="POST">
+<form id="form-list-of-examiner-paper-setter" action="{{ route('committee.input.regular.examiner.paper.setter.store') }}" method="POST">
     @csrf
     <input type="hidden" id="{{$sid}}" name="sid" value="{{$sid}}">
     <div class="row mb-5">
@@ -34,22 +33,19 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="moderation_committee_min_rate">Rate Per script</label>
-                                <input type="number" name="examiner_rate_per_script" value="200" step="any"
-                                       class="form-control" placeholder="Rate per script" required>
+                                <input type="number"  name="examiner_rate_per_script" value="200" step="any" class="form-control" placeholder="Rate per script" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="total_week">Minimum Rate Per Examiner</label>
-                                <input type="number" name="examiner_min_rate" value="1000" step="any"
-                                       class="form-control" placeholder="Min Rate per examiner" required>
+                                <input type="number"  name="examiner_min_rate" value="1000" step="any" class="form-control" placeholder="Min Rate per examiner" required>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="total_week">Paper Setter Rate:</label>
-                                <input type="number" name="paper_setter_rate" value="3600" step="any"
-                                       class="form-control" placeholder="Paper Setter Rate" required>
+                                <input type="number"  name="paper_setter_rate" value="3600" step="any" class="form-control" placeholder="Paper Setter Rate" required>
                             </div>
                         </div>
                     </div>
@@ -60,22 +56,14 @@
                                     $single_course = $courseData->courseObject;
                                      $course_code = $single_course->courseno;
                                      $savedForPaperSetter = $savedRateAssignPaperSetter[$course_code] ?? collect(); // Collection of RateAssigns
-                                    // dump($savedForPaperSetter);
                                      $savedForExaminer = $savedRateAssignExaminer[$course_code] ?? collect(); // Collection of RateAssigns
-
-                                    /*//for showing number of student
-                                     $savedPaperSetterTotalStudent = $savedForPaperSetter->first();*/
                                 @endphp
 
                                     <!-- Hidden course-level metadata -->
-                                <input type="hidden" name="courseno[{{ $single_course->id }}]"
-                                       value="{{ $single_course->courseno }}">
-                                <input type="hidden" name="coursetitle[{{ $single_course->id }}]"
-                                       value="{{ $single_course->coursetitle }}">
-                                {{-- <input type="hidden" name="registered_students_count[{{ $single_course->id }}]"
-                                        value="{{ $savedSetter->total_students ?? $courseData->registered_students_count }}">--}}
-                                {{--<input type="hidden" name="teacher_count[{{ $single_course->id }}]"
-                                       value="{{ count($single_course->teachers) }}">--}}
+                                <input type="hidden" name="courseno[{{ $single_course->id }}]" value="{{ $single_course->courseno }}">
+                                <input type="hidden" name="coursetitle[{{ $single_course->id }}]" value="{{ $single_course->coursetitle }}">
+                                <input type="hidden" name="registered_students_count[{{ $single_course->id }}]" value="{{ $courseData->registered_students_count }}">
+                                <input type="hidden" name="teacher_count[{{ $single_course->id }}]" value="{{ count($single_course->teachers) }}">
 
                                 <section class="card card-featured card-featured-secondary mb-4 w-100">
                                     <header class="card-header">
@@ -89,37 +77,24 @@
                                             <!-- Left Side: Paper Setter & Examiner -->
                                             <div class="col-md-8">
                                                 <div class="p-2">
-                                                    @foreach($single_course->teachers as $index=>$assignedTeacher)
+                                                    @foreach($single_course->teachers as $assignedTeacher)
                                                         <div class="row mb-3">
                                                             <!-- Paper Setter -->
                                                             <div class="col-md-6">
-                                                                <label
-                                                                    for="paper_setter_{{ $single_course->id }}_{{ $loop->index }}">Paper
-                                                                    Setter</label>
-                                                                <select
-                                                                    name="paper_setter_ids[{{ $single_course->id }}][]"
-                                                                    data-plugin-selectTwo
-                                                                    id="paper_setter_{{ $single_course->id }}_{{ $loop->index }}"
-                                                                    class="form-control  populate" required>
+                                                                <label for="paper_setter_{{ $single_course->id }}_{{ $loop->index }}">Paper Setter</label>
+                                                                <select name="paper_setter_ids[{{ $single_course->id }}][]" data-plugin-selectTwo
+                                                                        id="paper_setter_{{ $single_course->id }}_{{ $loop->index }}"
+                                                                        class="form-control  populate"  required>
                                                                     <option value="">-- Select Teacher --</option>
                                                                     @foreach($teachers as $teacherOption)
                                                                         @php
-                                                                            if ($savedForPaperSetter->isNotEmpty()) {
-                                                                                    // Match saved teacher at current index
-                                                                                     // Use teacher from DB at this index
-                                                                                    $savedTeacher = $savedForPaperSetter->values()[$index]->teacher_id ?? null;
-                                                                                    $isSelected = (int) $teacherOption->id === (int) $savedTeacher;
-                                                                            } else {
-                                                                                // Fallback: match by email if no DB saved data
-                                                                                $isSelected = isset($assignedTeacher->user->email, $teacherOption->user->email) &&
-                                                                                              $assignedTeacher->user->email === $teacherOption->user->email;
-                                                                            }
+                                                                            // Match by email between API teacher and  local DB teacher
+                                                                            $isSelected = isset($assignedTeacher->user->email, $teacherOption->user->email) &&
+                                                                                          $assignedTeacher->user->email === $teacherOption->user->email;
                                                                         @endphp
                                                                         <option value="{{ $teacherOption->id }}"
                                                                             {{ $isSelected ? 'selected' : '' }}>
-                                                                            {{ $teacherOption->user->name }}
-                                                                            - {{ $teacherOption->designation->designation }}
-                                                                            -{{$teacherOption->department->shortname}}
+                                                                            {{ $teacherOption->user->name }} - {{ $teacherOption->designation->designation }} -{{$teacherOption->department->shortname}}
                                                                         </option>
                                                                     @endforeach
                                                                 </select>
@@ -128,31 +103,20 @@
                                                             <!-- Examiner -->
                                                             <div class="col-md-6">
                                                                 {{--<label for="examiner_{{ $assignedTeacher->id }}">Examiner</label>--}}
-                                                                <label
-                                                                    for="examiner_{{ $single_course->id }}">Examiner</label>
-                                                                <select name="examiner_ids[{{ $single_course->id }}][]"
-                                                                        data-plugin-selectTwo
+                                                                <label for="examiner_{{ $single_course->id }}">Examiner</label>
+                                                                <select name="examiner_ids[{{ $single_course->id }}][]" data-plugin-selectTwo
                                                                         id="examiner_{{ $assignedTeacher->id }}"
                                                                         class="form-control populate" required>
                                                                     <option value="">-- Select Teacher --</option>
                                                                     @foreach($teachers as $teacherOption)
                                                                         @php
-                                                                            if ($savedForExaminer->isNotEmpty()) {
-                                                                                    // Match saved teacher at current index
-                                                                                     // Use teacher from DB at this index
-                                                                                    $savedTeacher = $savedForExaminer->values()[$index]->teacher_id ?? null;
-                                                                                    $isSelected = (int) $teacherOption->id === (int) $savedTeacher;
-                                                                            } else {
-                                                                                // Fallback: match by email if no DB saved data
-                                                                                $isSelected = isset($assignedTeacher->user->email, $teacherOption->user->email) &&
-                                                                                              $assignedTeacher->user->email === $teacherOption->user->email;
-                                                                            }
+                                                                            // Match by email between API teacher and  local DB teacher
+                                                                            $isSelected = isset($assignedTeacher->user->email, $teacherOption->user->email) &&
+                                                                                          $assignedTeacher->user->email === $teacherOption->user->email;
                                                                         @endphp
                                                                         <option value="{{ $teacherOption->id }}"
                                                                             {{ $isSelected ? 'selected' : '' }}>
-                                                                            {{ $teacherOption->user->name }}
-                                                                            - {{ $teacherOption->designation->designation }}
-                                                                            -{{$teacherOption->department->shortname}}
+                                                                            {{ $teacherOption->user->name }} - {{ $teacherOption->designation->designation }}-{{$teacherOption->department->shortname}}
                                                                         </option>
                                                                     @endforeach
                                                                 </select>
@@ -165,20 +129,14 @@
                                             <!-- Right Side: No of Scripts -->
                                             <div class="col-md-4 d-flex align-items-center justify-content-center">
                                                 <div class="form-group w-100">
-                                                    <label for="no_of_script_{{ $single_course->id }}">No of
-                                                        Scripts</label>
-                                                    @php
-                                                        // Prefer database-saved script count, fallback to API count
-                                                        $noOfScript = $savedForPaperSetter->first()->total_students ?? $courseData->registered_students_count;
-                                                    @endphp
-
+                                                    <label for="no_of_script_{{ $single_course->id }}">No of Scripts</label>
                                                     <input type="number"
                                                            id="no_of_script_{{ $single_course->id }}"
                                                            name="no_of_script[{{ $single_course->id }}]"
                                                            class="form-control"
                                                            min="0"
                                                            step="any"
-                                                           value="{{ old('no_of_script.'.$single_course->id, $noOfScript) }}"
+                                                           value="{{ old('no_of_script.'.$single_course->id, $courseData->registered_students_count) }}"
                                                            required>
                                                 </div>
                                             </div>
@@ -248,9 +206,10 @@
                                 });
 
                                 const submitBtn = document.getElementById('submit-list-of-examiner-paper-setter');
-                                submitBtn.textContent = 'Update Examiner PaperSetter';  // ✅ New label
-                                submitBtn.classList.remove('btn-primary');
-                                submitBtn.classList.add('btn-warning');
+                                submitBtn.textContent = 'Already Saved';             // ✅ Change text
+                                submitBtn.disabled = true;                           // ✅ Disable button
+                                submitBtn.classList.remove('btn-primary');           // ✅ Remove old style
+                                submitBtn.classList.add('btn-success');              // ✅ Add success style
 
                                 const cards = document.querySelectorAll('.card-list-of-examiner-paper-setter');
                                 cards.forEach(card => {
@@ -265,7 +224,7 @@
                                 console.error('Error:', error);
                                 Swal.fire({
                                     title: 'Error!',
-                                    text: error.message || 'Something went wrong. Please try again.',
+                                    text: error.message||'Something went wrong. Please try again.',
                                     icon: 'error'
                                 });
                             });

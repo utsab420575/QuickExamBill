@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class RateAssign extends Model
 {
@@ -41,5 +42,29 @@ class RateAssign extends Model
             ->where('exam_type_id', $examTypeId)
             ->where('rate_head_id', $rateHeadId)
             ->get();
+    }
+
+    public static function getTeacherWithCourse($sessionId, $examTypeId, $rateHeadId)
+    {
+        /*Log::info('📥 getTeacherWithCourse() input received', [
+            'session_id' => $sessionId,
+            'exam_type_id' => $examTypeId,
+            'rate_head_id' => $rateHeadId,
+        ]);*/
+        $data = self::where('session_id', $sessionId)
+            ->where('exam_type_id', $examTypeId)
+            ->where('rate_head_id', $rateHeadId)
+            ->get()
+            ->groupBy('course_code');
+
+        Log::info("📘 getTeacherWithCourse() grouped results:\n" . json_encode([
+                'session_id' => $sessionId,
+                'exam_type_id' => $examTypeId,
+                'rate_head_id' => $rateHeadId,
+                'grouped_keys' => $data->keys()->toArray(),
+                'full_grouped_data' => $data->map->toArray(),
+            ], JSON_PRETTY_PRINT));
+
+        return $data;
     }
 }
