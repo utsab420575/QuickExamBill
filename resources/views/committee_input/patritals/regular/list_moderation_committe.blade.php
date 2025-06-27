@@ -19,7 +19,8 @@
     </style>
 @endpush
 
-<form id="form-list-of-moderation-committee" action="{{ route('committee.input.regular.examination.moderation.committee.store') }}" method="POST">
+<form id="form-list-of-moderation-committee"
+      action="{{ route('committee.input.regular.examination.moderation.committee.store') }}" method="POST">
     @csrf
     <input type="hidden" id="{{$sid}}" name="sid" value="{{$sid}}">
     <div class="row mb-5">
@@ -34,30 +35,34 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="total_week">Min rate per member</label>
-                                <input type="number"  name="moderation_committee_min_rate" value="1500" step="any" class="form-control" placeholder="Min rate per member" required="">
+                                <input type="number" name="moderation_committee_min_rate" value="1500" step="any"
+                                       class="form-control" placeholder="Min rate per member" required="">
                             </div>
                         </div>
                         <div class="col-md-4"></div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="total_week">Max rate per member:</label>
-                                <input type="number"  name="moderation_committee_max_rate" value="5000" step="any" class="form-control" placeholder="Max rate per member" required="">
+                                <input type="number" name="moderation_committee_max_rate" value="5000" step="any"
+                                       class="form-control" placeholder="Max rate per member" required="">
                             </div>
                         </div>
                     </div>
 
-                    <div class="row mb-2 fw-bold">
-                        <div class="col-md-1 text-center">Select</div>
-                        <div class="col-md-6">Teacher</div>
-                        <div class="col-md-4">Amount(Taka)</div>
+                    <hr>
+                    <div class="row mb-2 fw-bold mt-2">
+                        <div class="col-md-8 text-start">Select Teacher</div>
+                        <div class="col-md-3 text-start" style="margin-left:-15px;">Amount(Taka)</div>
                     </div>
 
                     {{--here will be add checkbox--}}
                     <div id="dynamic-moderation-container"></div>
 
+                    {{--Only Add Button--}}
                     <div class="mt-3 text-end">
-                        <button type="button" id="add-moderation-committee-row" class="btn btn-sm btn-success me-2">+ Add Teacher</button>
-                        <button type="button" id="remove-moderation-committee-row" class="btn btn-sm btn-danger">- Remove Last</button>
+                        <button type="button" id="add-moderation-committee-row" class="btn btn-sm btn-success">+ Add
+                            Teacher
+                        </button>
                     </div>
 
                     <div class="text-end mt-3">
@@ -72,11 +77,13 @@
 </form>
 
 @push('scripts')
+
     <script>
         let moderationCommitteeRowCount = 0;
         const moderationCommitteeTeachers = @json($teachers);
+        const savedModerationAssigns = @json($savedModerationAssigns);
 
-        function createTeacherRow() {
+        function createTeacherRow(teacherId = '', amount = '') {
             moderationCommitteeRowCount++;
 
             const container = document.getElementById('dynamic-moderation-container');
@@ -85,31 +92,30 @@
             row.setAttribute('data-row', moderationCommitteeRowCount);
 
             row.innerHTML = `
-                <div class="row mb-3">
-                    <div class="col-md-1 text-center">
-                        <input type="checkbox" class="form-check-input moderation-committee-toggle-input mt-2" data-row="${moderationCommitteeRowCount}">
-                    </div>
-                    <div class="col-md-6">
-                        <!--1st change: data-plugin-selectTwo class="form-control teacher-select populate"-->
-                        <select name="moderation_committee_teacher_ids[]" data-plugin-selectTwo class="form-control teacher-select populate" data-row="${moderationCommitteeRowCount}" disabled required>
-                            <option value="">-- Select Teacher --</option>
-                            ${moderationCommitteeTeachers.map(t => `<option
-                                                value="${t.id}">
-
-                                                ${t.user.name}, ${t.designation.designation},${t.department.shortname}
-                                            </option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <input type="number" name="moderation_committee_amounts[]" class="form-control amount-input" placeholder="Provide Amount" disabled required>
-                    </div>
+            <div class="row mb-3 align-items-center" data-row="${moderationCommitteeRowCount}">
+                <div class="col-md-8">
+                    <select name="moderation_committee_teacher_ids[]" class="form-control teacher-select" required>
+                        <option value="">-- Select Teacher --</option>
+                        ${moderationCommitteeTeachers.map(t => `
+                            <option value="${t.id}" ${t.id == teacherId ? 'selected' : ''}>
+                                ${t.user.name}, ${t.designation.designation}, ${t.department.shortname}
+                            </option>
+                        `).join('')}
+                    </select>
                 </div>
-            `;
+                <div class="col-md-3">
+                    <input type="number" name="moderation_committee_amounts[]" class="form-control amount-input"
+                        placeholder="Provide Amount" value="${amount}" required>
+                </div>
+                <div class="col-md-1 text-end">
+                    <button type="button" class="btn btn-sm btn-danger remove-row">🗑️</button>
+                </div>
+            </div>
+        `;
 
             container.appendChild(row);
 
-            //2nd change:
-            // Re-initialize Select2 for the new element
+            // Initialize Select2
             $(row).find('select').select2({
                 theme: 'bootstrap',
                 width: '100%',
@@ -117,60 +123,40 @@
                 placeholder: '-- Select Teacher --'
             });
 
-            const checkbox = row.querySelector('.moderation-committee-toggle-input');
-            checkbox.addEventListener('change', function () {
-                const isChecked = this.checked;
-                const rowIndex = this.getAttribute('data-row');
-                const select = row.querySelector(`.teacher-select[data-row="${rowIndex}"]`);
-                const amountInput = row.querySelector('.amount-input');
-
-                select.disabled = !isChecked;
-                amountInput.disabled = !isChecked;
-
-                if (!isChecked) {
-                    select.value = '';
-                    amountInput.value = '';
-                    select.classList.remove('is-invalid');
-                    amountInput.classList.remove('is-invalid');
-                }
+            // Delete button logic
+            row.querySelector('.remove-row').addEventListener('click', function () {
+                row.remove();
             });
         }
 
-        document.getElementById('add-moderation-committee-row').addEventListener('click', createTeacherRow);
+        // Load pre-filled rows from DB
+        if (savedModerationAssigns && savedModerationAssigns.length > 0) {
+            savedModerationAssigns.forEach(assign => {
+                createTeacherRow(assign.teacher_id, assign.total_amount);
+            });
+        }
 
-        document.getElementById('remove-moderation-committee-row').addEventListener('click', function () {
-            const container = document.getElementById('dynamic-moderation-container');
-            if (container.lastElementChild) {
-                container.removeChild(container.lastElementChild);
-                moderationCommitteeRowCount--;
-            }
+        // Add blank new row
+        document.getElementById('add-moderation-committee-row').addEventListener('click', function () {
+            createTeacherRow();
         });
 
+        // Submit logic
         document.getElementById('form-list-of-moderation-committee').addEventListener('submit', function (e) {
             e.preventDefault();
 
             const form = this;
-            const checkedRows = form.querySelectorAll('.moderation-committee-toggle-input:checked');
-
-            if (checkedRows.length === 0) {
-                Swal.fire('No Teachers Selected', 'Please select at least one teacher and fill all required fields.', 'warning');
-                return;
-            }
-
-            // Validation
+            const selects = form.querySelectorAll('.teacher-select');
+            const inputs = form.querySelectorAll('.amount-input');
             let valid = true;
             let teacherIds = [];
 
-            checkedRows.forEach(checkbox => {
-                const row = checkbox.closest('.row');
-                const select = row.querySelector('.teacher-select');
-                const input = row.querySelector('.amount-input');
+            selects.forEach((select, index) => {
+                const teacherId = select.value;
+                const amount = inputs[index].value;
 
                 select.classList.remove('is-invalid');
-                input.classList.remove('is-invalid');
-
-                const teacherId = select.value;
-                const amount = input.value;
+                inputs[index].classList.remove('is-invalid');
 
                 if (!teacherId) {
                     select.classList.add('is-invalid');
@@ -178,7 +164,7 @@
                 }
 
                 if (!amount || amount <= 0) {
-                    input.classList.add('is-invalid');
+                    inputs[index].classList.add('is-invalid');
                     valid = false;
                 }
 
@@ -215,22 +201,20 @@
                     })
                         .then(response => {
                             if (!response.ok) {
-                                // Return the error JSON and throw it
                                 return response.json().then(err => {
                                     throw new Error(err.message || 'Unknown error occurred.');
                                 });
                             }
-                            return response.json(); // if response is OK
+                            return response.json();
                         })
                         .then(data => {
-                            console.log("Server response:", data); // Debug log
                             Swal.fire('Success!', data.message, 'success');
 
                             const submitBtn = document.getElementById('submit-list-of-moderation-committee');
-                            submitBtn.textContent = 'Already Saved';
-                            submitBtn.disabled = true;
+                            submitBtn.textContent = 'Update Moderation Committee';
+                            submitBtn.disabled = false;
                             submitBtn.classList.remove('btn-primary');
-                            submitBtn.classList.add('btn-success');
+                            submitBtn.classList.add('btn-warning');
 
                             const cards = document.querySelectorAll('.card-list-of-moderation-committee');
                             cards.forEach(card => {
@@ -240,15 +224,11 @@
                             });
                         })
                         .catch(error => {
-                            console.error('Error:', error);
-                            Swal.fire({
-                                title: 'Error!',
-                                text: error.message || 'Something went wrong. Please try again.',
-                                icon: 'error'
-                            });
+                            Swal.fire('Error!', error.message || 'Something went wrong.', 'error');
                         });
                 }
             });
         });
     </script>
+
 @endpush

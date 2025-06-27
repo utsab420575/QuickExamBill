@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
-class CommitteeInputController extends Controller
+class CommitteeInputController_v2 extends Controller
 {
     //regular session list
     public function regularSessionShow(){

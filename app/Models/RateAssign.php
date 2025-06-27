@@ -28,4 +28,18 @@ class RateAssign extends Model
     {
         return $this->belongsTo(ExamType::class);
     }
+
+    public static function getModerationCommitteeData($sessionId, $examTypeId, $rateHeadId)
+    {
+
+        return self::with([
+            'teacher.user',
+            'teacher.designation',
+            'teacher.department'
+        ])
+            ->where('session_id', $sessionId)
+            ->where('exam_type_id', $examTypeId)
+            ->where('rate_head_id', $rateHeadId)
+            ->get();
+    }
 }
