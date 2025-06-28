@@ -48,6 +48,8 @@
                                 @foreach($all_sessional_course_with_teacher->courses as $courseData)
                                     @php
                                         $single_course = $courseData->courseObject;
+                                        $course_code = $single_course->courseno;
+				                        $savedForScrutinizersSessionalGradeSheet = $savedRateAssignScrutinizersSessionalGradeSheet[$course_code] ?? collect(); // Collection of RateAssigns
                                     @endphp
                                         <!-- Hidden course-level metadata -->
                                     <input type="hidden" name="courseno[{{ $single_course->id }}]" value="{{ $single_course->courseno }}">
@@ -74,7 +76,7 @@
                                                         @foreach($groupedTeachers as $deptFullName => $deptTeachers)
                                                             <optgroup label="{{ $deptFullName }}">
                                                                 @foreach($deptTeachers as $teacher)
-                                                                    <option value="{{ $teacher->id }}">
+                                                                    <option value="{{ $teacher->id }}" {{ $savedForScrutinizersSessionalGradeSheet->pluck('teacher_id')->contains($teacher->id) ? 'selected' : '' }}>
                                                                         {{ $teacher->user->name }}  - {{ $teacher->department->shortname }}
                                                                     </option>
                                                                 @endforeach
@@ -85,11 +87,18 @@
 
 
                                                 <div class="col-md-3">
+                                                    @php
+                                                        // Check if there is saved data, and if yes, get total_students from the first teacher's entry
+                                                        $noOfItems = $savedForScrutinizersSessionalGradeSheet->isNotEmpty()
+                                                                    ? $savedForScrutinizersSessionalGradeSheet->first()->total_students
+                                                                    : $courseData->registered_students_count;
+                                                    @endphp
                                                     <label for="scrutinizing_theory_grade_sheet_no_of_students">Per Script Rate</label>
                                                     <input name="scrutinizing_sessional_grade_sheet_no_of_students[{{ $single_course->id }}]"
                                                            type="number" min="1" step="any"
                                                            class="form-control"
-                                                           value="{{ $courseData->registered_students_count }}"
+                                                          {{-- value="{{ $courseData->registered_students_count }}"--}}
+                                                           value="{{ old('scrutinizing_sessional_grade_sheet_no_of_students.' . $single_course->id, $noOfItems) }}"
                                                            required>
                                                 </div>
                                             </div>
@@ -180,10 +189,9 @@
                                     });
 
                                     const submitBtn = document.getElementById('submit-list-of-scrutinizers-sessional-grade-sheet');
-                                    submitBtn.textContent = 'Already Saved';
-                                    submitBtn.disabled = true;
+                                    submitBtn.textContent = 'Update Examiner PaperSetter';  // ✅ New label
                                     submitBtn.classList.remove('btn-primary');
-                                    submitBtn.classList.add('btn-success');
+                                    submitBtn.classList.add('btn-warning');
 
                                     const cards = document.querySelectorAll('.card-list-of-scrutinizers-sessional-grade-sheet');
 

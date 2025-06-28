@@ -47,6 +47,7 @@
                         <div class="col-md-12">
                             @if(isset($all_theory_sessional_courses_with_student_count->courses))
                                 @php
+                                    /*for 6/3 only theory course and for other semester use 6/3*/
                                     $courses = ($session_info->year != 6 && $session_info->semester != 3)
                                         ? $all_theory_sessional_courses_with_student_count->courses
                                         : $all_course_with_teacher->courses;
@@ -54,6 +55,8 @@
                                 @foreach($courses as $courseData)
                                     @php
                                         $single_course = $courseData->courseObject;
+                                        $course_code = $single_course->courseno;
+				                        $savedForPreparedComputerizedResult = $savedRateAssignPreparedComputerizedResult[$course_code] ?? collect(); // Collection of RateAssigns
                                     @endphp
                                         <!-- Hidden course-level metadata -->
                                     <input type="hidden" name="courseno[{{ $single_course->id }}]" value="{{ $single_course->courseno }}">
@@ -80,7 +83,7 @@
                                                         @foreach($groupedTeachers as $deptFullName => $deptTeachers)
                                                             <optgroup label="{{ $deptFullName }}">
                                                                 @foreach($deptTeachers as $teacher)
-                                                                    <option value="{{ $teacher->id }}">
+                                                                    <option value="{{ $teacher->id }}" {{ $savedForPreparedComputerizedResult->pluck('teacher_id')->contains($teacher->id) ? 'selected' : '' }}>
                                                                         {{ $teacher->user->name }}  - {{ $teacher->department->shortname }}
                                                                     </option>
                                                                 @endforeach
@@ -91,11 +94,18 @@
 
 
                                                 <div class="col-md-3">
+                                                    @php
+                                                        // Check if there is saved data, and if yes, get total_students from the first teacher's entry
+                                                        $noOfItems = $savedForPreparedComputerizedResult->isNotEmpty()
+                                                                    ? $savedForPreparedComputerizedResult->first()->total_students
+                                                                    : $courseData->registered_students_count;
+                                                    @endphp
                                                     <label for="prepared_computerized_result_no_of_students">Per Script Rate</label>
                                                     <input name="prepared_computerized_result_no_of_students[{{ $single_course->id }}]"
                                                            type="number" min="1" step="any"
                                                            class="form-control"
-                                                           value="{{ $courseData->registered_students_count }}"
+                                                           {{--value="{{ $courseData->registered_students_count }}"--}}
+                                                           value="{{ old('prepared_computerized_result_no_of_students.' . $single_course->id, $noOfItems) }}"
                                                            required>
                                                 </div>
                                             </div>
@@ -183,10 +193,9 @@
                                 });
 
                                 const submitBtn = document.getElementById('submit-list-of-prepared-computerized-result');
-                                submitBtn.textContent = 'Already Saved';             // ✅ Change text
-                                submitBtn.disabled = true;                           // ✅ Disable button
-                                submitBtn.classList.remove('btn-primary');           // ✅ Remove old style
-                                submitBtn.classList.add('btn-success');              // ✅ Add success style
+                                submitBtn.textContent = 'Update Prepare Computerized Result Committee';  // ✅ New label
+                                submitBtn.classList.remove('btn-primary');
+                                submitBtn.classList.add('btn-warning');
 
                                 const cards = document.querySelectorAll('.card-list-of-prepared-computerized-result');
 

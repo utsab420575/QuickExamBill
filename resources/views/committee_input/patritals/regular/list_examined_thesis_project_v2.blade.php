@@ -73,7 +73,7 @@
         const examinedThesisProjectTeachers = @json($teachers);
         const savedExaminedThesisProjectAssign = @json($savedRateAssignExaminedThesisProject);
 
-        function createExaminedThesisProjectRow(teacherId = '', internalStudents = '', externalStudents = '') {
+        function createTeacherRow() {
             examinedTheisProjectRowCount++;
 
             const container = document.getElementById('dynamic-examined-thesis-project-container');
@@ -82,26 +82,24 @@
             row.setAttribute('data-row', examinedTheisProjectRowCount);
 
             row.innerHTML = `
+
                 <div class="col-md-7">
-                    <select name="examined_thesis_project_teacher_ids[]" data-plugin-selectTwo class="form-control teacher-select populate" data-row="${examinedTheisProjectRowCount}" required>
+                    <select name="examined_thesis_project_teacher_ids[]" data-plugin-selectTwo class="form-control teacher-select populate" data-row="${examinedTheisProjectRowCount}" disabled required>
                         <option value="">-- Select Teacher --</option>
-                        ${examinedThesisProjectTeachers.map(t => `<option value="${t.id}" ${t.id == teacherId ? 'selected' : ''}>${t.user.name}, ${t.designation.designation},${t.department.shortname}</option>`).join('')}
+                        ${examinedThesisProjectTeachers.map(t => `<option value="${t.id}">${t.user.name}, ${t.designation.designation},${t.department.shortname}</option>`).join('')}
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <input type="number" name="examined_internal_thesis_project_student_amounts[]" class="form-control internal-input" placeholder="Internal students" value="${internalStudents}"  min="0">
+                    <input type="number" name="examined_internal_thesis_project_student_amounts[]" class="form-control internal-input" placeholder="Internal students" disabled  min="0">
                 </div>
                 <div class="col-md-2">
-                    <input type="number" name="examined_external_thesis_project_student_amounts[]" class="form-control external-input" placeholder="External students" value="${externalStudents}"  min="0">
-                </div>
-                <div class="col-md-1 text-end">
-                    <button type="button" class="btn btn-sm btn-danger remove-row">🗑️</button>
+                    <input type="number" name="examined_external_thesis_project_student_amounts[]" class="form-control external-input" placeholder="External students" disabled  min="0">
                 </div>
             `;
 
             container.appendChild(row);
-
-            // Re-initialize Select2 for the newly added select input
+            //2nd change:
+            // Re-initialize Select2 for the new element
             $(row).find('select').select2({
                 theme: 'bootstrap',
                 width: '100%',
@@ -109,58 +107,78 @@
                 placeholder: '-- Select Teacher --'
             });
 
-            // Remove row logic
-            row.querySelector('.remove-row').addEventListener('click', function () {
-                row.remove();
+            const checkbox = row.querySelector('.examined-thesis-project-toggle-input');
+            const select = row.querySelector('.teacher-select');
+            const internalInput = row.querySelector('.internal-input');
+            const externalInput = row.querySelector('.external-input');
+
+            checkbox.addEventListener('change', function () {
+                const isChecked = this.checked;
+
+                select.disabled = !isChecked;
+                internalInput.disabled = !isChecked;
+                externalInput.disabled = !isChecked;
+
+                if (!isChecked) {
+                    select.value = '';
+                    internalInput.value = '';
+                    externalInput.value = '';
+                    select.classList.remove('is-invalid');
+                    internalInput.classList.remove('is-invalid');
+                    externalInput.classList.remove('is-invalid');
+                }
             });
         }
 
-        // Load pre-filled rows from DB if any data exists
-        if (savedExaminedThesisProjectAssign && savedExaminedThesisProjectAssign.length > 0) {
-            savedExaminedThesisProjectAssign.forEach(assign => {
-                createExaminedThesisProjectRow(assign.teacher_id, assign.total_students, assign.total_teachers);
-            });
-        }
+        document.getElementById('add-examined-thesis-project-row').addEventListener('click', createTeacherRow);
 
-        // Add new blank row
-        document.getElementById('add-examined-thesis-project-row').addEventListener('click', function () {
-            createExaminedThesisProjectRow();
+        document.getElementById('remove-examined-thesis-project-row').addEventListener('click', function () {
+            const container = document.getElementById('dynamic-examined-thesis-project-container');
+            if (container.lastElementChild) {
+                container.removeChild(container.lastElementChild);
+                examinedTheisProjectRowCount--;
+            }
         });
 
-        // Form submission logic
         document.getElementById('form-list-of-examined-thesis-project').addEventListener('submit', function (e) {
             e.preventDefault();
 
             const form = this;
-            const selects = form.querySelectorAll('.teacher-select');
-            const internalInputs = form.querySelectorAll('.internal-input');
-            const externalInputs = form.querySelectorAll('.external-input');
+            const checkedRows = form.querySelectorAll('.examined-thesis-project-toggle-input:checked');
+
+            if (checkedRows.length === 0) {
+                Swal.fire('No Teachers Selected', 'Please select at least one teacher and fill all required fields.', 'warning');
+                return;
+            }
+
             let valid = true;
             let teacherIds = [];
 
-            selects.forEach((select, index) => {
-                const teacherId = select.value;
-                const internalStudents = internalInputs[index].value;
-                const externalStudents = externalInputs[index].value;
+            checkedRows.forEach(checkbox => {
+                const row = checkbox.closest('.row');
+                const select = row.querySelector('.teacher-select');
+                const internalInput = row.querySelector('.internal-input');
+                const externalInput = row.querySelector('.external-input');
 
                 select.classList.remove('is-invalid');
-                internalInputs[index].classList.remove('is-invalid');
-                externalInputs[index].classList.remove('is-invalid');
+                internalInput.classList.remove('is-invalid');
+                externalInput.classList.remove('is-invalid');
 
-                // Validate teacher selection
+                const teacherId = select.value;
+                const internalValue = parseInt(internalInput.value) || 0;
+                const externalValue = parseInt(externalInput.value) || 0;
+
                 if (!teacherId) {
                     select.classList.add('is-invalid');
                     valid = false;
                 }
 
-                // Ensure internal or external students count is entered
-                if (parseInt(internalStudents) <= 0 && parseInt(externalStudents) <= 0) {
-                    internalInputs[index].classList.add('is-invalid');
-                    externalInputs[index].classList.add('is-invalid');
+                if (internalValue < 1 && externalValue < 1) {
+                    internalInput.classList.add('is-invalid');
+                    externalInput.classList.add('is-invalid');
                     valid = false;
                 }
 
-                // Ensure teachers are not duplicated
                 if (teacherIds.includes(teacherId)) {
                     select.classList.add('is-invalid');
                     valid = false;
@@ -170,7 +188,7 @@
             });
 
             if (!valid) {
-                Swal.fire('Validation Failed', 'Each selected row must include a unique teacher and at least one student count (internal or external).', 'error');
+                Swal.fire('Validation Failed', 'Each selected row must include a unique teacher and either internal or external student count.', 'error');
                 return;
             }
 
@@ -194,6 +212,7 @@
                     })
                         .then(response => {
                             if (!response.ok) {
+                                // Return the error JSON and throw it
                                 return response.json().then(err => {
                                     throw new Error(err.message || 'Unknown error occurred.');
                                 });
@@ -201,6 +220,7 @@
                             return response.json(); // if response is OK
                         })
                         .then(data => {
+                            console.log("Server response:", data); // Debug log
                             Swal.fire('Success!', data.message, 'success');
 
                             const submitBtn = document.getElementById('submit-list-of-examined-thesis-project');
@@ -216,11 +236,15 @@
                             });
                         })
                         .catch(error => {
-                            Swal.fire('Error!', error.message || 'Something went wrong. Please try again.', 'error');
+                            console.error('Error:', error);
+                            Swal.fire({
+                                title: 'Error!',
+                                text: error.message||'Something went wrong. Please try again.',
+                                icon: 'error'
+                            });
                         });
                 }
             });
         });
     </script>
 @endpush
-

@@ -44,9 +44,10 @@
                     </div>
 
 
-                    <div class="row mb-2 fw-bold mt-2">
-                        <div class="col-md-8 text-start">Select Teacher</div>
-                        <div class="col-md-3 text-start" style="margin-left:0px;">No of Students</div>
+                    <div class="row mb-2 fw-bold">
+                        <div class="col-md-1 text-center">Select</div>
+                        <div class="col-md-6">Teacher</div>
+                        <div class="col-md-4">No of Students</div>
                     </div>
 
                     {{--here will be add checkbox--}}
@@ -54,6 +55,7 @@
 
                     <div class="mt-3 text-end">
                         <button type="button" id="add-conducted-central-oral-examination-row" class="btn btn-sm btn-success me-2">+ Add Teacher</button>
+                        <button type="button" id="remove-conducted-central-oral-examination-row" class="btn btn-sm btn-danger">- Remove Last</button>
                     </div>
 
                     <div class="text-end mt-3">
@@ -71,10 +73,8 @@
     <script>
         let conductedCentralOralExaminationRowCount = 0;
         const conductedCentralOralExaminationTeachers = @json($teachers);
-        const savedConductedCentralOralAssign = @json($savedRateAssignConductedCentralOralExam);
 
-        // Function to create a new row with teacher and amount
-        function createConductedCentralOralRow(teacherId = '', amount = '') {
+        function createTeacherRow() {
             conductedCentralOralExaminationRowCount++;
 
             const container = document.getElementById('dynamic-conducted-central-oral-examination-container');
@@ -83,25 +83,23 @@
             row.setAttribute('data-row', conductedCentralOralExaminationRowCount);
 
             row.innerHTML = `
-                <div class="col-md-8">
-                    <select name="conducted_central_oral_examination_teacher_ids[]" class="form-control teacher-select" required>
-                        <option value="">-- Select Teacher --</option>
-                        ${conductedCentralOralExaminationTeachers.map(t => `<option value="${t.id}" ${t.id == teacherId ? 'selected' : ''}>
-                            ${t.user.name}, ${t.designation.name}
-                        </option>`).join('')}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <input type="number" name="conducted_central_oral_examination_student_amounts[]" class="form-control amount-input" placeholder="No of students" value="${amount}" required min="1">
-                </div>
-                <div class="col-md-1 text-end">
-                    <button type="button" class="btn btn-sm btn-danger remove-row">🗑️</button>
-                </div>
-            `;
+            <div class="col-md-1 text-center">
+                <input type="checkbox" class="form-check-input conducted-central-oral-examination-toggle-input" data-row="${conductedCentralOralExaminationRowCount}">
+            </div>
+            <div class="col-md-6">
+                <select name="conducted_central_oral_examination_teacher_ids[]"  data-plugin-selectTwo class="form-control teacher-select populate" data-row="${conductedCentralOralExaminationRowCount}" disabled required>
+                    <option value="">-- Select Teacher --</option>
+                    ${conductedCentralOralExaminationTeachers.map(t => `<option value="${t.id}">${t.user.name}, ${t.designation.name}</option>`).join('')}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <input type="number" name="conducted_central_oral_examination_student_amounts[]" class="form-control amount-input" placeholder="No of students" disabled required min="1">
+            </div>
+        `;
 
             container.appendChild(row);
-
-            // Initialize Select2 for the newly added select input
+            //2nd change:
+            // Re-initialize Select2 for the new element
             $(row).find('select').select2({
                 theme: 'bootstrap',
                 width: '100%',
@@ -109,54 +107,71 @@
                 placeholder: '-- Select Teacher --'
             });
 
-            // Delete button logic: removes the current row when clicked
-            row.querySelector('.remove-row').addEventListener('click', function () {
-                row.remove();
+            const checkbox = row.querySelector('.conducted-central-oral-examination-toggle-input');
+            checkbox.addEventListener('change', function () {
+                const isChecked = this.checked;
+                const rowIndex = this.getAttribute('data-row');
+                const select = row.querySelector(`.teacher-select[data-row="${rowIndex}"]`);
+                const amountInput = row.querySelector('.amount-input');
+
+                select.disabled = !isChecked;
+                amountInput.disabled = !isChecked;
+
+                if (!isChecked) {
+                    select.value = '';
+                    amountInput.value = '';
+                    select.classList.remove('is-invalid');
+                    amountInput.classList.remove('is-invalid');
+                }
             });
         }
 
-        // Load pre-filled rows from DB if any data exists
-        if (savedConductedCentralOralAssign && savedConductedCentralOralAssign.length > 0) {
-            savedConductedCentralOralAssign.forEach(assign => {
-                createConductedCentralOralRow(assign.teacher_id, assign.no_of_items);
-            });
-        }
+        document.getElementById('add-conducted-central-oral-examination-row').addEventListener('click', createTeacherRow);
 
-        // Add new blank row
-        document.getElementById('add-conducted-central-oral-examination-row').addEventListener('click', function () {
-            createConductedCentralOralRow();
+        document.getElementById('remove-conducted-central-oral-examination-row').addEventListener('click', function () {
+            const container = document.getElementById('dynamic-conducted-central-oral-examination-container');
+            if (container.lastElementChild) {
+                container.removeChild(container.lastElementChild);
+                conductedCentralOralExaminationRowCount--;
+            }
         });
 
-        // Form submission logic
         document.getElementById('form-list-of-conducted-central-oral-examination').addEventListener('submit', function (e) {
             e.preventDefault();
 
             const form = this;
-            const selects = form.querySelectorAll('.teacher-select');
-            const inputs = form.querySelectorAll('.amount-input');
+            const checkedRows = form.querySelectorAll('.conducted-central-oral-examination-toggle-input:checked');
+
+            if (checkedRows.length === 0) {
+                Swal.fire('No Teachers Selected', 'Please select at least one teacher and fill all required fields.', 'warning');
+                return;
+            }
+
+            // Validation
             let valid = true;
             let teacherIds = [];
 
-            selects.forEach((select, index) => {
-                const teacherId = select.value;
-                const amount = inputs[index].value;
+            checkedRows.forEach(checkbox => {
+                const row = checkbox.closest('.row');
+                const select = row.querySelector('.teacher-select');
+                const input = row.querySelector('.amount-input');
 
                 select.classList.remove('is-invalid');
-                inputs[index].classList.remove('is-invalid');
+                input.classList.remove('is-invalid');
 
-                // Validate teacher selection
+                const teacherId = select.value;
+                const amount = input.value;
+
                 if (!teacherId) {
                     select.classList.add('is-invalid');
                     valid = false;
                 }
 
-                // Validate amount input
                 if (!amount || amount <= 0) {
-                    inputs[index].classList.add('is-invalid');
+                    input.classList.add('is-invalid');
                     valid = false;
                 }
 
-                // Ensure teachers are not duplicated
                 if (teacherIds.includes(teacherId)) {
                     select.classList.add('is-invalid');
                     valid = false;
@@ -170,7 +185,6 @@
                 return;
             }
 
-            // Confirm submission
             Swal.fire({
                 title: 'Are you sure?',
                 text: "Do you want to save the committee data?",
@@ -191,6 +205,7 @@
                     })
                         .then(response => {
                             if (!response.ok) {
+                                // Return the error JSON and throw it
                                 return response.json().then(err => {
                                     throw new Error(err.message || 'Unknown error occurred.');
                                 });
@@ -198,12 +213,14 @@
                             return response.json(); // if response is OK
                         })
                         .then(data => {
+                            console.log("Server response:", data); // Debug log
                             Swal.fire('Success!', data.message, 'success');
 
                             const submitBtn = document.getElementById('submit-list-of-conducted-central-oral-examination');
-                            submitBtn.textContent = 'Update Conducted Central Oral Examination';  // ✅ New label
+                            submitBtn.textContent = 'Already Saved';
+                            submitBtn.disabled = true;
                             submitBtn.classList.remove('btn-primary');
-                            submitBtn.classList.add('btn-warning');
+                            submitBtn.classList.add('btn-success');
 
                             const cards = document.querySelectorAll('.card-list-of-conducted-central-oral-examination');
                             cards.forEach(card => {
@@ -216,7 +233,7 @@
                             console.error('Error:', error);
                             Swal.fire({
                                 title: 'Error!',
-                                text: error.message || 'Something went wrong. Please try again.',
+                                text: error.message||'Something went wrong. Please try again.',
                                 icon: 'error'
                             });
                         });
@@ -225,4 +242,3 @@
         });
     </script>
 @endpush
-

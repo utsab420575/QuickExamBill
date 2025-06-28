@@ -34,21 +34,21 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="moderation_committee_min_rate">Rate Per script</label>
-                                <input type="number" name="examiner_rate_per_script" value="200" step="any"
+                                <input type="number" name="examiner_rate_per_script" value="{{$examiner_rate_per_script??200}}" step="any"
                                        class="form-control" placeholder="Rate per script" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="total_week">Minimum Rate Per Examiner</label>
-                                <input type="number" name="examiner_min_rate" value="1000" step="any"
+                                <input type="number" name="examiner_min_rate" value="{{$examiner_min_rate??1000}}" step="any"
                                        class="form-control" placeholder="Min Rate per examiner" required>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="total_week">Paper Setter Rate:</label>
-                                <input type="number" name="paper_setter_rate" value="3600" step="any"
+                                <input type="number" name="paper_setter_rate" value="{{$paper_setter_rate??3600}}" step="any"
                                        class="form-control" placeholder="Paper Setter Rate" required>
                             </div>
                         </div>
@@ -57,7 +57,7 @@
                         @if(isset($all_course_with_teacher->courses))
                             @foreach($all_course_with_teacher->courses as $courseData)
                                 @php
-                                    $single_course = $courseData->courseObject;
+                                     $single_course = $courseData->courseObject;
                                      $course_code = $single_course->courseno;
                                      $savedForPaperSetter = $savedRateAssignPaperSetter[$course_code] ?? collect(); // Collection of RateAssigns
                                     // dump($savedForPaperSetter);
@@ -74,8 +74,8 @@
                                        value="{{ $single_course->coursetitle }}">
                                 {{-- <input type="hidden" name="registered_students_count[{{ $single_course->id }}]"
                                         value="{{ $savedSetter->total_students ?? $courseData->registered_students_count }}">--}}
-                                {{--<input type="hidden" name="teacher_count[{{ $single_course->id }}]"
-                                       value="{{ count($single_course->teachers) }}">--}}
+                                <input type="hidden" name="teacher_count[{{ $single_course->id }}]"
+                                       value="{{ count($single_course->teachers) }}">
 
                                 <section class="card card-featured card-featured-secondary mb-4 w-100">
                                     <header class="card-header">

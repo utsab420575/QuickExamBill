@@ -44,6 +44,12 @@
                     </div>
 
 
+
+                    @php
+                        // Check if savedRateAssignAdvisorStudent is available and not empty
+                        $savedAdvisorStudentData = $savedRateAssignAdvisorStudent ?? collect();
+                    @endphp
+
                     {{--method call for find teacher name--}}
                     @php
                         function getTeacherName($teacherId, $teachers) {
@@ -111,6 +117,13 @@
 
                                         // Use the matched local teacher's name, or fallback to API teacher's name or 'Unknown'
                                         $displayName = $matchedTeacher->user->name ?? $singleAdvisor->user->name ?? 'Unknown';
+
+
+                                        // Search in saved data to find the teacher's total_students
+                                        $savedAdvisorStudent = $savedAdvisorStudentData->firstWhere('teacher_id', $localTeacherId);
+
+                                        // If the teacher exists in the saved data, use total_students, otherwise use API data
+                                        $totalStudents = $savedAdvisorStudent ? $savedAdvisorStudent->total_students : $singleAdvisor->count;
                                     @endphp
                                     <div class="form-group row pb-3">
                                         <input type="hidden" name="advisorTeacherIds[]" value="{{ $localTeacherId }}">
@@ -124,7 +137,7 @@
                                                    name="advisorTotal_students[]"
                                                    min="0"
                                                    step="any"
-                                                   value="{{ $singleAdvisor->count }}"
+                                                   value="{{ $totalStudents }}"
                                                    class="form-control"
                                                    required>
                                         </div>
@@ -217,10 +230,9 @@
                                 });
 
                                 const submitBtn = document.getElementById('submit-list-of-advisor-student');
-                                submitBtn.textContent = 'Already Saved';             // ✅ Change text
-                                submitBtn.disabled = true;                           // ✅ Disable button
-                                submitBtn.classList.remove('btn-primary');           // ✅ Remove old style
-                                submitBtn.classList.add('btn-success');              // ✅ Add success style
+                                submitBtn.textContent = 'Update Advisory Students';  // ✅ New label
+                                submitBtn.classList.remove('btn-primary');
+                                submitBtn.classList.add('btn-warning');
 
                                 const cards = document.querySelectorAll('.card-list-of-advisor-student');
 

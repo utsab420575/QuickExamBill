@@ -20,6 +20,7 @@
                         <tr>
                             @php
                                 $selectedCoordinatorId = $teacher_coordinator->teacher->user->email?? null;
+                                $savedForHonorariumCoordinator = $savedRateAssignHonorariumCoordinator ?? collect();
                             @endphp
                             <td>
                                 <select name="coordinator_id"
@@ -28,11 +29,21 @@
                                         class="form-control  populate"  required>
                                     <option value="" disabled>-- Select Teacher --</option>
                                     @foreach($groupedTeachers as $deptFullName => $deptTeachers)
+
                                         <optgroup label="{{ $deptFullName }}">
                                             @foreach($deptTeachers as $teacher)
                                                 @php
-                                                    $isSelected = isset($teacher->user->email, $selectedCoordinatorId) &&
-                                                                  $teacher->user->email === $selectedCoordinatorId;
+                                                    // Check if the coordinator is either from the API data or from the saved data in the database
+                                                    $isSelected = false;
+
+                                                    // If the coordinator is saved in the database, use the saved data
+                                                    if ($savedForHonorariumCoordinator->isNotEmpty()) {
+                                                        $isSelected = $savedForHonorariumCoordinator->pluck('teacher_id')->contains($teacher->id);
+                                                    }
+                                                    // If not, use the API data
+                                                    elseif (isset($teacher->user->email, $selectedCoordinatorId) && $teacher->user->email === $selectedCoordinatorId) {
+                                                        $isSelected = true;
+                                                    }
                                                 @endphp
                                                 <option value="{{ $teacher->id }}"
                                                     {{ $isSelected ? 'selected' : '' }}>
@@ -112,10 +123,9 @@
                                 });
 
                                 const submitBtn = document.getElementById('submit-list-of-honorarium-coordinator');
-                                submitBtn.textContent = 'Already Saved';
-                                submitBtn.disabled = true;
+                                submitBtn.textContent = 'Update Honorarium Coordinator';  // ✅ New label
                                 submitBtn.classList.remove('btn-primary');
-                                submitBtn.classList.add('btn-success');
+                                submitBtn.classList.add('btn-warning');
 
                                 const cells = document.querySelectorAll('#table-list-of-honorarium-coordinator td');
                                 cells.forEach(td => {

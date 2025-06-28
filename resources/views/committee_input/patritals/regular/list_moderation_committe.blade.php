@@ -35,7 +35,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="total_week">Min rate per member</label>
-                                <input type="number" name="moderation_committee_min_rate" value="1500" step="any"
+                                <input type="number" name="moderation_committee_min_rate" value="{{$mc_min_rate??1500}}" step="any"
                                        class="form-control" placeholder="Min rate per member" required="">
                             </div>
                         </div>
@@ -43,7 +43,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="total_week">Max rate per member:</label>
-                                <input type="number" name="moderation_committee_max_rate" value="5000" step="any"
+                                <input type="number" name="moderation_committee_max_rate" value="{{$mc_max_rate??5000}}" step="any"
                                        class="form-control" placeholder="Max rate per member" required="">
                             </div>
                         </div>
@@ -212,7 +212,6 @@
 
                             const submitBtn = document.getElementById('submit-list-of-moderation-committee');
                             submitBtn.textContent = 'Update Moderation Committee';
-                            submitBtn.disabled = false;
                             submitBtn.classList.remove('btn-primary');
                             submitBtn.classList.add('btn-warning');
 

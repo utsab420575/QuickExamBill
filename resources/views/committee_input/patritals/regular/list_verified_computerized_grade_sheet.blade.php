@@ -43,7 +43,9 @@
                     </div>
 
                     <div class="form-group row pb-3">
-
+                        @php
+                            $savedForVerifiedComputerizedGradeSheet = $savedRateAssignVerifiedComputerizedGradeSheet ?? collect(); // Collection of RateAssigns
+                        @endphp
                         <div class="col-md-9">
                             <label for="verified_computerized_result_teachers">Select Scrutinizers</label>
                             <select name="verified_computerized_result_teachers[]"
@@ -54,7 +56,7 @@
                                 @foreach($groupedTeachers as $deptFullName => $deptTeachers)
                                     <optgroup label="{{ $deptFullName }}">
                                         @foreach($deptTeachers as $teacher)
-                                            <option value="{{ $teacher->id }}">
+                                            <option value="{{ $teacher->id }}" {{ $savedForVerifiedComputerizedGradeSheet->pluck('teacher_id')->contains($teacher->id) ? 'selected' : '' }}>
                                                 {{ $teacher->user->name }}  - {{ $teacher->department->shortname }}
                                             </option>
                                         @endforeach
@@ -65,12 +67,19 @@
 
                         {{-- Total Students --}}
                         <div class="col-md-3">
+                            @php
+                                // Check if there is saved data, and if yes, get total_students from the first teacher's entry
+                                $noOfItems = $savedForVerifiedComputerizedGradeSheet->isNotEmpty()
+                                            ? $savedForVerifiedComputerizedGradeSheet->first()->total_students
+                                            : $totalStudentInSession;
+                            @endphp
                             <label for="verified_computerized_result_total_students">Total Students</label>
                             <input type="number"
                                    name="verified_computerized_result_total_students"
                                    min="1"
                                    steps="any"
-                                   value="{{$totalStudentInSession}}"
+                                   {{--value="{{$totalStudentInSession}}"--}}
+                                   value="{{ old('verified_computerized_result_total_students', $noOfItems) }}"
                                    class="form-control"
                                    required>
                         </div>
@@ -158,10 +167,9 @@
                                 });
 
                                 const submitBtn = document.getElementById('submit-list-of-verified-computerized-result');
-                                submitBtn.textContent = 'Already Saved';             // ✅ Change text
-                                submitBtn.disabled = true;                           // ✅ Disable button
-                                submitBtn.classList.remove('btn-primary');           // ✅ Remove old style
-                                submitBtn.classList.add('btn-success');              // ✅ Add success style
+                                submitBtn.textContent = 'Update Verified Computerized Grade Sheet Committee';  // ✅ New label
+                                submitBtn.classList.remove('btn-primary');
+                                submitBtn.classList.add('btn-warning');
 
                                 const cards = document.querySelectorAll('.card-list-of-verified-computerized-result');
 

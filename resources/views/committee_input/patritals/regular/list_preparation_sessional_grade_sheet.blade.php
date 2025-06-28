@@ -40,84 +40,15 @@
                     </div>
 
 
-                   {{-- <div class="row">
-                        <div class="col-md-12">
-                            @if(isset($all_sessional_course_with_teacher['courses']))
-                                @foreach($all_sessional_course_with_teacher['courses'] as $courseData)
-                                    @php
-                                        $single_course = $courseData['courseObject'];
-                                    @endphp
-                                        <!-- Hidden course-level metadata -->
-                                    <input type="hidden" name="courseno[{{ $single_course['id'] }}]" value="{{ $single_course['courseno'] }}">
-                                    <input type="hidden" name="coursetitle[{{ $single_course['id'] }}]" value="{{ $single_course['coursetitle'] }}">
-                                    <input type="hidden" name="registered_students_count[{{ $single_course['id'] }}]" value="{{ $courseData['registered_students_count'] }}">
-                                    <input type="hidden" name="teacher_count[{{ $single_course['id'] }}]" value="{{ count($single_course['teachers']) }}">
 
-                                    <section class="card card-featured card-featured-secondary">
-                                        <header class="card-header">
-                                            <h2 class="card-title">
-                                                Course: {{ $single_course['courseno'] }} - {{ $single_course['coursetitle'] }}
-                                            </h2>
-                                        </header>
-
-                                        <div class="card-body card-list-of-prepare-sessional-grade-sheet">
-                                            <div class="form-group row pb-3">
-                                                <label class="col-md-2 control-label text-lg-end pt-2 ">Select Teacher</label>
-                                                <div class="col-md-6">
-                                                    <div class="input-group input-group-select-append">
-														<span class="input-group-text">
-															<i class="fas fa-th-list"></i>
-														</span>
-                                                        <select class="form-control"
-                                                                name="prepare_sessional_grade_sheet_teacher_ids[{{ $single_course['id'] }}][]"
-                                                                multiple="multiple"
-                                                                data-plugin-multiselect
-                                                                data-plugin-options='{ "maxHeight": 300 }'
-                                                                id="ms_example5"
-                                                                required>
-                                                            @foreach($teachers as $teacherOption)
-                                                                <option
-                                                                    value="{{ $teacherOption->id }}">
-                                                                    {{ $teacherOption->user->name }}
-                                                                    - {{ $teacherOption->designation->name }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <label class="col-md-2 control-label text-lg-end pt-2 ">Total Student</label>
-                                                <div class="col-md-2">
-                                                    <input
-                                                        name="prepare_sessional_grade_sheet_no_of_students[{{ $single_course['id'] }}]"
-                                                        type="number" min="1"
-                                                        step="any" class="form-control"
-                                                        value="{{$courseData['registered_students_count']}}"
-                                                        required>
-                                                </div>
-
-                                            </div>
-
-                                        </div>
-
-                                    </section>
-                                @endforeach
-                            @endif
-
-
-                            <div class="text-end mt-3">
-                                <button id="submit-list-of-prepare-sessional-grade-sheet" type="submit" class="btn btn-primary">
-                                    Submit
-                                    Sessional Grade Sheet Committee
-                                </button>
-                            </div>
-                        </div>
-                    </div>--}}
                     <div class="row">
                         <div class="col-md-12">
                             @if(isset($all_sessional_course_with_teacher->courses))
                                 @foreach($all_sessional_course_with_teacher->courses as $courseData)
                                     @php
                                         $single_course = $courseData->courseObject;
+                                        $course_code = $single_course->courseno;
+				                        $savedForSessionalGradeSheet = $savedRateAssignSessionalGradeSheet[$course_code] ?? collect(); // Collection of RateAssigns
                                     @endphp
                                         <!-- Hidden course-level metadata -->
                                     <input type="hidden" name="courseno[{{ $single_course->id }}]" value="{{ $single_course->courseno }}">
@@ -144,7 +75,7 @@
                                                         @foreach($groupedTeachers as $deptFullName => $deptTeachers)
                                                             <optgroup label="{{ $deptFullName }}">
                                                                 @foreach($deptTeachers as $teacher)
-                                                                    <option value="{{ $teacher->id }}">
+                                                                    <option value="{{ $teacher->id }}" {{ $savedForSessionalGradeSheet->pluck('teacher_id')->contains($teacher->id) ? 'selected' : '' }}>
                                                                         {{ $teacher->user->name }}  - {{ $teacher->department->shortname }}
                                                                     </option>
                                                                 @endforeach
@@ -155,11 +86,18 @@
 
 
                                                 <div class="col-md-3">
+                                                    @php
+                                                        // Check if there is saved data, and if yes, get total_students from the first teacher's entry
+                                                        $noOfItems = $savedForSessionalGradeSheet->isNotEmpty()
+                                                                    ? $savedForSessionalGradeSheet->first()->total_students
+                                                                    : $courseData->registered_students_count;
+                                                    @endphp
                                                     <label for="prepare_sessional_grade_sheet_no_of_students">Per Script Rate</label>
                                                     <input name="prepare_sessional_grade_sheet_no_of_students[{{ $single_course->id }}]"
                                                            type="number" min="1" step="any"
                                                            class="form-control"
-                                                           value="{{ $courseData->registered_students_count }}"
+                                                           {{--value="{{ $courseData->registered_students_count }}"--}}
+                                                           value="{{ old('prepare_sessional_grade_sheet_no_of_students.' . $single_course->id, $noOfItems) }}"
                                                            required>
                                                 </div>
                                             </div>
@@ -227,10 +165,9 @@
                                 });
 
                                 const submitBtn = document.getElementById('submit-list-of-prepare-sessional-grade-sheet');
-                                submitBtn.textContent = 'Already Saved';             // ✅ Change text
-                                submitBtn.disabled = true;                           // ✅ Disable button
-                                submitBtn.classList.remove('btn-primary');           // ✅ Remove old style
-                                submitBtn.classList.add('btn-success');              // ✅ Add success style
+                                submitBtn.textContent = 'Update Theory Grade Sheet Committee';  // ✅ New label
+                                submitBtn.classList.remove('btn-primary');
+                                submitBtn.classList.add('btn-warning');
 
                                 const cards = document.querySelectorAll('.card-list-of-prepare-sessional-grade-sheet');
 

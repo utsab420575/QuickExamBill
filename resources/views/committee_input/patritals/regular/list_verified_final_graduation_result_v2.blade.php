@@ -46,7 +46,7 @@
 
                     <div class="row mb-2 fw-bold mt-2">
                         <div class="col-md-8 text-start">Select Teacher</div>
-                        <div class="col-md-3 text-start" style="margin-left:0px;">No of Students</div>
+                        <div class="col-md-3 text-start" style="margin-left:-15px;">No of Students</div>
                     </div>
 
 
@@ -54,6 +54,7 @@
 
                     <div class="mt-3 text-end">
                         <button type="button" id="add-verified-graduation-teacher-row" class="btn btn-sm btn-success me-2">+ Add Teacher</button>
+                        <button type="button" id="remove-verified-graduation-teacher-row" class="btn btn-sm btn-danger">- Remove Last</button>
                     </div>
 
                     <div class="text-end mt-3">
@@ -73,8 +74,7 @@
         const verifiedGraduationTeachers = @json($teachers);
         const savedVerifiedFinalGraduationResultAssign = @json($savedRateAssignVerifiedFinalGraduationResult);
 
-        // Function to create a new row with teacher and amount
-        function createVerifiedFinalGraduationResultRow(teacherId = '', amount = '') {
+        function createTeacherRow() {
             VerifiedGraduationRowCount++;
 
             const container = document.getElementById('dynamic-verified-graduation-container');
@@ -83,25 +83,24 @@
             row.setAttribute('data-row', VerifiedGraduationRowCount);
 
             row.innerHTML = `
-                <div class="col-md-8">
-                    <select name="verified_grade_teacher_ids[]" class="form-control teacher-select" required>
-                        <option value="">-- Select Teacher --</option>
-                        ${verifiedGraduationTeachers.map(t => `<option value="${t.id}" ${t.id == teacherId ? 'selected' : ''}>
-                            ${t.user.name}, ${t.designation.designation}, ${t.department.shortname}
-                        </option>`).join('')}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <input type="number" name="verified_grade_amounts[]" class="form-control amount-input" placeholder="No of students" value="${amount}" required min="1">
-                </div>
-                <div class="col-md-1 text-end">
-                    <button type="button" class="btn btn-sm btn-danger remove-row">🗑️</button>
-                </div>
-            `;
+            <div class="col-md-1 text-center">
+                <input type="checkbox" class="form-check-input verified-final-graduation-toggle-input" data-row="${VerifiedGraduationRowCount}">
+            </div>
+            <div class="col-md-6">
+                <select name="verified_grade_teacher_ids[]" data-plugin-selectTwo class="form-control teacher-select populate" data-row="${VerifiedGraduationRowCount}" disabled required>
+                    <option value="">-- Select Teacher --</option>
+                    ${verifiedGraduationTeachers.map(t => `<option value="${t.id}">${t.user.name}, ${t.designation.designation},${t.department.shortname}</option>`).join('')}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <input type="number" name="verified_grade_amounts[]" class="form-control amount-input" placeholder="No of students" disabled required min="1">
+            </div>
+        `;
 
             container.appendChild(row);
 
-            // Initialize Select2 for the newly added select input
+            //2nd change:
+            // Re-initialize Select2 for the new element
             $(row).find('select').select2({
                 theme: 'bootstrap',
                 width: '100%',
@@ -109,54 +108,71 @@
                 placeholder: '-- Select Teacher --'
             });
 
-            // Delete button logic: removes the current row when clicked
-            row.querySelector('.remove-row').addEventListener('click', function () {
-                row.remove();
+            const checkbox = row.querySelector('.verified-final-graduation-toggle-input');
+            checkbox.addEventListener('change', function () {
+                const isChecked = this.checked;
+                const rowIndex = this.getAttribute('data-row');
+                const select = row.querySelector(`.teacher-select[data-row="${rowIndex}"]`);
+                const amountInput = row.querySelector('.amount-input');
+
+                select.disabled = !isChecked;
+                amountInput.disabled = !isChecked;
+
+                if (!isChecked) {
+                    select.value = '';
+                    amountInput.value = '';
+                    select.classList.remove('is-invalid');
+                    amountInput.classList.remove('is-invalid');
+                }
             });
         }
 
-        // Load pre-filled rows from DB if any data exists
-        if (savedVerifiedFinalGraduationResultAssign && savedVerifiedFinalGraduationResultAssign.length > 0) {
-            savedVerifiedFinalGraduationResultAssign.forEach(assign => {
-                createVerifiedFinalGraduationResultRow(assign.teacher_id, assign.no_of_items);
-            });
-        }
+        document.getElementById('add-verified-graduation-teacher-row').addEventListener('click', createTeacherRow);
 
-        // Add new blank row
-        document.getElementById('add-verified-graduation-teacher-row').addEventListener('click', function () {
-            createVerifiedFinalGraduationResultRow();
+        document.getElementById('remove-verified-graduation-teacher-row').addEventListener('click', function () {
+            const container = document.getElementById('dynamic-verified-graduation-container');
+            if (container.lastElementChild) {
+                container.removeChild(container.lastElementChild);
+                VerifiedGraduationRowCount--;
+            }
         });
 
-        // Form submission logic
         document.getElementById('form-list-of-verified-graduation-result').addEventListener('submit', function (e) {
             e.preventDefault();
 
             const form = this;
-            const selects = form.querySelectorAll('.teacher-select');
-            const inputs = form.querySelectorAll('.amount-input');
+            const checkedRows = form.querySelectorAll('.verified-final-graduation-toggle-input:checked');
+
+            if (checkedRows.length === 0) {
+                Swal.fire('No Teachers Selected', 'Please select at least one teacher and fill all required fields.', 'warning');
+                return;
+            }
+
+            // Validation
             let valid = true;
             let teacherIds = [];
 
-            selects.forEach((select, index) => {
-                const teacherId = select.value;
-                const amount = inputs[index].value;
+            checkedRows.forEach(checkbox => {
+                const row = checkbox.closest('.row');
+                const select = row.querySelector('.teacher-select');
+                const input = row.querySelector('.amount-input');
 
                 select.classList.remove('is-invalid');
-                inputs[index].classList.remove('is-invalid');
+                input.classList.remove('is-invalid');
 
-                // Validate teacher selection
+                const teacherId = select.value;
+                const amount = input.value;
+
                 if (!teacherId) {
                     select.classList.add('is-invalid');
                     valid = false;
                 }
 
-                // Validate amount input
                 if (!amount || amount <= 0) {
-                    inputs[index].classList.add('is-invalid');
+                    input.classList.add('is-invalid');
                     valid = false;
                 }
 
-                // Ensure teachers are not duplicated
                 if (teacherIds.includes(teacherId)) {
                     select.classList.add('is-invalid');
                     valid = false;
@@ -170,7 +186,6 @@
                 return;
             }
 
-            // Confirm submission
             Swal.fire({
                 title: 'Are you sure?',
                 text: "Do you want to save the committee data?",
@@ -191,6 +206,7 @@
                     })
                         .then(response => {
                             if (!response.ok) {
+                                // Return the error JSON and throw it
                                 return response.json().then(err => {
                                     throw new Error(err.message || 'Unknown error occurred.');
                                 });
@@ -198,12 +214,14 @@
                             return response.json(); // if response is OK
                         })
                         .then(data => {
+                            console.log("Server response:", data); // Debug log
                             Swal.fire('Success!', data.message, 'success');
 
                             const submitBtn = document.getElementById('submit-list-of-verified-graduation-result');
-                            submitBtn.textContent = 'Update Verified Final Graduation Result Committee';  // ✅ New label
+                            submitBtn.textContent = 'Already Saved';
+                            submitBtn.disabled = true;
                             submitBtn.classList.remove('btn-primary');
-                            submitBtn.classList.add('btn-warning');
+                            submitBtn.classList.add('btn-success');
 
                             const cards = document.querySelectorAll('.card-list-of-verified-graduation-result');
                             cards.forEach(card => {
@@ -216,7 +234,7 @@
                             console.error('Error:', error);
                             Swal.fire({
                                 title: 'Error!',
-                                text: error.message || 'Something went wrong. Please try again.',
+                                text: error.message||'Something went wrong. Please try again.',
                                 icon: 'error'
                             });
                         });
@@ -225,4 +243,3 @@
         });
     </script>
 @endpush
-

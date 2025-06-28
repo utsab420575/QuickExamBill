@@ -41,12 +41,17 @@
                             @foreach($all_course_with_teacher->courses as $courseData)
                                 @php
                                     $single_course = $courseData->courseObject;
+
+                                    $course_code = $single_course->courseno;
+                                     $savedForClassTest = $savedRateAssignClassTest[$course_code] ?? collect(); // Collection of RateAssigns
+                                     //dump($savedForClassTest);
+
                                 @endphp
 
                                     <!-- Hidden course-level metadata -->
                                 <input type="hidden" name="courseno[{{ $single_course->id }}]" value="{{ $single_course->courseno }}">
                                 <input type="hidden" name="coursetitle[{{ $single_course->id }}]" value="{{ $single_course->coursetitle }}">
-                                <input type="hidden" name="registered_students_count[{{ $single_course->id }}]" value="{{ $courseData->registered_students_count }}">
+                               {{-- <input type="hidden" name="registered_students_count[{{ $single_course->id }}]" value="{{ $courseData->registered_students_count }}">--}}
                                 <input type="hidden" name="teacher_count[{{ $single_course->id }}]" value="{{ count($single_course->teachers) }}">
 
                                 <section class="card card-featured card-featured-secondary mb-4 w-100">
@@ -65,7 +70,7 @@
                                             <!-- Left Side: Paper Setter & Examiner -->
                                             <div class="col-md-8">
                                                 <div class="p-2">
-                                                    @foreach($single_course->teachers as $assignedTeacher)
+                                                    @foreach($single_course->teachers as $index=>$assignedTeacher)
                                                         <div class="row mb-3">
                                                             <div class="col-md-12">
                                                                 <select name="class_test_teachers_ids[{{ $single_course->id }}][]"
@@ -75,9 +80,17 @@
                                                                     <option value="">-- Select Teacher --</option>
                                                                     @foreach($teachers as $teacherOption)
                                                                         @php
-                                                                            // Match by email between API teacher and  local DB teacher
-                                                                            $isSelected = isset($assignedTeacher->user->email, $teacherOption->user->email) &&
-                                                                                          $assignedTeacher->user->email === $teacherOption->user->email;
+                                                                            if ($savedForClassTest->isNotEmpty()) {
+                                                                                    // Match saved teacher at current index
+                                                                                     // Use teacher from DB at this index
+                                                                                    $savedTeacher = $savedForClassTest->values()[$index]->teacher_id ?? null;
+                                                                                    $isSelected = (int) $teacherOption->id === (int) $savedTeacher;
+                                                                            } else {
+                                                                                // Fallback: match by email if no DB saved data
+                                                                                 // Match by email between API teacher and  local DB teacher
+                                                                                $isSelected = isset($assignedTeacher->user->email, $teacherOption->user->email) &&
+                                                                                              $assignedTeacher->user->email === $teacherOption->user->email;
+                                                                            }
                                                                         @endphp
                                                                         <option value="{{ $teacherOption->id }}"
                                                                             {{ $isSelected ? 'selected' : '' }}>
@@ -95,13 +108,19 @@
                                             <div class="col-md-4 d-flex align-items-center justify-content-center">
                                                 <div class="form-group w-100">
                                                     <label for="no_of_students_ct_{{ $single_course->id }}">No of Students</label>
+                                                    @php
+                                                        // Prefer database-saved script count, fallback to API count
+                                                        $noOfScript = $savedForClassTest->first()->total_students ?? $courseData->registered_students_count;
+                                                    @endphp
+
                                                     <input type="number"
                                                            id="no_of_students_ct_{{ $single_course->id }}"
                                                            name="no_of_students_ct[{{ $single_course->id }}]"
                                                            class="form-control"
                                                            min="0"
                                                            step="any"
-                                                           value="{{ old('no_of_script.'.$single_course->id, $courseData->registered_students_count) }}"
+                                                           {{--value="{{ old('no_of_script.'.$single_course->id, $courseData->registered_students_count) }}"--}}
+                                                           value="{{ old('no_of_script.'.$single_course->id, $noOfScript) }}"
                                                            required>
                                                 </div>
                                             </div>
@@ -171,10 +190,9 @@
                                 });
 
                                 const submitBtn = document.getElementById('submit-list-of-class-test-teacher');
-                                submitBtn.textContent = 'Already Saved';             // ✅ Change text
-                                submitBtn.disabled = true;                           // ✅ Disable button
-                                submitBtn.classList.remove('btn-primary');           // ✅ Remove old style
-                                submitBtn.classList.add('btn-success');              // ✅ Add success style
+                                submitBtn.textContent = 'Update Class Test Teacher';  // ✅ New label
+                                submitBtn.classList.remove('btn-primary');
+                                submitBtn.classList.add('btn-warning');
 
                                 const cards = document.querySelectorAll('.card-list-of-class-test-teacher');
                                 cards.forEach(card => {

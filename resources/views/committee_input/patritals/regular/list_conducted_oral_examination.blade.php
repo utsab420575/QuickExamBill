@@ -44,10 +44,9 @@
                     </div>
 
 
-                    <div class="row mb-2 fw-bold">
-                        <div class="col-md-1 text-center">Select</div>
-                        <div class="col-md-6">Teacher</div>
-                        <div class="col-md-4">No of Students</div>
+                    <div class="row mb-2 fw-bold mt-2">
+                        <div class="col-md-8 text-start">Select Teacher</div>
+                        <div class="col-md-3 text-start" style="margin-left:0px;">No of Students</div>
                     </div>
 
                     {{--here will be add checkbox--}}
@@ -55,7 +54,6 @@
 
                     <div class="mt-3 text-end">
                         <button type="button" id="add-conducted-oral-examination-row" class="btn btn-sm btn-success me-2">+ Add Teacher</button>
-                        <button type="button" id="remove-conducted-oral-examination-row" class="btn btn-sm btn-danger">- Remove Last</button>
                     </div>
 
                     <div class="text-end mt-3">
@@ -73,8 +71,9 @@
     <script>
         let conductedOralExaminationRowCount = 0;
         const conductedOralExaminationTeachers = @json($teachers);
+        const savedConductedOralExaminationAssign = @json($savedRateAssignConductedOralExamination);
 
-        function createTeacherRow() {
+        function createConductedOralExaminationRow(teacherId = '', numberOfItems = '') {
             conductedOralExaminationRowCount++;
 
             const container = document.getElementById('dynamic-conducted-oral-examination-container');
@@ -83,23 +82,23 @@
             row.setAttribute('data-row', conductedOralExaminationRowCount);
 
             row.innerHTML = `
-            <div class="col-md-1 text-center">
-                <input type="checkbox" class="form-check-input conducted-oral-examination-toggle-input" data-row="${conductedOralExaminationRowCount}">
-            </div>
-            <div class="col-md-6">
-                <select name="conducted_oral_examination_teacher_ids[]" data-plugin-selectTwo class="form-control teacher-select populate" data-row="${conductedOralExaminationRowCount}" disabled required>
-                    <option value="">-- Select Teacher --</option>
-                    ${conductedOralExaminationTeachers.map(t => `<option value="${t.id}">${t.user.name}, ${t.designation.designation},${t.department.shortname}</option>`).join('')}
-                </select>
-            </div>
-            <div class="col-md-4">
-                <input type="number" name="conducted_oral_examination_student_amounts[]" class="form-control amount-input" placeholder="No of students" disabled required min="1">
-            </div>
-        `;
+                <div class="col-md-8">
+                    <select name="conducted_oral_examination_teacher_ids[]" data-plugin-selectTwo class="form-control teacher-select populate" data-row="${conductedOralExaminationRowCount}" required>
+                        <option value="">-- Select Teacher --</option>
+                        ${conductedOralExaminationTeachers.map(t => `<option value="${t.id}" ${t.id == teacherId ? 'selected' : ''}>${t.user.name}, ${t.designation.designation}, ${t.department.shortname}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="number" name="conducted_oral_examination_student_amounts[]" class="form-control amount-input" placeholder="No of students" value="${numberOfItems}" required min="1">
+                </div>
+                <div class="col-md-1 text-end">
+                    <button type="button" class="btn btn-sm btn-danger remove-row">🗑️</button>
+                </div>
+            `;
 
             container.appendChild(row);
-            //2nd change:
-            // Re-initialize Select2 for the new element
+
+            // Re-initialize Select2 for the newly added select input
             $(row).find('select').select2({
                 theme: 'bootstrap',
                 width: '100%',
@@ -107,60 +106,40 @@
                 placeholder: '-- Select Teacher --'
             });
 
-            const checkbox = row.querySelector('.conducted-oral-examination-toggle-input');
-            checkbox.addEventListener('change', function () {
-                const isChecked = this.checked;
-                const rowIndex = this.getAttribute('data-row');
-                const select = row.querySelector(`.teacher-select[data-row="${rowIndex}"]`);
-                const amountInput = row.querySelector('.amount-input');
-
-                select.disabled = !isChecked;
-                amountInput.disabled = !isChecked;
-
-                if (!isChecked) {
-                    select.value = '';
-                    amountInput.value = '';
-                    select.classList.remove('is-invalid');
-                    amountInput.classList.remove('is-invalid');
-                }
+            // Remove row logic
+            row.querySelector('.remove-row').addEventListener('click', function () {
+                row.remove();
             });
         }
 
-        document.getElementById('add-conducted-oral-examination-row').addEventListener('click', createTeacherRow);
+        // Load pre-filled rows from DB if any data exists
+        if (savedConductedOralExaminationAssign && savedConductedOralExaminationAssign.length > 0) {
+            savedConductedOralExaminationAssign.forEach(assign => {
+                createConductedOralExaminationRow(assign.teacher_id, assign.no_of_items);
+            });
+        }
 
-        document.getElementById('remove-conducted-oral-examination-row').addEventListener('click', function () {
-            const container = document.getElementById('dynamic-conducted-oral-examination-container');
-            if (container.lastElementChild) {
-                container.removeChild(container.lastElementChild);
-                conductedOralExaminationRowCount--;
-            }
+        // Add new blank row
+        document.getElementById('add-conducted-oral-examination-row').addEventListener('click', function () {
+            createConductedOralExaminationRow();
         });
 
+        // Form submission logic
         document.getElementById('form-list-of-conducted-oral-examination').addEventListener('submit', function (e) {
             e.preventDefault();
 
             const form = this;
-            const checkedRows = form.querySelectorAll('.conducted-oral-examination-toggle-input:checked');
-
-            if (checkedRows.length === 0) {
-                Swal.fire('No Teachers Selected', 'Please select at least one teacher and fill all required fields.', 'warning');
-                return;
-            }
-
-            // Validation
+            const selects = form.querySelectorAll('.teacher-select');
+            const inputs = form.querySelectorAll('.amount-input');
             let valid = true;
             let teacherIds = [];
 
-            checkedRows.forEach(checkbox => {
-                const row = checkbox.closest('.row');
-                const select = row.querySelector('.teacher-select');
-                const input = row.querySelector('.amount-input');
+            selects.forEach((select, index) => {
+                const teacherId = select.value;
+                const amount = inputs[index].value;
 
                 select.classList.remove('is-invalid');
-                input.classList.remove('is-invalid');
-
-                const teacherId = select.value;
-                const amount = input.value;
+                inputs[index].classList.remove('is-invalid');
 
                 if (!teacherId) {
                     select.classList.add('is-invalid');
@@ -168,7 +147,7 @@
                 }
 
                 if (!amount || amount <= 0) {
-                    input.classList.add('is-invalid');
+                    inputs[index].classList.add('is-invalid');
                     valid = false;
                 }
 
@@ -205,7 +184,6 @@
                     })
                         .then(response => {
                             if (!response.ok) {
-                                // Return the error JSON and throw it
                                 return response.json().then(err => {
                                     throw new Error(err.message || 'Unknown error occurred.');
                                 });
@@ -213,14 +191,12 @@
                             return response.json(); // if response is OK
                         })
                         .then(data => {
-                            console.log("Server response:", data); // Debug log
                             Swal.fire('Success!', data.message, 'success');
 
                             const submitBtn = document.getElementById('submit-list-of-conducted-oral-examination');
-                            submitBtn.textContent = 'Already Saved';
-                            submitBtn.disabled = true;
+                            submitBtn.textContent = 'Update Conducted Oral Examination Committee';
                             submitBtn.classList.remove('btn-primary');
-                            submitBtn.classList.add('btn-success');
+                            submitBtn.classList.add('btn-warning');
 
                             const cards = document.querySelectorAll('.card-list-of-conducted-oral-examination');
                             cards.forEach(card => {
@@ -242,3 +218,4 @@
         });
     </script>
 @endpush
+

@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ExamType;
 use App\Models\RateAmount;
 use App\Models\RateAssign;
 use App\Models\RateHead;
+use App\Models\Session;
 use App\Models\Teacher;
 use App\Services\ApiData;
 use App\Services\LocalData;
@@ -29,28 +31,19 @@ class CommitteeInputController extends Controller
 
     private function getOrCreateRateAmount($rateHeadId, $sessionId, $examTypeId, array $allData)
     {
-        $rateAmount = RateAmount::where([
-            'rate_head_id' => $rateHeadId,
-            'session_id' => $sessionId,
-            'exam_type_id' => $examTypeId,
-        ])->first();
-
-        Log::info('Fetched RateAmount:', $rateAmount ? $rateAmount->toArray() : ['rateAmount' => null]);
-
-        if (!$rateAmount) {
-            $rateAmount = new RateAmount();
-            $rateAmount->fill($allData);
-            $rateAmount->rate_head_id = $rateHeadId;
-            $rateAmount->session_id = $sessionId;
-            $rateAmount->exam_type_id = $examTypeId;
-            $rateAmount->saved = 1;
-
-            if ($rateAmount->save()) {
-                Log::info("✅ RateAmount created for rate_head_id {$rateHeadId}", $rateAmount->toArray());
-            } else {
-                Log::error("❌ Failed to save RateAmount for rate_head_id {$rateHeadId}");
-            }
-        }
+        $rateAmount = RateAmount::updateOrCreate(
+            [
+                'rate_head_id' => $rateHeadId,
+                'session_id' => $sessionId,
+                'exam_type_id' => $examTypeId,
+            ],
+            array_merge($allData, [
+                'rate_head_id' => $rateHeadId,
+                'session_id' => $sessionId,
+                'exam_type_id' => $examTypeId,
+                'saved' => 1, // Assuming 'saved' is a boolean or flag for record status
+            ])
+        );
 
         Log::info('Confirmed Rate Amount', $rateAmount ? $rateAmount->toArray() : ['rateAmount' => null]);
         return $rateAmount;
@@ -88,7 +81,11 @@ class CommitteeInputController extends Controller
         //this session id got from session list blade
         $sid=$request->sid;
         //return $sid;
-        $session_info=ApiData::getSessionInfo($sid);
+        //$session_info=ApiData::getSessionInfo($sid);
+
+        //create session record
+        $exam_type = ExamType::where('type', 'regular')->first();
+        $session_info = LocalData::getOrCreateRegularSession($sid,$exam_type->id);
         //filter by department
         $order = ['Arch', 'CE', 'ChE', 'Chem','CSE','EEE','FE','HSS','IPE','Math','ME','MME','Phy','TE']; // Custom order of departments
 
@@ -151,6 +148,7 @@ class CommitteeInputController extends Controller
             ->with('teacher_head', $teacher_head)
            ->with('teacher_coordinator', $teacher_coordinator)
             ->with('session_info', $session_info)
+            ->with('exam_type',$exam_type->id)
             ->with('groupedTeachers', $groupedTeachers)
             ->with('teachers', $teachers)
             ->with('all_course_with_teacher', $all_course_with_teacher)
@@ -174,7 +172,10 @@ class CommitteeInputController extends Controller
         $sessionId = $request->sid;
         $min_rate=$request->moderation_committee_min_rate;
         $max_rate=$request->moderation_committee_max_rate;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
         Log::info('teacherId',$teacherIds);
         Log::info('amounts',$amounts);
@@ -315,7 +316,8 @@ class CommitteeInputController extends Controller
         $examiner_min_rate=$request->examiner_min_rate;
         $paper_setter_rate=$request->paper_setter_rate;
         $sessionId = $request->sid;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
         // ✅ Log all data
         Log::info('🔍 Incoming Examiner & Paper Setter Submission', [
@@ -396,6 +398,7 @@ class CommitteeInputController extends Controller
                 ->where('exam_type_id', $exam_type)
                 ->where('rate_head_id', $rateHead_3->id)
                 ->delete();
+            Log::info('Delete Done RateAssign');
             /*"paper_setters":
                {
                     "1": ["110", "120"],
@@ -575,7 +578,8 @@ class CommitteeInputController extends Controller
         $noOfStudents = $request->input('no_of_students_ct', []);
         $sessionId = $request->sid;
         $class_test_rate = $request->class_test_rate;
-        $exam_type = 1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
         // ✅ Log incoming request
         Log::info('🔍 Incoming Class Test Teacher Submission', [
@@ -599,7 +603,8 @@ class CommitteeInputController extends Controller
                 'status' => 1,
             ]);
 
-            $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+            //$session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+            $session_info=Session::where('ugr_id',$sessionId)->where('exam_type_id',$exam_type)->first();
 
             $rateAmount = $this->getOrCreateRateAmount(
                 $rateHead->id,
@@ -612,11 +617,24 @@ class CommitteeInputController extends Controller
                 ]
             );
 
+
+            //RateAssign
+            // Delete old entries (rateAssign)
+            RateAssign::where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
+
+
+
             foreach ($classTestTeacherData as $courseId => $teacherIds) {
                 $courseno = $request->input("courseno.$courseId");
                 $coursetitle = $request->input("coursetitle.$courseId");
+                //this is from input field(not api)
                 $input_studentCount = $noOfStudents[$courseId] ?? 0;
+                //this teacher number from api
                 $teacher_count = $request->input("teacher_count.$courseId");
+                //this is from input
                 $teacherCount = count($teacherIds);
 
                 $studentCount = $teacherCount > 0 ? $input_studentCount * 2 : 0;
@@ -748,6 +766,13 @@ class CommitteeInputController extends Controller
                     'max_rate'     => null,
                 ]
             );
+
+            //RateAssign
+            // Delete old entries (rateAssign)
+            RateAssign::where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
             // ✅ Step 6: Save RateAssign per teacher
             foreach ($sessionalTeacherData as $courseId => $teacherIds) {
                 // Case 1: Common hour (multi-select)
@@ -924,6 +949,13 @@ class CommitteeInputController extends Controller
 
             Log::debug('✅ RateAmount confirmed', $rateAmount->toArray());
 
+
+            //RateAssign
+            // Delete old entries (rateAssign)
+            RateAssign::where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
             foreach ($scrutinizer_teacher_ids as $courseId => $teacherIds) {
                 $studentCount = (int) $scrutinizers_no_of_students[$courseId];
                 $teacherCount = count($teacherIds);
@@ -1000,7 +1032,8 @@ class CommitteeInputController extends Controller
         $studentData = $request->input('prepares_theory_grade_sheet_no_of_students', []);
         $sessionId=$request->sid;
         $theory_grade_sheet_rate=$request->theory_grade_sheet_rate;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
         Log::info('📥 Received Theory Grade Sheet Submission', [
             'session_id' => $sessionId,
@@ -1074,6 +1107,13 @@ class CommitteeInputController extends Controller
             );
 
 
+            //RateAssign
+            // Delete old entries (rateAssign)
+            RateAssign::where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
+
             foreach ($teacherData as $courseId => $teacherIds) {
                 $studentCount = (int) $studentData[$courseId];
                 $teacherCount = count($teacherIds);
@@ -1143,7 +1183,8 @@ class CommitteeInputController extends Controller
         $studentData = $request->input('prepare_sessional_grade_sheet_no_of_students', []);
         $sessionId   = $request->sid;
         $sessional_grade_sheet_rate   = $request->sessional_grade_sheet_rate;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
         Log::info('📥 Received Sessional Grade Sheet Submission', [
             'session_id' => $sessionId,
@@ -1213,6 +1254,12 @@ class CommitteeInputController extends Controller
                 ]
             );
 
+            //RateAssign
+            // Delete old entries (rateAssign)
+            RateAssign::where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
             // ✅ Loop through course-wise teacher assignments
             foreach ($teacherData as $courseId => $teacherIds) {
                 $studentCount = (int) $studentData[$courseId];
@@ -1295,7 +1342,8 @@ class CommitteeInputController extends Controller
         $studentData = $request->input('scrutinizing_theory_grade_sheet_no_of_students', []);
         $sessionId = $request->sid;
         $scrutinize_theory_grade_sheet_rate = $request->scrutinize_theory_grade_sheet_rate;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
         Log::info('📥 Received Scrutinizing Theory Grade Sheet', [
             'session_id' => $sessionId,
@@ -1367,6 +1415,14 @@ class CommitteeInputController extends Controller
                 ]
             );
 
+
+
+            //RateAssign
+            // Delete old entries (rateAssign)
+            RateAssign::where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
 
 
             // Step 5: RateAssign per teacher
@@ -1443,7 +1499,8 @@ class CommitteeInputController extends Controller
         $studentData = $request->input('scrutinizing_sessional_grade_sheet_no_of_students', []);
         $sessionId = $request->sid;
         $scrutinize_sessional_grade_sheet_rate = $request->scrutinize_sessional_grade_sheet_rate;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
         Log::info('📥 Received Scrutinizing Sessional Grade Sheet', [
             'session_id' => $sessionId,
@@ -1514,6 +1571,12 @@ class CommitteeInputController extends Controller
                 ]
             );
 
+             //RateAssign
+            // Delete old entries (rateAssign)
+            RateAssign::where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
             // Step 5: Assign rates per teacher
             foreach ($teacherData as $courseId => $teacherIds) {
                 $studentCount = (int) $studentData[$courseId];
@@ -1590,7 +1653,8 @@ class CommitteeInputController extends Controller
         $studentData = $request->input('prepared_computerized_result_no_of_students', []);
         $sessionId = $request->sid;
         $prepare_computerized_result_rate=$request->input('prepare_computerized_result_rate');
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
         Log::info('📥 Received Prepared Computerized Result Data', [
             'session_id' => $sessionId,
@@ -1661,6 +1725,21 @@ class CommitteeInputController extends Controller
                     'max_rate'     => null,
                 ]
             );
+
+             //RateAssign
+            // Delete old entries (rateAssign)
+            RateAssign::where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
+
+             //RateAssign
+            // Delete old entries (rateAssign)
+            RateAssign::where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
+
 
             // Step 5: Assign to teachers
             foreach ($teacherData as $courseId => $teacherIds) {
@@ -1736,7 +1815,8 @@ class CommitteeInputController extends Controller
         $totalStudents = (int) $request->input('verified_computerized_result_total_students');
         $sessionId = $request->sid;
         $verified_computerized_grade_sheet_rate = $request->verified_computerized_grade_sheet_rate;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
         Log::info('📥 Received Verified Computerized Result Data', [
             'session_id' => $sessionId,
@@ -1795,6 +1875,15 @@ class CommitteeInputController extends Controller
                     'max_rate'     => null,
                 ]
             );
+
+
+             //RateAssign
+            // Delete old entries (rateAssign)
+            RateAssign::where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
+
 
             // Step 4: Assign to teachers
             $total_teacher=count($teacherIds);
@@ -1868,7 +1957,8 @@ class CommitteeInputController extends Controller
         $number_of_stencil = $request->input('stencil_cutting_committee_amounts');        // array (indexed)
         $sessionId = $request->sid;
         $per_stencil_cutting_rate=$request->stencil_cutting_question_paper_rate;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
 
         Log::info('📥 Received Stencill Committee Data', [
@@ -1934,6 +2024,11 @@ class CommitteeInputController extends Controller
             );
 
 
+            RateAssign::where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
+
 
             // Step 5: Loop and store teacher-wise rate_assign
             foreach ($teacherIds as $index => $teacherId) {
@@ -1990,7 +2085,8 @@ class CommitteeInputController extends Controller
         $number_of_stencil = $request->input('printing_question_committee_amounts');        // array (indexed)
         $sessionId = $request->sid;
         $per_printing_question_paper_rate=$request->printing_question_paper_rate;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
 
         Log::info('📥 Received Stencill Committee Data', [
@@ -2053,6 +2149,11 @@ class CommitteeInputController extends Controller
             );
 
 
+            RateAssign::where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
+
 
             // Step 5: Loop and store teacher-wise rate_assign
             foreach ($teacherIds as $index => $teacherId) {
@@ -2110,7 +2211,8 @@ class CommitteeInputController extends Controller
         $number_of_correction = $request->input('comparison_question_committee_amounts');        // array (indexed)
         $sessionId = $request->sid;
         $per_comparsion_rate=$request->comparison_question_paper_rate;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
 
         Log::info('📥 Received Question Comparison Committee Data', [
@@ -2176,6 +2278,10 @@ class CommitteeInputController extends Controller
             );
 
 
+            RateAssign::where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
 
             // Step 5: Loop and store teacher-wise rate_assign
             foreach ($teacherIds as $index => $teacherId) {
@@ -2229,7 +2335,8 @@ class CommitteeInputController extends Controller
         $studentCounts = $request->input('advisorTotal_students', []);
         $sessionId = $request->sid;
         $advisor_per_student_rate = $request->advisor_per_student_rate;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
         Log::info('📥 Received Prepared Advisor Result Data', [
             'session_id' => $sessionId,
@@ -2281,6 +2388,11 @@ class CommitteeInputController extends Controller
                     'max_rate'     => null,
                 ]
             );
+
+            RateAssign::where('session_id', $session->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
 
             // ✅ Step 4: Assign teachers
             foreach ($teacherIds as $index => $teacherId) {
@@ -2340,7 +2452,8 @@ class CommitteeInputController extends Controller
         $no_of_students = $request->input('verified_grade_amounts', []);
         $sessionId = $request->sid;
         $final_result_per_student_rate=$request->final_result_per_student_rate;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
 
         Log::info('📥 Received Prepared Computerized Result Data', [
@@ -2388,6 +2501,10 @@ class CommitteeInputController extends Controller
                 ]
             );
 
+            RateAssign::where('session_id', $session->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
 
             // Step 4: Assign each teacher
             foreach ($teacherIds as $index => $teacherId) {
@@ -2444,7 +2561,8 @@ class CommitteeInputController extends Controller
         $no_of_students = $request->input('conducted_central_oral_examination_student_amounts', []);
         $sessionId = $request->sid;
         $central_examination_thesis_rate = $request->oral_central_exam_thesis_project;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
         Log::info('📥 Received Prepared Computerized Result Data', [
             'session_id' => $sessionId,
@@ -2491,6 +2609,11 @@ class CommitteeInputController extends Controller
                     'max_rate'     => null,
                 ]
             );
+
+            RateAssign::where('session_id', $session->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
 
             // Step 4: Assign each teacher
             foreach ($teacherIds as $index => $teacherId) {
@@ -2545,7 +2668,8 @@ class CommitteeInputController extends Controller
         $no_of_students = $request->input('involved_survey_student_amounts');        // array (indexed)
         $sessionId = $request->sid;
         $servey_rate = $request->servey_rate;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
         Log::info('📥 Received Involved Survey Data', [
             'session_id' => $sessionId,
@@ -2591,6 +2715,11 @@ class CommitteeInputController extends Controller
                 ]
             );
             Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
+
+            RateAssign::where('session_id', $session->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
 
             // Step 4: Assign each teacher
             foreach ($teacherIds as $index => $teacherId) {
@@ -2645,7 +2774,8 @@ class CommitteeInputController extends Controller
         $no_of_students = $request->input('conducted_preliminary_viva_student_amounts');        // array (indexed)
         $sessionId = $request->sid;
         $viva_thesis_project_rate = $request->viva_thesis_project_rate;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
 
         Log::info('📥 Received Conducted Priliminary Viva Data', [
@@ -2693,6 +2823,11 @@ class CommitteeInputController extends Controller
             );
 
             Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
+
+            RateAssign::where('session_id', $session->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
 
             // Step 4: Assign each teacher
             foreach ($teacherIds as $index => $teacherId) {
@@ -2749,7 +2884,8 @@ class CommitteeInputController extends Controller
         $external_no_of_students = $request->input('examined_external_thesis_project_student_amounts', []);
         $sessionId = $request->sid;
         $examined_thesis_project_rate = $request->examined_thesis_project_rate;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
 
         Log::info('📥 Received Examined Thesis Project Data', [
@@ -2802,6 +2938,13 @@ class CommitteeInputController extends Controller
 
             Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
 
+
+            RateAssign::where('session_id', $session->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
+
+
             // 4. Create RateAssign for each teacher
             foreach ($teacherIds as $index => $teacherId) {
                 $internal = (int) ($internal_no_of_students[$index] ?? 0);
@@ -2822,14 +2965,18 @@ class CommitteeInputController extends Controller
                         'exam_type_id'=>$exam_type,
                     ]);
 
-
+                    //for store internal and external student
+                    //we use total_student=internal
+                    //we use total_teacher=external
+                    //no_of_items store total students(internal+external)
                     $rateAssign = RateAssign::create([
                         'teacher_id' => $teacherId,
                         'rate_head_id' => $rateHead->id,
                         'session_id' => $session->id,
                         'no_of_items' => $totalStudents,
                         'total_amount' => $totalAmount,
-                        'total_students'=>$totalStudents,
+                        'total_students'=>$internal,
+                        'total_teachers'=>$external,
                         'exam_type_id'=>$exam_type,
                     ]);
 
@@ -2858,7 +3005,8 @@ class CommitteeInputController extends Controller
         $no_of_students = $request->input('conducted_oral_examination_student_amounts');        // array (indexed)
         $sessionId = $request->sid;
         $oral_exam_thesis_project_rate = $request->oral_exam_thesis_project;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
         Log::info('📥 Received Conducted Oral Data', [
             'session_id' => $sessionId,
@@ -2910,6 +3058,11 @@ class CommitteeInputController extends Controller
             );
             Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
 
+
+            RateAssign::where('session_id', $session->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
             // Step 4: Assign each teacher
             foreach ($teacherIds as $index => $teacherId) {
                 $studentCount = (int) ($no_of_students[$index] ?? 0);
@@ -2965,7 +3118,8 @@ class CommitteeInputController extends Controller
         $no_of_students = $request->input('supervised_thesis_project_student_amounts');        // array (indexed)
         $sessionId = $request->sid;
         $supervised_thesis_project_rate = $request->supervised_thesis_project_rate;
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
         Log::info('📥 Received Conducted Oral Data', [
             'session_id' => $sessionId,
@@ -3013,6 +3167,13 @@ class CommitteeInputController extends Controller
                     'max_rate'     => null,
                 ]
             );
+
+
+            RateAssign::where('session_id', $session->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
+
 
             Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
 
@@ -3071,7 +3232,8 @@ class CommitteeInputController extends Controller
         $teacherId = $request->input('coordinator_id');
         $coordinator_rate = $request->input('coordinator_amount');
         $sessionId=$request->input('sid');
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
         Log::info('📥 Received Coordinator Data', [
             'session_id' => $sessionId,
@@ -3121,6 +3283,12 @@ class CommitteeInputController extends Controller
                 'total_amount' => $coordinator_rate,
                 'exam_type_id'=>$exam_type,
             ]);
+
+            RateAssign::where('session_id', $session->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
+
             $rateAssign = RateAssign::create([
                 'rate_head_id' => $rateHead->id,
                 'session_id' => $session->id,
@@ -3146,7 +3314,8 @@ class CommitteeInputController extends Controller
         $teacherId = $request->input('chairman_id');
         $chairman_rate = $request->input('chairman_amount');
         $sessionId=$request->input('sid');
-        $exam_type=1;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
         Log::info('📥 Received Chairman Data', [
             'session_id' => $sessionId,
@@ -3195,6 +3364,13 @@ class CommitteeInputController extends Controller
                 'total_amount' => $chairman_rate,
                 'exam_type_id'=>$exam_type,
             ]);
+
+            RateAssign::where('session_id', $session->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
+
+
             $rateAssign = RateAssign::create([
                 'rate_head_id' => $rateHead->id,
                 'session_id' => $session->id,

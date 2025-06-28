@@ -48,6 +48,10 @@
                                 @foreach($all_course_with_teacher->courses as $courseData)
                                     @php
                                         $single_course = $courseData->courseObject;
+                                         // Retrieve saved data if available from RateAssign
+                                        $course_code = $single_course->courseno;
+                                        $savedForScrutinizers = $savedRateAssignScrutinizers[$course_code] ?? collect(); // Collection of RateAssigns
+                                        //dump($savedForScrutinizers);
                                     @endphp
                                         <!-- Hidden course-level metadata -->
                                     <input type="hidden" name="courseno[{{ $single_course->id }}]" value="{{ $single_course->courseno }}">
@@ -74,7 +78,7 @@
                                                         @foreach($groupedTeachers as $deptFullName => $deptTeachers)
                                                             <optgroup label="{{ $deptFullName }}">
                                                                 @foreach($deptTeachers as $teacher)
-                                                                    <option value="{{ $teacher->id }}">
+                                                                    <option value="{{ $teacher->id }}" {{ $savedForScrutinizers->pluck('teacher_id')->contains($teacher->id) ? 'selected' : '' }}>
                                                                         {{ $teacher->user->name }}  - {{ $teacher->department->shortname }}
                                                                     </option>
                                                                 @endforeach
@@ -85,11 +89,18 @@
 
 
                                                 <div class="col-md-3">
+                                                    @php
+                                                        // Check if there is saved data, and if yes, get total_students from the first teacher's entry
+                                                        $noOfItems = $savedForScrutinizers->isNotEmpty()
+                                                                    ? $savedForScrutinizers->first()->total_students
+                                                                    : $courseData->registered_students_count;
+                                                    @endphp
                                                     <label for="scrutinizers_no_of_students">No of student</label>
                                                     <input name="scrutinizers_no_of_students[{{ $single_course->id }}]"
                                                            type="number" min="1" step="any"
                                                            class="form-control"
-                                                           value="{{ $courseData->registered_students_count }}"
+                                                           {{--value="{{ $courseData->registered_students_count }}"--}}
+                                                           value="{{ old('scrutinizers_no_of_students.' . $single_course->id, $noOfItems) }}"
                                                            required>
                                                 </div>
                                             </div>
@@ -157,10 +168,9 @@
                                 });
 
                                 const submitBtn = document.getElementById('submit-list-of-scrutinizers');
-                                submitBtn.textContent = 'Already Saved';             // ✅ Change text
-                                submitBtn.disabled = true;                           // ✅ Disable button
-                                submitBtn.classList.remove('btn-primary');           // ✅ Remove old style
-                                submitBtn.classList.add('btn-success');              // ✅ Add success style
+                                submitBtn.textContent = 'Update Scrutinizers Committee';  // ✅ New label
+                                submitBtn.classList.remove('btn-primary');
+                                submitBtn.classList.add('btn-warning');
 
                                 const cards = document.querySelectorAll('.card-list-of-scrutinizers');
 

@@ -43,9 +43,10 @@
                         </div>
                     </div>
 
-                    <div class="row mb-2 fw-bold mt-2">
-                        <div class="col-md-8 text-start">Select Teacher</div>
-                        <div class="col-md-3 text-start" style="margin-left:-15px;">No of Question</div>
+                    <div class="row mb-2 fw-bold">
+                        <div class="col-md-1 text-center">Select</div>
+                        <div class="col-md-6">Name</div>
+                        <div class="col-md-4">No of Questions</div>
                     </div>
 
                     {{--here will be add row--}}
@@ -53,6 +54,7 @@
 
                     <div class="mt-3 text-end">
                         <button type="button" id="add-comparison-question-paper-row" class="btn btn-sm btn-success me-2">+ Add Teacher</button>
+                        <button type="button" id="remove-comparison-question-paper-row" class="btn btn-sm btn-danger">- Remove Last</button>
                     </div>
 
                     <div class="text-end mt-3">
@@ -72,7 +74,7 @@
         const comparisonQuestionStaffTeachers = @json($teachers);
         const savedComparisonCommitteeAssign = @json($savedRateAssignComparisonCommittee);
 
-        function createComparisonCommitteeRow(teacherId = '', amount = '') {
+        function createComparisonCommitteeRow() {
             comparisonQuestionRowCount++;
 
             const container = document.getElementById('dynamic-comparison-question-paper-container');
@@ -80,29 +82,33 @@
             row.classList.add('row', 'align-items-center', 'mb-2');
             row.setAttribute('data-row', comparisonQuestionRowCount);
 
+
             row.innerHTML = `
-                <div class="row mb-3 align-items-center" data-row="${comparisonQuestionRowCount}">
-                    <div class="col-md-8">
-                        <select name="comparison_question_committee_teacher_ids[]" class="form-control teacher-select populate" data-row="${comparisonQuestionRowCount}" required>
+                <div class="row mb-3">
+                    <div class="col-md-1 text-center">
+                        <input type="checkbox" class="form-check-input comparison-question-paper-toggle-input mt-2" data-row="${comparisonQuestionRowCount}">
+                    </div>
+                    <div class="col-md-6">
+                        <!--1st change: data-plugin-selectTwo class="form-control teacher-select populate"-->
+                        <select name="comparison_question_committee_teacher_ids[]" data-plugin-selectTwo class="form-control teacher-select populate" data-row="${comparisonQuestionRowCount}" disabled required>
                             <option value="">-- Select Teacher --</option>
                             ${comparisonQuestionStaffTeachers.map(t => `<option
-                                value="${t.id}" ${t.id == teacherId ? 'selected' : ''}>
-                                ${t.user.name}, ${t.designation.designation}, ${t.department.shortname}
-                            </option>`).join('')}
+                                                value="${t.id}">
+
+                                                ${t.user.name}, ${t.designation.designation},${t.department.shortname}
+                                            </option>`).join('')}
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <input type="number" name="comparison_question_committee_amounts[]" class="form-control amount-input" step="any" placeholder="Provide Amount" value="${amount}" required>
-                    </div>
-                    <div class="col-md-1 text-end">
-                        <button type="button" class="btn btn-sm btn-danger remove-row">🗑️</button>
+                    <div class="col-md-4">
+                        <input type="number" name="comparison_question_committee_amounts[]" class="form-control amount-input"  step="any" placeholder="Provide Amount" disabled required>
                     </div>
                 </div>
             `;
 
             container.appendChild(row);
 
-            // Initialize Select2 for the newly added select input
+            //2nd change:
+            // Re-initialize Select2 for the new element
             $(row).find('select').select2({
                 theme: 'bootstrap',
                 width: '100%',
@@ -110,40 +116,60 @@
                 placeholder: '-- Select Teacher --'
             });
 
-            // Delete button logic
-            row.querySelector('.remove-row').addEventListener('click', function () {
-                row.remove();
+            const checkbox = row.querySelector('.comparison-question-paper-toggle-input');
+            checkbox.addEventListener('change', function () {
+                const isChecked = this.checked;
+                const rowIndex = this.getAttribute('data-row');
+                const select = row.querySelector(`.teacher-select[data-row="${rowIndex}"]`);
+                const amountInput = row.querySelector('.amount-input');
+
+                select.disabled = !isChecked;
+                amountInput.disabled = !isChecked;
+
+                if (!isChecked) {
+                    select.value = '';
+                    amountInput.value = '';
+                    select.classList.remove('is-invalid');
+                    amountInput.classList.remove('is-invalid');
+                }
             });
         }
 
-        // Load pre-filled rows from DB
-        if (savedComparisonCommitteeAssign && savedComparisonCommitteeAssign.length > 0) {
-            savedComparisonCommitteeAssign.forEach(assign => {
-                createComparisonCommitteeRow(assign.teacher_id, assign.no_of_items);
-            });
-        }
+        document.getElementById('add-comparison-question-paper-row').addEventListener('click', createComparisonCommitteeRow);
 
-        // Add blank new row
-        document.getElementById('add-comparison-question-paper-row').addEventListener('click', function () {
-            createComparisonCommitteeRow();
+        document.getElementById('remove-comparison-question-paper-row').addEventListener('click', function () {
+            const container = document.getElementById('dynamic-comparison-question-paper-container');
+            if (container.lastElementChild) {
+                container.removeChild(container.lastElementChild);
+                comparisonQuestionRowCount--;
+            }
         });
 
-        // Submit logic
         document.getElementById('form-list-of-comparison-question-paper').addEventListener('submit', function (e) {
             e.preventDefault();
 
             const form = this;
-            const selects = form.querySelectorAll('.teacher-select');
-            const inputs = form.querySelectorAll('.amount-input');
+            const checkedRows = form.querySelectorAll('.comparison-question-paper-toggle-input:checked');
+
+            if (checkedRows.length === 0) {
+                Swal.fire('No Teachers Selected', 'Please select at least one teacher and fill all required fields.', 'warning');
+                return;
+            }
+
+            // Validation
             let valid = true;
             let teacherIds = [];
 
-            selects.forEach((select, index) => {
-                const teacherId = select.value;
-                const amount = inputs[index].value;
+            checkedRows.forEach(checkbox => {
+                const row = checkbox.closest('.row');
+                const select = row.querySelector('.teacher-select');
+                const input = row.querySelector('.amount-input');
 
                 select.classList.remove('is-invalid');
-                inputs[index].classList.remove('is-invalid');
+                input.classList.remove('is-invalid');
+
+                const teacherId = select.value;
+                const amount = input.value;
 
                 if (!teacherId) {
                     select.classList.add('is-invalid');
@@ -151,7 +177,7 @@
                 }
 
                 if (!amount || amount <= 0) {
-                    inputs[index].classList.add('is-invalid');
+                    input.classList.add('is-invalid');
                     valid = false;
                 }
 
@@ -188,6 +214,7 @@
                     })
                         .then(response => {
                             if (!response.ok) {
+                                // Return the error JSON and throw it
                                 return response.json().then(err => {
                                     throw new Error(err.message || 'Unknown error occurred.');
                                 });
@@ -195,12 +222,14 @@
                             return response.json(); // if response is OK
                         })
                         .then(data => {
+                            console.log("Server response:", data); // Debug log
                             Swal.fire('Success!', data.message, 'success');
 
                             const submitBtn = document.getElementById('submit-list-of-comparison-question-paper');
-                            submitBtn.textContent = 'Update Comparison,Correction Committee';
+                            submitBtn.textContent = 'Already Saved';
+                            submitBtn.disabled = true;
                             submitBtn.classList.remove('btn-primary');
-                            submitBtn.classList.add('btn-warning');
+                            submitBtn.classList.add('btn-success');
 
                             const cards = document.querySelectorAll('.card-list-of-comparison-question-paper');
                             cards.forEach(card => {
@@ -213,7 +242,7 @@
                             console.error('Error:', error);
                             Swal.fire({
                                 title: 'Error!',
-                                text: error.message || 'Something went wrong. Please try again.',
+                                text: error.message||'Something went wrong. Please try again.',
                                 icon: 'error'
                             });
                         });
@@ -222,4 +251,3 @@
         });
     </script>
 @endpush
-

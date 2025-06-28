@@ -43,23 +43,18 @@
                         </div>
                     </div>
 
-
-                    <hr>
-                    <div class="row mb-2 fw-bold mt-2">
-                        <div class="col-md-8 text-start">Select Teacher</div>
-                        <div class="col-md-3 text-start" style="margin-left:-15px;">No of Stencil</div>
-                    </div>
-                    {{--<div class="row mb-2 fw-bold">
+                    <div class="row mb-2 fw-bold">
                         <div class="col-md-1 text-center">Select</div>
                         <div class="col-md-6">Name</div>
                         <div class="col-md-4">No of Stencil</div>
-                    </div>--}}
+                    </div>
 
                     {{--here will be add row--}}
                     <div id="dynamic-stencil-cutting-question-paper-container"></div>
 
                     <div class="mt-3 text-end">
                         <button type="button" id="add-stencil-cutting-question-paper-row" class="btn btn-sm btn-success me-2">+ Add Teacher</button>
+                        <button type="button" id="remove-stencil-cutting-question-paper-row" class="btn btn-sm btn-danger">- Remove Last</button>
                     </div>
 
                     <div class="text-end mt-3">
@@ -79,7 +74,7 @@
         const stencilCuttingStaffTeachers = @json($teachers);
         const savedStencilCuttingCommittee = @json($savedRateAssignStencilCuttingCommittee);
 
-        function createStencillCommitteeRow(teacherId = '', amount = '') {
+        function createTeacherRow(teacherId = '', amount = '') {
             stencilCuttingRowCount++;
 
             const container = document.getElementById('dynamic-stencil-cutting-question-paper-container');
@@ -87,34 +82,33 @@
             row.classList.add('row', 'align-items-center', 'mb-2');
             row.setAttribute('data-row', stencilCuttingRowCount);
 
+
             row.innerHTML = `
-                <div class="row mb-3 align-items-center" data-row="${stencilCuttingRowCount}">
-                    <!-- Teacher Select Column -->
-                    <div class="col-md-8">
-                        <select name="stencil_cutting_committee_teacher_ids[]" class="form-control teacher-select populate" data-row="${stencilCuttingRowCount}" required>
+                <div class="row mb-3">
+                    <div class="col-md-1 text-center">
+                        <input type="checkbox" class="form-check-input stencil-cutting-question-paper-toggle-input mt-2" data-row="${stencilCuttingRowCount}">
+                    </div>
+                    <div class="col-md-6">
+                        <!--1st change: data-plugin-selectTwo class="form-control teacher-select populate"-->
+                        <select name="stencil_cutting_committee_teacher_ids[]" data-plugin-selectTwo class="form-control teacher-select populate" data-row="${stencilCuttingRowCount}" disabled required>
                             <option value="">-- Select Teacher --</option>
                             ${stencilCuttingStaffTeachers.map(t => `<option
-                                value="${t.id}" ${t.id == teacherId ? 'selected' : ''}>
-                                ${t.user.name}, ${t.designation.designation}, ${t.department.shortname}
-                            </option>`).join('')}
+                                                value="${t.id}">
+
+                                                ${t.user.name}, ${t.designation.designation},${t.department.shortname}
+                                            </option>`).join('')}
                         </select>
                     </div>
-
-                    <!-- Amount Column -->
-                    <div class="col-md-3">
-                        <input type="number" name="stencil_cutting_committee_amounts[]" step="any" class="form-control amount-input" placeholder="Provide Stencil Number" value="${amount}" required>
-                    </div>
-
-                    <!-- Delete Button Column -->
-                    <div class="col-md-1 text-end">
-                        <button type="button" class="btn btn-sm btn-danger remove-row">🗑️</button>
+                    <div class="col-md-4">
+                        <input type="number" name="stencil_cutting_committee_amounts[]" step="any" class="form-control amount-input" placeholder="Provide Amount" disabled required>
                     </div>
                 </div>
             `;
 
             container.appendChild(row);
 
-            // Initialize Select2
+            //2nd change:
+            // Re-initialize Select2 for the new element
             $(row).find('select').select2({
                 theme: 'bootstrap',
                 width: '100%',
@@ -122,40 +116,60 @@
                 placeholder: '-- Select Teacher --'
             });
 
-            // Delete row logic
-            row.querySelector('.remove-row').addEventListener('click', function () {
-                row.remove();
+            const checkbox = row.querySelector('.stencil-cutting-question-paper-toggle-input');
+            checkbox.addEventListener('change', function () {
+                const isChecked = this.checked;
+                const rowIndex = this.getAttribute('data-row');
+                const select = row.querySelector(`.teacher-select[data-row="${rowIndex}"]`);
+                const amountInput = row.querySelector('.amount-input');
+
+                select.disabled = !isChecked;
+                amountInput.disabled = !isChecked;
+
+                if (!isChecked) {
+                    select.value = '';
+                    amountInput.value = '';
+                    select.classList.remove('is-invalid');
+                    amountInput.classList.remove('is-invalid');
+                }
             });
         }
 
-        // Load pre-filled rows from DB
-        if (savedStencilCuttingCommittee && savedStencilCuttingCommittee.length > 0) {
-            savedStencilCuttingCommittee.forEach(assign => {
-                createStencillCommitteeRow(assign.teacher_id, assign.no_of_items);
-            });
-        }
+        document.getElementById('add-stencil-cutting-question-paper-row').addEventListener('click', createTeacherRow);
 
-        // Add blank new row
-        document.getElementById('add-stencil-cutting-question-paper-row').addEventListener('click', function () {
-            createStencillCommitteeRow();
+        document.getElementById('remove-stencil-cutting-question-paper-row').addEventListener('click', function () {
+            const container = document.getElementById('dynamic-stencil-cutting-question-paper-container');
+            if (container.lastElementChild) {
+                container.removeChild(container.lastElementChild);
+                stencilCuttingRowCount--;
+            }
         });
 
-        // Submit logic
         document.getElementById('form-list-of-stencil-cutting-question-paper').addEventListener('submit', function (e) {
             e.preventDefault();
 
             const form = this;
-            const selects = form.querySelectorAll('.teacher-select');
-            const inputs = form.querySelectorAll('.amount-input');
+            const checkedRows = form.querySelectorAll('.stencil-cutting-question-paper-toggle-input:checked');
+
+            if (checkedRows.length === 0) {
+                Swal.fire('No Teachers Selected', 'Please select at least one teacher and fill all required fields.', 'warning');
+                return;
+            }
+
+            // Validation
             let valid = true;
             let teacherIds = [];
 
-            selects.forEach((select, index) => {
-                const teacherId = select.value;
-                const amount = inputs[index].value;
+            checkedRows.forEach(checkbox => {
+                const row = checkbox.closest('.row');
+                const select = row.querySelector('.teacher-select');
+                const input = row.querySelector('.amount-input');
 
                 select.classList.remove('is-invalid');
-                inputs[index].classList.remove('is-invalid');
+                input.classList.remove('is-invalid');
+
+                const teacherId = select.value;
+                const amount = input.value;
 
                 if (!teacherId) {
                     select.classList.add('is-invalid');
@@ -163,7 +177,7 @@
                 }
 
                 if (!amount || amount <= 0) {
-                    inputs[index].classList.add('is-invalid');
+                    input.classList.add('is-invalid');
                     valid = false;
                 }
 
@@ -200,20 +214,22 @@
                     })
                         .then(response => {
                             if (!response.ok) {
+                                // Return the error JSON and throw it
                                 return response.json().then(err => {
                                     throw new Error(err.message || 'Unknown error occurred.');
                                 });
                             }
-                            return response.json();
+                            return response.json(); // if response is OK
                         })
                         .then(data => {
+                            console.log("Server response:", data); // Debug log
                             Swal.fire('Success!', data.message, 'success');
 
                             const submitBtn = document.getElementById('submit-list-of-stencil-cutting-question-paper');
-                            submitBtn.textContent = 'Update Stencil Cutting Committee';
-                            submitBtn.disabled = false;
+                            submitBtn.textContent = 'Already Saved';
+                            submitBtn.disabled = true;
                             submitBtn.classList.remove('btn-primary');
-                            submitBtn.classList.add('btn-warning');
+                            submitBtn.classList.add('btn-success');
 
                             const cards = document.querySelectorAll('.card-list-of-stencil-cutting-question-paper');
                             cards.forEach(card => {
@@ -223,11 +239,15 @@
                             });
                         })
                         .catch(error => {
-                            Swal.fire('Error!', error.message || 'Something went wrong. Please try again.', 'error');
+                            console.error('Error:', error);
+                            Swal.fire({
+                                title: 'Error!',
+                                text: error.message||'Something went wrong. Please try again.',
+                                icon: 'error'
+                            });
                         });
                 }
             });
         });
     </script>
 @endpush
-
