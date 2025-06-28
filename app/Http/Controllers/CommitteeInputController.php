@@ -174,8 +174,6 @@ class CommitteeInputController extends Controller
         $max_rate=$request->moderation_committee_max_rate;
         $exam_type_record=ExamType::where('type','regular')->first();
         $exam_type = $exam_type_record->id;
-        $exam_type_record=ExamType::where('type','regular')->first();
-        $exam_type = $exam_type_record->id;
 
         Log::info('teacherId',$teacherIds);
         Log::info('amounts',$amounts);
@@ -235,7 +233,7 @@ class CommitteeInputController extends Controller
 
 
             // Step 4: Ensure  RateAmount exists(Rate Amount Exist for Rate Head=1)
-            $rateAmount = $rateAmount = $this->getOrCreateRateAmount(
+            $rateAmount = $this->getOrCreateRateAmount(
                 $rateHead->id,
                 $session_info->id,
                 $exam_type,

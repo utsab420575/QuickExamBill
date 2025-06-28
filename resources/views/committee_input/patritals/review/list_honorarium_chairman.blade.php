@@ -20,6 +20,7 @@
                         <tr>
                             @php
                                 $selectedChairmanEmail = $teacher_head->teacher->user->email ?? null;
+                                 $savedForHonorariumChairman = $savedRateAssignHonorariumChairman ?? collect();
                             @endphp
                             <td>
                                 <select name="chairman_id"
@@ -30,8 +31,17 @@
                                         <optgroup label="{{ $deptFullName }}">
                                             @foreach($deptTeachers as $teacher)
                                                 @php
-                                                    $isSelected = isset($teacher->user->email, $selectedChairmanEmail) &&
-                                                                  $teacher->user->email === $selectedChairmanEmail;
+                                                    // Check if the coordinator is either from the API data or from the saved data in the database
+                                                    $isSelected = false;
+
+                                                    // If the coordinator is saved in the database, use the saved data
+                                                    if ($savedForHonorariumChairman->isNotEmpty()) {
+                                                        $isSelected = $savedForHonorariumChairman->pluck('teacher_id')->contains($teacher->id);
+                                                    }
+                                                    // If not, use the API data
+                                                    elseif (isset($teacher->user->email, $selectedChairmanEmail) && $teacher->user->email === $selectedChairmanEmail) {
+                                                        $isSelected = true;
+                                                    }
                                                 @endphp
                                                 <option value="{{ $teacher->id }}"
                                                     {{ $isSelected ? 'selected' : '' }}>
@@ -43,7 +53,15 @@
                                 </select>
                             </td>
                             <td>
-                                <input type="number" name="chairman_amount" class="form-control" step="any" min="1" value="4500" required>
+                                @php
+                                    // If there are any saved data, get the total_amount, otherwise use the default value.
+                                    if ($savedForHonorariumChairman->isNotEmpty()) {
+                                        $amount = $savedForHonorariumChairman->first()->total_amount ?? 4500; // Assuming first() fetches the relevant item
+                                    } else {
+                                        $amount = 4500; // Default value if no data is found
+                                    }
+                                @endphp
+                                <input type="number" name="chairman_amount" class="form-control" step="any" min="1" value="{{$amount}}" required>
                             </td>
                         </tr>
 
@@ -111,10 +129,9 @@
                                 });
 
                                 const submitBtn = document.getElementById('submit-list-of-honorarium-chairman');
-                                submitBtn.textContent = 'Already Saved';
-                                submitBtn.disabled = true;
+                                submitBtn.textContent = 'Update Honorarium Chairman';  // ✅ New label
                                 submitBtn.classList.remove('btn-primary');
-                                submitBtn.classList.add('btn-success');
+                                submitBtn.classList.add('btn-warning');
 
                                 const cells = document.querySelectorAll('#table-list-of-honorarium-chairman td');
                                 cells.forEach(td => {

@@ -54,7 +54,15 @@
                                 </select>
                             </td>
                             <td>
-                                <input type="number" name="chairman_amount" class="form-control" step="any" min="1" value="4500" required>
+                                @php
+                                    // If there are any saved data, get the total_amount, otherwise use the default value.
+                                    if ($savedForHonorariumChairman->isNotEmpty()) {
+                                        $amount = $savedForHonorariumChairman->first()->total_amount ?? 4500; // Assuming first() fetches the relevant item
+                                    } else {
+                                        $amount = 4500; // Default value if no data is found
+                                    }
+                                @endphp
+                                <input type="number" name="chairman_amount" class="form-control" step="any" min="1" value="{{$amount}}" required>
                             </td>
                         </tr>
 

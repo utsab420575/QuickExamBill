@@ -37,9 +37,10 @@ class LocalData
     }
 
 
-    public static function getOrCreateReviewSession($sessionId)
+    public static function getOrCreateReviewSession($sessionId,$exam_type)
     {
-        $session_info = Session::where('ugr_id', $sessionId)->first();
+        $session_info = Session::where('ugr_id', $sessionId)
+            ->where('exam_type_id',$exam_type)->first();
 
         if (!$session_info) {
             $session_info_data = ApiData::getSessionInfo($sessionId);

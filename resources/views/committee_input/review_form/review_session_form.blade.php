@@ -37,93 +37,191 @@
         </header>
         <!-- start: page -->
 
-        @php
+        {{--@php
             use App\Models\RateAmount;
             $session = \App\Models\Session::where('ugr_id', $sid)->where('exam_type_id', 1)->first();
             $session_info=(object)$session_info;
-        @endphp
+        @endphp--}}
+        @php
+           use App\Models\RateAmount;
+           use App\Models\RateAssign;
+           use App\Models\RateHead;
+           use App\Models\Session;
+           use App\Models\ExamType;
 
-        @if(!RateAmount::isRateAmountSaved($sid, 2, '1'))
-            @include('committee_input.patritals.review.list_moderation_committe')
-        @else
-            <div class="alert alert-info">
-                List of  Examination Committee already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
-                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
-            </div>
-        @endif
 
-        @if(!RateAmount::isRateAmountSaved($sid, 2, '2'))
+            $savedModerationAssigns = collect();  // Default to empty collection
+            $savedRateAssignPaperSetter = collect();  // Default to empty collection
+            $savedRateAssignExaminer = collect();  // Default to empty collection
+             $savedRateAssignScrutinizers = collect();  // Default to empty collection
+
+            if ($session_info)
+            {
+                    // Moderation Committee
+                    $rateHead = RateHead::where('order_no', 1)->first();
+                    if ($rateHead) {
+                        $mc_data = RateAmount::where('exam_type_id', $exam_type)
+                            ->where('rate_head_id', $rateHead->id)
+                            ->where('session_id', $session_info->id)
+                            ->first();
+
+                        // Check if mc_data is found before accessing properties
+                        $mc_min_rate = $mc_data ? $mc_data->min_rate : null;
+                        $mc_max_rate = $mc_data ? $mc_data->max_rate : null;
+                    }
+
+                    // Paper Setter Examiner
+                    $rateHeadPaperSetter = RateHead::where('order_no', 2)->first();
+                    $rateHeadExaminer = RateHead::where('order_no', 3)->first();
+
+                    if ($rateHeadPaperSetter && $rateHeadExaminer) {
+                        $ps_data = RateAmount::where('exam_type_id', $exam_type)
+                            ->where('rate_head_id', $rateHeadPaperSetter->id)
+                            ->where('session_id', $session_info->id)
+                            ->first();
+
+                        $examiner_data = RateAmount::where('exam_type_id', $exam_type)
+                            ->where('rate_head_id', $rateHeadExaminer->id)
+                            ->where('session_id', $session_info->id)
+                            ->first();
+
+                        // Check if ps_data and examiner_data are found before accessing properties
+                        $paper_setter_rate = $ps_data ? $ps_data->default_rate : null;
+                        $examiner_rate_per_script = $examiner_data ? $examiner_data->default_rate : null;
+                        $examiner_min_rate = $examiner_data ? $examiner_data->min_rate : null;
+                    }
+
+                    // For Moderation Committee (Ensure session_info, rateHead, and exam_type are not null)
+                    $savedModerationAssigns = ($session_info && $rateHead && $exam_type)
+                        ? RateAssign::getModerationCommitteeData($session_info->id, $exam_type, $rateHead->id)
+                        : collect(); // fallback to empty collection if any value is null
+
+
+                    // For Paper Setter Examiner (Ensure all needed data exists)
+                    if ($rateHeadPaperSetter && $rateHeadExaminer) {
+                        $savedRateAssignPaperSetter = RateAssign::getTeacherWithCourse(
+                            $session_info->id,
+                            $exam_type,
+                            $rateHeadPaperSetter->id
+                        );
+
+                        $savedRateAssignExaminer = RateAssign::getTeacherWithCourse(
+                            $session_info->id,
+                            $exam_type,
+                            $rateHeadExaminer->id
+                        );
+                    }
+
+                     //For Scrutinizers
+                    $rateHeadScrutinizers = RateHead::where('order_no', 9)->first();
+                    if($rateHeadScrutinizers){
+                        $savedRateAssignScrutinizers = RateAssign::getTeacherWithCourse(
+                            $session_info->id,
+                            $exam_type,
+                            $rateHeadScrutinizers->id
+                        );
+                    }
+
+                     //For TheoryGradeSheet
+                    $rateTheoryGradeSheet = RateHead::where('order_no', '=','8.a')->first();
+                    if($rateTheoryGradeSheet){
+                        $savedRateAssignTheoryGradeSheet = RateAssign::getTeacherWithCourse(
+                            $session_info->id,
+                            $exam_type,
+                            $rateTheoryGradeSheet->id
+                        );
+                    }
+
+                    //For ScrutinizersTheoryGradeSheet
+                    $rateScrutinizersTheoryGradeSheet = RateHead::where('order_no', '=','10.a')->first();
+                    if($rateScrutinizersTheoryGradeSheet){
+                        $savedRateAssignScrutinizersTheoryGradeSheet = RateAssign::getTeacherWithCourse(
+                            $session_info->id,
+                            $exam_type,
+                            $rateScrutinizersTheoryGradeSheet->id
+                        );
+                    }
+
+                     //For StencilCuttingCommittee
+                    $rateStencilCuttingCommittee = RateHead::where('order_no', '=','12.a')->first();
+                    if($rateStencilCuttingCommittee){
+                        $savedRateAssignStencilCuttingCommittee = RateAssign::getTeachersFromCommittee(
+                            $session_info->id,
+                            $exam_type,
+                            $rateStencilCuttingCommittee->id
+                        );
+                    }
+
+                    //For PrintingQuestion
+                    $ratePrintingQuestion = RateHead::where('order_no', '=','12.b')->first();
+                    if($ratePrintingQuestion){
+                        $savedRateAssignPrintingQuestion = RateAssign::getTeachersFromCommittee(
+                            $session_info->id,
+                            $exam_type,
+                            $ratePrintingQuestion->id
+                        );
+                    }
+
+                     //For ComparisonCommittee
+                    $rateComparisonCommittee = RateHead::where('order_no', '=','11')->first();
+                    if($rateComparisonCommittee){
+                        $savedRateAssignComparisonCommittee = RateAssign::getTeachersFromCommittee(
+                            $session_info->id,
+                            $exam_type,
+                            $rateComparisonCommittee->id
+                        );
+                    }
+
+                     //For HonorariumChairman
+                    $rateHonorariumChairman = RateHead::where('order_no', '=','15')->first();
+                    if($rateHonorariumChairman){
+                          $savedRateAssignHonorariumChairman = RateAssign::getTeachersFromCommittee(
+                            $session_info->id,
+                            $exam_type,
+                            $rateHonorariumChairman->id
+                        );
+                    }
+            }
+       @endphp
+
+
+        {{--order -1--}}
+       @include('committee_input.patritals.review.list_moderation_committe')
+
+
+        {{--order-2,3--}}
+
             @include('committee_input.patritals.review.list_paper_setter_examineer')
-        @else
-            <div class="alert alert-info">
-                List of Examiners Committee already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
-                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
-            </div>
-        @endif
 
 
-        @if(!RateAmount::isRateAmountSaved($sid, 2, '9'))
-            @include('committee_input.patritals.review.list_scrutinizers')
-        @else
-            <div class="alert alert-info">
-                List of  Scrutinizers already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
-                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
-            </div>
-        @endif
 
-        @if(!RateAmount::isRateAmountSaved($sid, 2, '8.a'))
-            @include('committee_input.patritals.review.list_preparation_theory_grade_sheet')
-        @else
-            <div class="alert alert-info">
-                List of  Preparation Theory Grade already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
-                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
-            </div>
-        @endif
-
-        @if(!RateAmount::isRateAmountSaved($sid, 2, '10.a'))
-            @include('committee_input.patritals.review.list_scrutinizing_theory_grade_sheet')
-        @else
-            <div class="alert alert-info">
-                List of  Scrutinizing of Grade Sheet(Theoretical) already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
-                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
-            </div>
-        @endif
+        {{--order-9--}}
+        @include('committee_input.patritals.review.list_scrutinizers')
 
 
-        @if(!RateAmount::isRateAmountSaved($sid, 2, '12.a'))
-            @include('committee_input.patritals.review.list_stencil_cutting_question_paper')
-        @else
-            <div class="alert alert-info">
-                List of  Stencill Cutting  already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
-                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
-            </div>
-        @endif
+        {{--order-8.a--}}
+        @include('committee_input.patritals.review.list_preparation_theory_grade_sheet')
 
-        @if(!RateAmount::isRateAmountSaved($sid, 2, '12.b'))
-            @include('committee_input.patritals.review.list_printing_question_paper')
-        @else
-            <div class="alert alert-info">
-                List of  Printing of Question paper already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
-                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
-            </div>
-        @endif
 
-        @if(!RateAmount::isRateAmountSaved($sid, 2, '11'))
-            @include('committee_input.patritals.review.list_comparison_question_paper')
-        @else
-            <div class="alert alert-info">
-                List of  Comparison,Correction,sketching already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
-                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
-            </div>
-        @endif
-        @if(!RateAmount::isRateAmountSaved($sid, 2, '15'))
-            @include('committee_input.patritals.review.list_honorarium_chairman')
-        @else
-            <div class="alert alert-info">
-                List of  Honorarium for Chairman already saved for {{$session->session}} Year/{{$session->year}} Semester/{{$session->semester}}.
-                If any update is needed, go to <strong>Committee Record Manage → Select Session</strong>.
-            </div>
-        @endif
+        {{--order-10.a--}}
+        @include('committee_input.patritals.review.list_scrutinizing_theory_grade_sheet')
+
+
+
+        {{--order-12.a--}}
+        @include('committee_input.patritals.review.list_stencil_cutting_question_paper')
+
+
+        {{--order-12.b--}}
+
+        @include('committee_input.patritals.review.list_printing_question_paper')
+
+
+        {{--order-12.b--}}
+        @include('committee_input.patritals.review.list_comparison_question_paper')
+
+        {{--order-15--}}
+        @include('committee_input.patritals.review.list_honorarium_chairman')
 
 
 
@@ -147,8 +245,8 @@
 
 
 
-        <!-- end: page -->
-    </section>
+   <!-- end: page -->
+</section>
 
 @endsection
 <!-- Add Script Data(You can write it any javascript file and than just import this js) -->

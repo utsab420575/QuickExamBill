@@ -54,6 +54,10 @@
                             @foreach($all_course_with_teacher->courses as $courseData)
                                 @php
                                     $single_course = $courseData->courseObject;
+                                    $course_code = $single_course->courseno;
+                                    $savedForPaperSetter = $savedRateAssignPaperSetter[$course_code] ?? collect(); // Collection of RateAssigns
+                                    // dump($savedForPaperSetter);
+                                     $savedForExaminer = $savedRateAssignExaminer[$course_code] ?? collect(); // Collection of RateAssigns
                                 @endphp
 
                                     <!-- Hidden course-level metadata -->
@@ -85,7 +89,7 @@
                                                                     @foreach($groupedTeachers as $deptFulltName => $deptTeachers)
                                                                         <optgroup label="{{ $deptFulltName }}">
                                                                             @foreach($deptTeachers as $teacher)
-                                                                                <option value="{{ $teacher->id }}">
+                                                                                <option value="{{ $teacher->id }}" {{ $savedForPaperSetter->pluck('teacher_id')->contains($teacher->id) ? 'selected' : '' }}>
                                                                                     {{ $teacher->user->name }}  - {{ $teacher->department->shortname }}
                                                                                 </option>
                                                                             @endforeach
@@ -104,7 +108,7 @@
                                                                     @foreach($groupedTeachers as $deptFulltName => $deptTeachers)
                                                                         <optgroup label="{{ $deptFulltName }}">
                                                                             @foreach($deptTeachers as $teacher)
-                                                                                <option value="{{ $teacher->id }}">
+                                                                                <option value="{{ $teacher->id }}" {{ $savedForExaminer->pluck('teacher_id')->contains($teacher->id) ? 'selected' : '' }}>
                                                                                     {{ $teacher->user->name }}  - {{ $teacher->department->shortname }}
                                                                                 </option>
                                                                             @endforeach
@@ -120,6 +124,12 @@
                                             <!-- Right Side: No of Scripts -->
                                             <div class="col-md-2 d-flex align-items-center justify-content-center">
                                                 <div class="form-group w-100">
+                                                    @php
+                                                        // Check if there is saved data, and if yes, get total_students from the first teacher's entry
+                                                        $noOfItems = $savedForPaperSetter->isNotEmpty()
+                                                                    ? $savedForPaperSetter->first()->total_students
+                                                                    : $courseData->registered_students_count;
+                                                    @endphp
                                                     <label for="no_of_script_{{ $single_course->id }}">No of Scripts</label>
                                                     <input type="number"
                                                            id="no_of_script_{{ $single_course->id }}"
@@ -127,7 +137,8 @@
                                                            class="form-control"
                                                            min="0"
                                                            step="any"
-                                                           value="{{ old('no_of_script.'.$single_course->id, $courseData->registered_students_count) }}"
+                                                          {{-- value="{{ old('no_of_script.'.$single_course->id, $courseData->registered_students_count) }}"--}}
+                                                           value="{{ old('no_of_script.'.$single_course->id,$noOfItems ) }}"
                                                            required>
                                                 </div>
                                             </div>
@@ -197,10 +208,9 @@
                                 });
 
                                 const submitBtn = document.getElementById('submit-list-of-examiner-paper-setter');
-                                submitBtn.textContent = 'Already Saved';             // ✅ Change text
-                                submitBtn.disabled = true;                           // ✅ Disable button
-                                submitBtn.classList.remove('btn-primary');           // ✅ Remove old style
-                                submitBtn.classList.add('btn-success');              // ✅ Add success style
+                                submitBtn.textContent = 'Update Examiner PaperSetter';  // ✅ New label
+                                submitBtn.classList.remove('btn-primary');
+                                submitBtn.classList.add('btn-warning');
 
                                 const cards = document.querySelectorAll('.card-list-of-examiner-paper-setter');
                                 cards.forEach(card => {
