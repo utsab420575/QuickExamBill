@@ -30,7 +30,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="scrutinize_script_rate">Per Script Rate</label>
-                                <input type="number"  name="scrutinize_script_rate"  value="24" step="any" class="form-control" placeholder="Enter per script rate" required>
+                                <input type="number"  name="scrutinize_script_rate"  value="{{$scrutinizer_per_script_rate??24}}" step="any" class="form-control" placeholder="Enter per script rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
@@ -38,7 +38,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="scrutinize_min_rate">Minimum Scrutinizer Rate</label>
-                                <input type="number"  name="scrutinize_min_rate" value="1000" step="any" class="form-control" placeholder="Enter minimum scrutinizer rate" required>
+                                <input type="number"  name="scrutinize_min_rate" value="{{$scrutinizer_min_rate??1000}}" step="any" class="form-control" placeholder="Enter minimum scrutinizer rate" required>
                             </div>
                         </div>
                     </div>

@@ -34,7 +34,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="stencil_cutting_question_paper_rate">Per Stencil Rate</label>
-                                <input type="number"  name="stencil_cutting_question_paper_rate" value="115" step="any" class="form-control" placeholder="Enter per student per thesis/project rate" required>
+                                <input type="number"  name="stencil_cutting_question_paper_rate" value="{{$stencill_cutting_per_stencil_rate??115}}" step="any" class="form-control" placeholder="Enter per student per thesis/project rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
@@ -69,7 +69,7 @@
 @push('scripts')
     <script>
         let stencilCuttingRowCount = 0;
-        const stencilCuttingStaffTeachers = @json($teachers);
+        const stencilCuttingStaffTeachers = @json($employees);
         const savedStencilCuttingCommittee = @json($savedRateAssignStencilCuttingCommittee);
 
         function createStencillCommitteeRow(teacherId = '', amount = '') {
@@ -124,7 +124,7 @@
         // Load pre-filled rows from DB
         if (savedStencilCuttingCommittee && savedStencilCuttingCommittee.length > 0) {
             savedStencilCuttingCommittee.forEach(assign => {
-                createStencillCommitteeRow(assign.teacher_id, assign.no_of_items);
+                createStencillCommitteeRow(assign.employee_id, assign.no_of_items);
             });
         }
 

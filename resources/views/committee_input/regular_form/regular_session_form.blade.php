@@ -52,6 +52,56 @@
             $paper_setter_rate = null;
             $examiner_rate_per_script = null;
             $examiner_min_rate = null;
+
+            $ct_per_class_test_rate=null;
+
+            $sessional_per_contact_hour_rate=null;
+            $sessional_min_exam_rate=null;
+            $sessional_total_week_semester_rate=null;
+
+            $scrutinizer_per_script_rate=null;
+            $scrutinizer_min_rate=null;
+
+            $theory_grade_sheet_per_subject_rate=null;
+
+            $sessional_grade_sheet_per_subject_rate=null;
+
+            $scrunizing_theory_grade_sheet_per_subject_rate=null;
+
+
+            $scrunizing_sessional_grade_sheet_per_subject_rate=null;
+
+
+            $prepared_computerized_per_student_per_subject_rate=null;
+
+            $verified_computerized_per_student_per_subject_rate=null;
+
+            $stencill_cutting_per_stencil_rate=null;
+
+            $print_question_paper_rate=null;
+
+            $comparison_rate=null;
+
+            $advisor_per_student_rate=null;
+
+            $final_graduation_per_student_rate=null;
+
+            $conducted_central_oral_per_thesis_rate=null;
+
+            $involved_survey_per_student_rate=null;
+
+            $conducted_preliminary_viva_per_student_rate=null;
+
+            $examined_thesis_per_student_rate=null;
+
+            $conducted_oral_per_student_rate=null;
+
+            $supervised_theis_per_student_rate=null;
+
+            $honorium_coordinator=null;
+
+            $honorium_chairman=null;
+
             $savedModerationAssigns = collect();  // Default to empty collection
             $savedRateAssignPaperSetter = collect();  // Default to empty collection
             $savedRateAssignExaminer = collect();  // Default to empty collection
@@ -154,11 +204,20 @@
                     //For Class Test
                     $rateHeadCT = RateHead::where('order_no', 4)->first();
                     if($rateHeadCT){
-                        $savedRateAssignClassTest = RateAssign::getTeacherWithCourse(
+
+                         $savedRateAssignClassTest = RateAssign::getTeacherWithCourse(
                             $session_info->id,
                             $exam_type,
                             $rateHeadCT->id
                         );
+
+                         $classTestData = RateAmount::where('exam_type_id', $exam_type)
+                            ->where('rate_head_id', $rateHeadCT->id)
+                            ->where('session_id', $session_info->id)
+                            ->first();
+                         $ct_per_class_test_rate=$classTestData?->default_rate;
+
+
                     }
 
 
@@ -170,9 +229,17 @@
                             $exam_type,
                             $rateHeadSCT->id
                         );
+
+                         $SessionalCourseTeacherData = RateAmount::where('exam_type_id', $exam_type)
+                            ->where('rate_head_id', $rateHeadSCT->id)
+                            ->where('session_id', $session_info->id)
+                            ->first();
+                         $sessional_per_contact_hour_rate=$SessionalCourseTeacherData?->default_rate;
+                         $sessional_min_exam_rate=$SessionalCourseTeacherData?->min_rate;
+                         $sessional_total_week_semester_rate=$SessionalCourseTeacherData?->total_week;
                     }
 
-                    //For Sessional Course Teacher
+                   /* //For Sessional Course Teacher
                     $rateHeadSCT = RateHead::where('order_no', 5)->first();
                     if($rateHeadSCT){
                         $savedRateAssignSessionalCourseTeacher = RateAssign::getTeacherWithCourse(
@@ -180,7 +247,7 @@
                             $exam_type,
                             $rateHeadSCT->id
                         );
-                    }
+                    }*/
 
                      //For Scrutinizers
                     $rateHeadScrutinizers = RateHead::where('order_no', 9)->first();
@@ -190,9 +257,18 @@
                             $exam_type,
                             $rateHeadScrutinizers->id
                         );
+
+                      $ScrutinizersData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateHeadScrutinizers->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+
+                      $scrutinizer_per_script_rate=$ScrutinizersData?->default_rate;
+                      $scrutinizer_min_rate=$ScrutinizersData?->min_rate;
+
                     }
 
-                    //For Scrutinizers
+                    //For Preparation Theory Grade Sheet
                     $rateTheoryGradeSheet = RateHead::where('order_no', '=','8.a')->first();
                     if($rateTheoryGradeSheet){
                         $savedRateAssignTheoryGradeSheet = RateAssign::getTeacherWithCourse(
@@ -200,6 +276,12 @@
                             $exam_type,
                             $rateTheoryGradeSheet->id
                         );
+
+                        $preparatonTheroyGradeSheetData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateTheoryGradeSheet->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+                        $theory_grade_sheet_per_subject_rate=$preparatonTheroyGradeSheetData?->default_rate;
                     }
 
                     //For SessionalGradeShee
@@ -210,6 +292,11 @@
                             $exam_type,
                             $rateSessionalGradeSheet->id
                         );
+                        $preparatonSessionalGradeSheetData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateSessionalGradeSheet->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+                        $sessional_grade_sheet_per_subject_rate=$preparatonSessionalGradeSheetData?->default_rate;
                     }
 
                      //For ScrutinizersTheoryGradeSheet
@@ -220,9 +307,15 @@
                             $exam_type,
                             $rateScrutinizersTheoryGradeSheet->id
                         );
+
+                        $preparatonSessionalGradeSheetData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateScrutinizersTheoryGradeSheet->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+                        $scrunizing_theory_grade_sheet_per_subject_rate=$preparatonSessionalGradeSheetData?->default_rate;
                     }
 
-                    //For ScrutinizersTheoryGradeSheet
+                    //For ScrutinizersSessionalGradeSheet
                     $rateScrutinizersSessionalGradeSheet = RateHead::where('order_no', '=','10.b')->first();
                     if($rateScrutinizersSessionalGradeSheet){
                         $savedRateAssignScrutinizersSessionalGradeSheet = RateAssign::getTeacherWithCourse(
@@ -230,6 +323,13 @@
                             $exam_type,
                             $rateScrutinizersSessionalGradeSheet->id
                         );
+
+                        $ScrutinizersSessionalGradeSheetData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateScrutinizersSessionalGradeSheet->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+                        $scrunizing_sessional_grade_sheet_per_subject_rate=$ScrutinizersSessionalGradeSheetData?->default_rate;
+
                     }
 
                     //For PreparedComputerizedResult
@@ -240,6 +340,12 @@
                             $exam_type,
                             $ratePreparedComputerizedResult->id
                         );
+
+                        $PreparedComputerizedResultData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $ratePreparedComputerizedResult->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+                        $prepared_computerized_per_student_per_subject_rate=$PreparedComputerizedResultData?->default_rate;
                     }
 
                     //For VerifiedComputerizedGradeSheet
@@ -250,6 +356,12 @@
                             $exam_type,
                             $rateVerifiedComputerizedGradeSheet->id
                         );
+
+                         $VerifiedComputerizedGradeSheetData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateVerifiedComputerizedGradeSheet->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+                        $verified_computerized_per_student_per_subject_rate=$VerifiedComputerizedGradeSheetData?->default_rate;
                     }
 
                  //For StencilCuttingCommittee
@@ -260,6 +372,13 @@
                         $exam_type,
                         $rateStencilCuttingCommittee->id
                     );
+
+                     $StencilCuttingData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateStencilCuttingCommittee->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+
+                     $stencill_cutting_per_stencil_rate=$StencilCuttingData?->default_rate;
                 }
 
 
@@ -271,19 +390,14 @@
                         $exam_type,
                         $ratePrintingQuestion->id
                     );
+
+                    $PrintingQuestionData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $ratePrintingQuestion->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+                    $print_question_paper_rate=$PrintingQuestionData?->default_rate;
+
                 }
-
-                //For AdvisorStudent
-                $rateAdvisorStudent = RateHead::where('order_no', '=','13')->first();
-                if($rateAdvisorStudent){
-                    $savedRateAssignAdvisorStudent = RateAssign::getTeachersFromCommittee(
-                        $session_info->id,
-                        $exam_type,
-                        $rateAdvisorStudent->id
-                    );
-                }
-
-
 
 
                 //For ComparisonCommittee
@@ -294,7 +408,36 @@
                         $exam_type,
                         $rateComparisonCommittee->id
                     );
+
+                    $ComparisonData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateComparisonCommittee->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+                    $comparison_rate=$ComparisonData?->default_rate;
+
                 }
+
+                //For AdvisorStudent
+                $rateAdvisorStudent = RateHead::where('order_no', '=','13')->first();
+                if($rateAdvisorStudent){
+                    $savedRateAssignAdvisorStudent = RateAssign::getTeachersFromCommittee(
+                        $session_info->id,
+                        $exam_type,
+                        $rateAdvisorStudent->id
+                    );
+
+                    $AdvisorStudentData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateAdvisorStudent->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+                    $advisor_per_student_rate=$AdvisorStudentData?->default_rate;
+
+                }
+
+
+
+
+
 
 
                 //For VerifiedFinalGraduationResult
@@ -305,9 +448,15 @@
                         $exam_type,
                         $rateVerifiedFinalGraduationResult->id
                     );
+
+                     $VerifiedFinalGraduationResultData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateVerifiedFinalGraduationResult->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+                    $final_graduation_per_student_rate=$VerifiedFinalGraduationResultData?->default_rate;
                 }
 
-                 //For VerifiedFinalGraduationResult
+                 //For ConductedCentralOralExam
                 $rateConductedCentralOralExam = RateHead::where('order_no', '=','7.e')->first();
                 if($rateConductedCentralOralExam){
                       $savedRateAssignConductedCentralOralExam = RateAssign::getTeachersFromCommittee(
@@ -315,6 +464,14 @@
                         $exam_type,
                         $rateConductedCentralOralExam->id
                     );
+
+                       $ConductedCentralOralData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateConductedCentralOralExam->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+
+                       $conducted_central_oral_per_thesis_rate=$ConductedCentralOralData?->default_rate;
+
                 }
 
                  //For InvolvedSurvey
@@ -325,6 +482,15 @@
                         $exam_type,
                         $rateInvolvedSurvey->id
                     );
+
+                       $InvolvedSurveyData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateInvolvedSurvey->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+
+                       $involved_survey_per_student_rate=$InvolvedSurveyData?->default_rate;
+
+
                 }
 
                 //For ConductedPreliminaryViva
@@ -335,6 +501,13 @@
                         $exam_type,
                         $rateConductedPreliminaryViva->id
                     );
+
+                       $ConductedPreliminaryVivaData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateConductedPreliminaryViva->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+
+                       $conducted_preliminary_viva_per_student_rate=$ConductedPreliminaryVivaData?->default_rate;
                 }
 
 
@@ -346,6 +519,14 @@
                         $exam_type,
                         $rateExaminedThesisProject->id
                     );
+
+                       $ExaminedThesisProjectData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateExaminedThesisProject->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+
+                       $examined_thesis_per_student_rate=$ExaminedThesisProjectData?->default_rate;
+
                 }
 
                 //For ExaminedThesisProject
@@ -356,6 +537,13 @@
                         $exam_type,
                         $rateConductedOralExamination->id
                     );
+
+                      $ConductedOralExaminationData  = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateConductedOralExamination->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+
+                       $conducted_oral_per_student_rate=$ConductedOralExaminationData?->default_rate;
                 }
 
                 //For ExaminedThesisProject
@@ -366,9 +554,16 @@
                         $exam_type,
                         $rateSupervisedThesisProject->id
                     );
+
+                      $SupervisedThesisProjectData  = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateSupervisedThesisProject->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+
+                       $supervised_theis_per_student_rate=$SupervisedThesisProjectData?->default_rate;
                 }
 
-                //For ExaminedThesisProject
+                //For HonorariumCoordinator
                 $rateHonorariumCoordinator = RateHead::where('order_no', '=','14')->first();
                 if($rateHonorariumCoordinator){
                       $savedRateAssignHonorariumCoordinator = RateAssign::getTeachersFromCommittee(
@@ -376,9 +571,16 @@
                         $exam_type,
                         $rateHonorariumCoordinator->id
                     );
+
+                       $HonorariumCoordinatorData  = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateHonorariumCoordinator->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+
+                       $honorium_coordinator=$HonorariumCoordinatorData?->default_rate;
                 }
 
-                //For ExaminedThesisProject
+                //For HonorariumChairman
                 $rateHonorariumChairman = RateHead::where('order_no', '=','15')->first();
                 if($rateHonorariumChairman){
                       $savedRateAssignHonorariumChairman = RateAssign::getTeachersFromCommittee(
@@ -386,6 +588,13 @@
                         $exam_type,
                         $rateHonorariumChairman->id
                     );
+
+                      $HonorariumChairmanData  = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateHonorariumChairman->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+
+                       $honorium_chairman=$HonorariumChairmanData?->default_rate;
                 }
 
 

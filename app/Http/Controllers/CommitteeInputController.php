@@ -101,6 +101,8 @@ class CommitteeInputController extends Controller
             ->get();
 
         //return $teachers;
+
+        //return $teachers;
         // Group by department short name
         $groupedTeachers = $teachers->groupBy(function ($teacher) {
             return $teacher->department->fullname ?? 'Unknown';
@@ -808,6 +810,7 @@ class CommitteeInputController extends Controller
                             'teacher_id' => $teacherId,
                             'rate_head_id' => $rateHead->id,
                             'session_id' => $session_info->id,
+                            'total_week' => $total_week,
                             'no_of_items' => $contactHour,
                             'total_amount' => $totalAmount,
                             'exam_type_id' => $exam_type,

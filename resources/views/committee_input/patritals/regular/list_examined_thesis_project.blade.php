@@ -34,7 +34,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="examined_thesis_project_rate">Per Student Per Result Rate</label>
-                                <input type="number"  name="examined_thesis_project_rate" step="any" value="2700" class="form-control" placeholder="Enter per student per result rate" required>
+                                <input type="number"  name="examined_thesis_project_rate" step="any" value="{{$examined_thesis_per_student_rate??2700}}" class="form-control" placeholder="Enter per student per result rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">

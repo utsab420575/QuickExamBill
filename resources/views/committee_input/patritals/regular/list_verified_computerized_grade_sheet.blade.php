@@ -33,7 +33,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="verified_computerized_grade_sheet_rate">Per Student Rate</label>
-                                <input type="number"  name="verified_computerized_grade_sheet_rate" value="24" step="any" class="form-control" placeholder="Enter per student rate" required>
+                                <input type="number"  name="verified_computerized_grade_sheet_rate" value="{{$verified_computerized_per_student_per_subject_rate??24}}" step="any" class="form-control" placeholder="Enter per student rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
@@ -57,7 +57,7 @@
                                     <optgroup label="{{ $deptFullName }}">
                                         @foreach($deptTeachers as $teacher)
                                             <option value="{{ $teacher->id }}" {{ $savedForVerifiedComputerizedGradeSheet->pluck('teacher_id')->contains($teacher->id) ? 'selected' : '' }}>
-                                                {{ $teacher->user->name }}  - {{ $teacher->department->shortname }}
+                                                {{ $teacher->user->name?? 'N/A' }}  - {{ $teacher->department->shortname?? 'N/A' }}
                                             </option>
                                         @endforeach
                                     </optgroup>

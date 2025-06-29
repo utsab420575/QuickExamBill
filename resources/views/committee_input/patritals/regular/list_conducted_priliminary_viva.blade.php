@@ -34,7 +34,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="viva_thesis_project_rate">Per Student Per Result Rate</label>
-                                <input type="number"  name="viva_thesis_project_rate" step="any" value="100" class="form-control" placeholder="Enter per student per thesis/project rate" required>
+                                <input type="number"  name="viva_thesis_project_rate" step="any" value="{{$conducted_preliminary_viva_per_student_rate??100}}" class="form-control" placeholder="Enter per student per thesis/project rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">

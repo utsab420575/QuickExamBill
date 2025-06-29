@@ -34,7 +34,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="comparison_question_paper_rate">Per Question Rate</label>
-                                <input type="number"  name="comparison_question_paper_rate" id="comparison-question-paper-rate" value="1350" step="any" class="form-control" placeholder="Enter per question rate" required>
+                                <input type="number"  name="comparison_question_paper_rate" id="comparison-question-paper-rate" value="{{$comparison_rate??1350}}" step="any" class="form-control" placeholder="Enter per question rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">

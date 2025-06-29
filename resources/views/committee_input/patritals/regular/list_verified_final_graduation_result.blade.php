@@ -34,7 +34,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="final_result_per_student_rate">Per Student Per Result Rate</label>
-                                <input type="number"  name="final_result_per_student_rate" value="700" step="any" class="form-control" placeholder="Enter per student per result rate" required>
+                                <input type="number"  name="final_result_per_student_rate" value="{{$final_graduation_per_student_rate??700}}" step="any" class="form-control" placeholder="Enter per student per result rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">

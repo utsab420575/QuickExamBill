@@ -50,10 +50,35 @@
            use App\Models\ExamType;
 
 
+           // Initialize variables with default values
+            $mc_min_rate = null;
+            $mc_max_rate = null;
+            $paper_setter_rate = null;
+            $examiner_rate_per_script = null;
+            $examiner_min_rate = null;
+
+            $scrutinizer_per_script_rate=null;
+            $scrutinizer_min_rate=null;
+
+
+            $theory_grade_sheet_per_subject_rate=null;
+
+            $scrunizing_theory_grade_sheet_per_subject_rate=null;
+
+
+            $stencill_cutting_per_stencil_rate=null;
+
+            $print_question_paper_rate=null;
+
+            $comparison_rate=null;
+
+            $honorium_chairman=null;
+
             $savedModerationAssigns = collect();  // Default to empty collection
             $savedRateAssignPaperSetter = collect();  // Default to empty collection
             $savedRateAssignExaminer = collect();  // Default to empty collection
              $savedRateAssignScrutinizers = collect();  // Default to empty collection
+
 
             if ($session_info)
             {
@@ -120,6 +145,14 @@
                             $exam_type,
                             $rateHeadScrutinizers->id
                         );
+
+                         $ScrutinizersData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateHeadScrutinizers->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+
+                      $scrutinizer_per_script_rate=$ScrutinizersData?->default_rate;
+                      $scrutinizer_min_rate=$ScrutinizersData?->min_rate;
                     }
 
                      //For TheoryGradeSheet
@@ -130,6 +163,12 @@
                             $exam_type,
                             $rateTheoryGradeSheet->id
                         );
+
+                        $preparatonTheroyGradeSheetData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateTheoryGradeSheet->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+                        $theory_grade_sheet_per_subject_rate=$preparatonTheroyGradeSheetData?->default_rate;
                     }
 
                     //For ScrutinizersTheoryGradeSheet
@@ -140,6 +179,12 @@
                             $exam_type,
                             $rateScrutinizersTheoryGradeSheet->id
                         );
+
+                        $preparatonSessionalGradeSheetData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateScrutinizersTheoryGradeSheet->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+                        $scrunizing_theory_grade_sheet_per_subject_rate=$preparatonSessionalGradeSheetData?->default_rate;
                     }
 
                      //For StencilCuttingCommittee
@@ -150,6 +195,13 @@
                             $exam_type,
                             $rateStencilCuttingCommittee->id
                         );
+
+                         $StencilCuttingData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateStencilCuttingCommittee->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+
+                     $stencill_cutting_per_stencil_rate=$StencilCuttingData?->default_rate;
                     }
 
                     //For PrintingQuestion
@@ -160,6 +212,12 @@
                             $exam_type,
                             $ratePrintingQuestion->id
                         );
+
+                        $PrintingQuestionData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $ratePrintingQuestion->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+                        $print_question_paper_rate=$PrintingQuestionData?->default_rate;
                     }
 
                      //For ComparisonCommittee
@@ -170,6 +228,12 @@
                             $exam_type,
                             $rateComparisonCommittee->id
                         );
+
+                        $ComparisonData = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateComparisonCommittee->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+                    $comparison_rate=$ComparisonData?->default_rate;
                     }
 
                      //For HonorariumChairman
@@ -180,6 +244,12 @@
                             $exam_type,
                             $rateHonorariumChairman->id
                         );
+                          $HonorariumChairmanData  = RateAmount::where('exam_type_id', $exam_type)
+                        ->where('rate_head_id', $rateHonorariumChairman->id)
+                        ->where('session_id', $session_info->id)
+                        ->first();
+
+                       $honorium_chairman=$HonorariumChairmanData?->default_rate;
                     }
             }
        @endphp

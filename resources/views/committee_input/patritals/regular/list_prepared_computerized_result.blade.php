@@ -33,7 +33,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="prepare_computerized_result_rate">Per Student Per Subject Rate</label>
-                                <input type="number"  name="prepare_computerized_result_rate" value="" step="any" class="form-control" placeholder="Enter per student per subject rate" required>
+                                <input type="number"  name="prepare_computerized_result_rate" value="{{$prepared_computerized_per_student_per_subject_rate??10}}" step="any" class="form-control" placeholder="Enter per student per subject rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">

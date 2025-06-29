@@ -15,14 +15,14 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="sessional_per_hour_rate">Per Contact Hour Rate</label>
-                                <input type="number" name="sessional_per_hour_rate" step="any" value="115"
+                                <input type="number" name="sessional_per_hour_rate" step="any" value="{{$sessional_per_contact_hour_rate??115}}"
                                        class="form-control" placeholder="Enter per contact hour rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="class_test_rate">Minimum Examineer Rate</label>
-                                <input type="number" name="sessional_examiner_min_rate" value="1500" step="any"
+                                <input type="number" name="sessional_examiner_min_rate" value="{{$sessional_min_exam_rate??1500}}" step="any"
                                        class="form-control" placeholder="Enter minimum examiner rate" required>
                             </div>
                         </div>
@@ -36,7 +36,7 @@
                                        step="any"
                                        class="form-control"
                                        placeholder="Enter Total Weeks"
-                                       value="14"
+                                       value="{{$sessional_total_week_semester_rate??14}}"
                                        required>
                             </div>
                         </div>

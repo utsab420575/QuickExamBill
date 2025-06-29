@@ -32,7 +32,9 @@
                             <div class="col-md-4 mb-4">
                                 <div class="form-group">
                                     <label for="class_test_rate">Per Class Test Rate</label>
-                                    <input type="number"  name="class_test_rate" value="45" step="any" class="form-control" placeholder="Enter class test rate" required>
+                                    <input type="number"  name="class_test_rate" value="{{$ct_per_class_test_rate??45}}" step="any" class="form-control" placeholder="Enter class test rate" required>
+
+
                                 </div>
                             </div>
                     </div>

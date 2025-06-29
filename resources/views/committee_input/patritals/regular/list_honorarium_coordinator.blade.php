@@ -55,7 +55,7 @@
                                 </select>
                             </td>
                             <td>
-                                <input type="number" name="coordinator_amount" class="form-control" step="any" min="1" value="3600" required>
+                                <input type="number" name="coordinator_amount" class="form-control" step="any" min="1" value="{{$honorium_coordinator??3600}}" required>
                             </td>
                         </tr>
 

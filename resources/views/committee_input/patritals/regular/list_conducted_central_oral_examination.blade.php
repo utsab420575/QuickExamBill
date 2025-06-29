@@ -34,7 +34,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="oral_central_exam_thesis_project">Per Student Per Thesis/Project Rate</label>
-                                <input type="number"  name="oral_central_exam_thesis_project" value="150" step="any" class="form-control" placeholder="Enter per student per thesis/proejct rate" required>
+                                <input type="number"  name="oral_central_exam_thesis_project" value="{{$conducted_central_oral_per_thesis_rate??150}}" step="any" class="form-control" placeholder="Enter per student per thesis/proejct rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">

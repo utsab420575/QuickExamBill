@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee;
 use App\Models\ExamType;
 use App\Models\RateAmount;
 use App\Models\RateAssign;
@@ -101,6 +102,12 @@ class CommitteeInputReviewController extends Controller
         });
         //return $groupedTeachers;
 
+        $employees = Employee::with('user', 'designation', 'department')
+            ->where('department_id', 2)
+            ->orderBy('id') // or any ordering you prefer
+            ->get();
+
+
         //all theory course with teacher
         //all theory course with teacher
         $all_course_with_teacher = ApiData::getSessionWiseTheoryCoursesReview($sid);
@@ -126,6 +133,7 @@ class CommitteeInputReviewController extends Controller
             ->with('session_info', $session_info)
             ->with('exam_type',$exam_type->id)
             ->with('teachers', $teachers)
+            ->with('employees', $employees)
             ->with('teacher_head', $teacher_head)
             ->with('groupedTeachers', $groupedTeachers)
             ->with('all_course_with_teacher', $all_course_with_teacher)
@@ -1102,7 +1110,9 @@ class CommitteeInputReviewController extends Controller
                 }
 
                 Log::info('📘 Stencill Cutting Store', [
-                    'teacher_id' => $teacherId,
+                    /*'teacher_id' => $teacherId,*/
+                    /* $teacherId worked as  employeeId here*/
+                    'employee_id' => $teacherId,
                     'rate_head_id' => $rateHead->id,
                     'session_id' => $session_info->id,
                     'exam_type_id'=>$exam_type,
@@ -1111,7 +1121,9 @@ class CommitteeInputReviewController extends Controller
                 ]);
 
                 RateAssign::create([
-                    'teacher_id' => $teacherId,
+                    /*'teacher_id' => $teacherId,*/
+                    /* $teacherId worked as  employeeId here*/
+                    'employee_id' => $teacherId,
                     'rate_head_id' => $rateHead->id,
                     'session_id' => $session_info->id,
                     'exam_type_id'=>$exam_type,
@@ -1225,8 +1237,10 @@ class CommitteeInputReviewController extends Controller
                     ], 422);
                 }
 
-                Log::info('📘 Question Comparison Store', [
-                    'teacher_id' => $teacherId,
+                Log::info('📘 Question Printing Store', [
+                    /*'teacher_id' => $teacherId,*/
+                    /* $teacherId worked as  employeeId here*/
+                    'employee_id' => $teacherId,
                     'rate_head_id' => $rateHead->id,
                     'session_id' => $session_info->id,
                     'exam_type_id'=>$exam_type,
@@ -1235,7 +1249,9 @@ class CommitteeInputReviewController extends Controller
                 ]);
 
                 RateAssign::create([
-                    'teacher_id' => $teacherId,
+                    /*'teacher_id' => $teacherId,*/
+                    /* $teacherId worked as  employeeId here*/
+                    'employee_id' => $teacherId,
                     'rate_head_id' => $rateHead->id,
                     'session_id' => $session_info->id,
                     'exam_type_id'=>$exam_type,

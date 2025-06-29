@@ -34,7 +34,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="printing_question_paper_rate">Per Stencil Rate</label>
-                                <input type="number"  name="printing_question_paper_rate" id="printing-question-paper-rate" value="35" step="any" class="form-control" placeholder="Enter per stencil rate" required>
+                                <input type="number"  name="printing_question_paper_rate" id="printing-question-paper-rate" value="{{$print_question_paper_rate??35}}" step="any" class="form-control" placeholder="Enter per stencil rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
@@ -69,7 +69,7 @@
 @push('scripts')
     <script>
         let printQuestionRowCount = 0;
-        const printQuestionStaffTeachers = @json($teachers);
+        const printQuestionStaffTeachers = @json($employees);
         const savedPrintQuestionStaffAssign = @json($savedRateAssignPrintingQuestion);
 
         function createPrintQuestionStaffRow(teacherId = '', amount = '') {
@@ -124,7 +124,7 @@
         // Load pre-filled rows from DB
         if (savedPrintQuestionStaffAssign && savedPrintQuestionStaffAssign.length > 0) {
             savedPrintQuestionStaffAssign.forEach(assign => {
-                createPrintQuestionStaffRow(assign.teacher_id, assign.no_of_items);
+                createPrintQuestionStaffRow(assign.employee_id, assign.no_of_items);
             });
         }
 

@@ -34,7 +34,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="servey_rate">Per Student Servey Rate</label>
-                                <input type="number"  name="servey_rate" value="900" step="any" class="form-control" placeholder="Enter per student per servey rate" required>
+                                <input type="number"  name="servey_rate" value="{{$involved_survey_per_student_rate??900}}" step="any" class="form-control" placeholder="Enter per student per servey rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">

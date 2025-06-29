@@ -13,7 +13,7 @@ class ApiData{
     {
         $response = Http::withHeaders([
             'X-API-KEY' => 'EXAMBILL_98745012'
-        ])->get('https://ugr.duetbd.org/api/architecture/regular-sessions');
+        ])->get('https://ugr.duetbd.org/api/cse/regular-sessions');
 
         if ($response->failed()) {
             Log::error('Session import failed from API.');
@@ -107,7 +107,7 @@ class ApiData{
     {
         $authKey = 'OE3KFIE649MRECGQ';
         //$authKey = $request->authKey;
-        $url = 'https://ugr.duetbd.org/get-architecture-previous-review-session-data';
+        $url = 'https://ugr.duetbd.org/get-cse-previous-review-session-data';
 
         $curl = curl_init();
 

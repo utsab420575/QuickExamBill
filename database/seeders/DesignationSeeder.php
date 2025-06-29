@@ -14,7 +14,7 @@ class DesignationSeeder extends Seeder
      */
     public function run(): void
     {
-        $designations = ['Admin', 'Officer', 'Staff','Admin'];
+        $designations = ['Admin', 'Officer', 'Staff'];
         //$designations = ['Admin'];
 
         foreach ($designations as $name) {

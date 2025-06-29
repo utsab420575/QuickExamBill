@@ -30,7 +30,7 @@
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
                                 <label for="sessional_grade_sheet_rate">Per Student Per Subject Rate</label>
-                                <input type="number"  name="sessional_grade_sheet_rate" value="35" step="any" class="form-control" placeholder="Enter per student per subject rate" required>
+                                <input type="number"  name="sessional_grade_sheet_rate" value="{{$sessional_grade_sheet_per_subject_rate??35}}" step="any" class="form-control" placeholder="Enter per student per subject rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
