@@ -14,8 +14,8 @@ class DesignationSeeder extends Seeder
      */
     public function run(): void
     {
-        //$designations = ['Admin', 'Officer', 'Staff'];
-        $designations = ['Admin'];
+        $designations = ['Admin', 'Officer', 'Staff','Admin'];
+        //$designations = ['Admin'];
 
         foreach ($designations as $name) {
             DB::table('designations')->insert([

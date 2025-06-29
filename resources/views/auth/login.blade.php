@@ -100,7 +100,9 @@
                     {{--<div class="mb-1 text-center">
                         <a class="btn btn-facebook mb-3 ms-1 me-1" href="#">Connect with <i class="fab fa-facebook-f"></i></a>
                     </div>--}}
-                    <p class="text-center">Don't have an account yet? <a href="{{route('register')}}">Sign Up!</a></p>
+
+                    {{--signup option remove--}}
+                    {{--<p class="text-center">Don't have an account yet? <a href="{{route('register')}}">Sign Up!</a></p>--}}
                 </form>
             </div>
         </div>

@@ -69,7 +69,8 @@
 @push('scripts')
     <script>
         let printQuestionRowCount = 0;
-        const printQuestionStaffTeachers = @json($teachers);
+       /* const printQuestionStaffTeachers = @json($teachers);*/
+        const printQuestionStaffTeachers = @json($employees);
         const savedPrintQuestionStaffAssign = @json($savedRateAssignPrintingQuestion);
 
         function createPrintQuestionStaffRow(teacherId = '', amount = '') {
@@ -124,7 +125,8 @@
         // Load pre-filled rows from DB
         if (savedPrintQuestionStaffAssign && savedPrintQuestionStaffAssign.length > 0) {
             savedPrintQuestionStaffAssign.forEach(assign => {
-                createPrintQuestionStaffRow(assign.teacher_id, assign.no_of_items);
+                /*createPrintQuestionStaffRow(assign.teacher_id, assign.no_of_items);*/
+                createPrintQuestionStaffRow(assign.employee_id, assign.no_of_items);
             });
         }
 

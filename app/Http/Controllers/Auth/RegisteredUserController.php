@@ -21,7 +21,10 @@ class RegisteredUserController extends Controller
      */
     public function create(): View
     {
-        return view('auth.register');
+        /*signup not available*/
+        return view('auth.login');
+        //for signup use this
+        /*return view('auth.register');*/
     }
 
     /**
@@ -31,6 +34,8 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        /*signup option disable*/
+        return redirect('/login');
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],

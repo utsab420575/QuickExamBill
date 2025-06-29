@@ -11,14 +11,30 @@ use App\Http\Controllers\RoleAssignmentController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserController;
+use App\Models\Employee;
+use App\Models\Teacher;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    //return view('welcome');
+    if (Auth::check()) {
+        return redirect('/dashboard');
+    } else {
+        return redirect()->route('login');
+    }
 });
 
 Route::get('/dashboard', function () {
-    return view('index');
+    $arch_department=\App\Models\Department::where('shortname','Arch')->first();
+    $teachers_count = Teacher::where('department_id', $arch_department->id)->count();
+
+    $employee_count = Employee::with('designation')
+        ->whereHas('designation', function ($query) {
+            $query->where('designation', 'Officer')
+                    ->orWhere('designation','Staff'); // Make sure the column is 'name'
+        })
+        ->count();
+    return view('index', compact('teachers_count', 'employee_count'));
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

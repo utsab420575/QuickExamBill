@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee;
 use App\Models\ExamType;
 use App\Models\RateAmount;
 use App\Models\RateAssign;
@@ -112,6 +113,20 @@ class CommitteeInputController extends Controller
         //return $groupedTeachers;
 
 
+        //All Employee
+        /*$employees = Employee::with('user', 'designation', 'department')
+            ->whereHas('department', function ($query) use ($order) {
+                $query->whereIn('shortname', $order);
+            })
+            ->join('departments', 'employees.department_id', '=', 'departments.id')
+            ->orderByRaw("FIELD(departments.shortname, '" . implode("','", $order) . "')")
+            ->select('employees.*') // Select only employee fields to avoid conflict
+            ->get();*/
+        $employees = Employee::with('user', 'designation', 'department')
+            ->where('department_id', 2)
+            ->orderBy('id') // or any ordering you prefer
+            ->get();
+
         //all theory course with teacher
         $all_course_with_teacher = ApiData::getSessionWiseTheoryCoursesRegular($sid);
         //return $all_course_with_teacher;
@@ -151,6 +166,7 @@ class CommitteeInputController extends Controller
             ->with('exam_type',$exam_type->id)
             ->with('groupedTeachers', $groupedTeachers)
             ->with('teachers', $teachers)
+            ->with('employees', $employees)
             ->with('all_course_with_teacher', $all_course_with_teacher)
             ->with('all_course_with_class_test_teacher', $all_course_with_teacher)
             ->with('all_sessional_course_with_teacher', $all_sessional_course_with_teacher)
@@ -2050,7 +2066,9 @@ class CommitteeInputController extends Controller
                 ]);
 
                 RateAssign::create([
-                    'teacher_id' => $teacherId,
+                    /*'teacher_id' => $teacherId,*/
+                   /* $teacherId worked as  employeeId here*/
+                    'employee_id' => $teacherId,
                     'rate_head_id' => $rateHead->id,
                     'session_id' => $session_info->id,
                     'exam_type_id'=>$exam_type,
@@ -2175,7 +2193,9 @@ class CommitteeInputController extends Controller
                 ]);
 
                 RateAssign::create([
-                    'teacher_id' => $teacherId,
+                    /*'teacher_id' => $teacherId,*/
+                    /* $teacherId worked as  employeeId here*/
+                    'employee_id' => $teacherId,
                     'rate_head_id' => $rateHead->id,
                     'session_id' => $session_info->id,
                     'exam_type_id'=>$exam_type,

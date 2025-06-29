@@ -76,7 +76,7 @@
 @push('scripts')
     <script>
         let stencilCuttingRowCount = 0;
-        const stencilCuttingStaffTeachers = @json($teachers);
+        const stencilCuttingStaffTeachers = @json($employees);
         const savedStencilCuttingCommittee = @json($savedRateAssignStencilCuttingCommittee);
 
         function createStencillCommitteeRow(teacherId = '', amount = '') {
@@ -131,7 +131,7 @@
         // Load pre-filled rows from DB
         if (savedStencilCuttingCommittee && savedStencilCuttingCommittee.length > 0) {
             savedStencilCuttingCommittee.forEach(assign => {
-                createStencillCommitteeRow(assign.teacher_id, assign.no_of_items);
+                createStencillCommitteeRow(assign.employee_id, assign.no_of_items);
             });
         }
 
