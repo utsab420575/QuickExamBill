@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee;
+use App\Models\ExamType;
 use App\Models\RateAmount;
 use App\Models\RateHead;
 use App\Models\Session;
@@ -30,10 +32,12 @@ class ReportController extends Controller
 
     public function regularReportGenerate(Request $request){
         $sid=$request->sid;
+        $exam_type_record=ExamType::where('type','Regular')->first();
+        $exam_type=$exam_type_record->id;
         Log::info('📥 Received request to generate Regular Report PDF', ['ugr_session_id' => $sid]);
 
         $session_info = Session::where('ugr_id', $sid)
-                                ->where('exam_type_id',1)
+                                ->where('exam_type_id',$exam_type)
                                 ->first();
         if (!$session_info) {
             Log::error('❌ No matching session found', ['ugr_id' => $sid]);
@@ -46,9 +50,9 @@ class ReportController extends Controller
             'user',
             'designation',
             'rateAssigns',
-        ])->whereHas('rateAssigns', function ($query) use ($session_info) {
+        ])->whereHas('rateAssigns', function ($query) use ($session_info,$exam_type) {
             $query->where('session_id', $session_info->id)
-                    ->where('exam_type_id', 1);
+                    ->where('exam_type_id', $exam_type);
         })
             ->orderByRaw('department_id = 2 DESC') // ✅ Architecture first
             ->orderBy('department_id')             // Then others by department
@@ -56,10 +60,24 @@ class ReportController extends Controller
 
         Log::info('👨‍🏫 Total teachers found for this session: ' . $teachers->count());
 
+        $employees = Employee::with([
+            'user',
+            'designation',
+            'rateAssigns',
+        ])->whereHas('rateAssigns', function ($query) use ($session_info,$exam_type) {
+            $query->where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type);
+        })
+            ->orderByRaw('department_id = 2 DESC') // ✅ Architecture first
+            ->orderBy('department_id')             // Then others by department
+            ->get();
+
+        Log::info('👨‍🏫 Total employees found for this session: ' . $teachers->count());
+
         $rateHead_order_1 = RateHead::where('order_no', 1)->first();
         // Assuming $session_info is already available
         $rateAmount_order_1 = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', 1);
             })
@@ -72,7 +90,7 @@ class ReportController extends Controller
         $rateHead_order_2 = RateHead::where('order_no', 2)->first();
         // Assuming $session_info is already available
         $rateAmount_order_2 = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', 2);
             })
@@ -85,7 +103,7 @@ class ReportController extends Controller
         $rateHead_order_3 = RateHead::where('order_no', 3)->first();
         // Assuming $session_info is already available
         $rateAmount_order_3 = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', 3);
             })
@@ -101,7 +119,7 @@ class ReportController extends Controller
         $rateHead_order_4 = RateHead::where('order_no', 4)->first();
         // Assuming $session_info is already available
         $rateAmount_order_4 = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', 4);
             })
@@ -114,7 +132,7 @@ class ReportController extends Controller
         $rateHead_order_5 = RateHead::where('order_no', 5)->first();
         // Assuming $session_info is already available
         $rateAmount_order_5 = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', 5);
             })
@@ -127,7 +145,7 @@ class ReportController extends Controller
         $rateHead_order_6a = RateHead::where('order_no', '6.a')->first();
         // Assuming $session_info is already available
         $rateAmount_order_6a = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '6.a');
             })
@@ -140,7 +158,7 @@ class ReportController extends Controller
         $rateHead_order_6b = RateHead::where('order_no', '6.b')->first();
         // Assuming $session_info is already available
         $rateAmount_order_6b = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '6.b');
             })
@@ -153,7 +171,7 @@ class ReportController extends Controller
         $rateHead_order_6c = RateHead::where('order_no', '6.c')->first();
         // Assuming $session_info is already available
         $rateAmount_order_6c = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '6.c');
             })
@@ -167,7 +185,7 @@ class ReportController extends Controller
         $rateHead_order_6d = RateHead::where('order_no', '6.d')->first();
         // Assuming $session_info is already available
         $rateAmount_order_6d = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '6.d');
             })
@@ -182,7 +200,7 @@ class ReportController extends Controller
         $rateHead_order_7e = RateHead::where('order_no', '7.e')->first();
         // Assuming $session_info is already available
         $rateAmount_order_7e = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '7.e');
             })
@@ -196,7 +214,7 @@ class ReportController extends Controller
         $rateHead_order_7f = RateHead::where('order_no', '7.f')->first();
         // Assuming $session_info is already available
         $rateAmount_order_7f = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '7.f');
             })
@@ -210,7 +228,7 @@ class ReportController extends Controller
         $rateHead_order_8a = RateHead::where('order_no', '8.a')->first();
         // Assuming $session_info is already available
         $rateAmount_order_8a = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '8.a');
             })
@@ -224,7 +242,7 @@ class ReportController extends Controller
         $rateHead_order_8b = RateHead::where('order_no', '8.b')->first();
         // Assuming $session_info is already available
         $rateAmount_order_8b = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '8.b');
             })
@@ -237,7 +255,7 @@ class ReportController extends Controller
         $rateHead_order_8c = RateHead::where('order_no', '8.c')->first();
         // Assuming $session_info is already available
         $rateAmount_order_8c = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '8.c');
             })
@@ -251,7 +269,7 @@ class ReportController extends Controller
         $rateHead_order_8d = RateHead::where('order_no', '8.d')->first();
         // Assuming $session_info is already available
         $rateAmount_order_8d = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '8.d');
             })
@@ -265,7 +283,7 @@ class ReportController extends Controller
         $rateHead_order_9 = RateHead::where('order_no', '9')->first();
         // Assuming $session_info is already available
         $rateAmount_order_9 = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '9');
             })
@@ -281,7 +299,7 @@ class ReportController extends Controller
         $rateHead_order_10_a = RateHead::where('order_no', '10.a')->first();
         // Assuming $session_info is already available
         $rateAmount_order_10_a = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '10.a');
             })
@@ -295,7 +313,7 @@ class ReportController extends Controller
         $rateHead_order_10_b = RateHead::where('order_no', '10.b')->first();
         // Assuming $session_info is already available
         $rateAmount_order_10_b = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '10.b');
             })
@@ -309,7 +327,7 @@ class ReportController extends Controller
         $rateHead_order_11 = RateHead::where('order_no', '11')->first();
         // Assuming $session_info is already available
         $rateAmount_order_11 = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '11');
             })
@@ -323,7 +341,7 @@ class ReportController extends Controller
         $rateHead_order_12_a = RateHead::where('order_no', '12.a')->first();
         // Assuming $session_info is already available
         $rateAmount_order_12_a = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '12.a');
             })
@@ -336,7 +354,7 @@ class ReportController extends Controller
         $rateHead_order_12_b = RateHead::where('order_no', '12.b')->first();
         // Assuming $session_info is already available
         $rateAmount_order_12_b = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '12.b');
             })
@@ -349,7 +367,7 @@ class ReportController extends Controller
         $rateHead_order_13 = RateHead::where('order_no', '13')->first();
         // Assuming $session_info is already available
         $rateAmount_order_13 = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '13');
             })
@@ -364,7 +382,7 @@ class ReportController extends Controller
         //dd($rateHead_order_14);
         // Assuming $session_info is already available
         $rateAmount_order_14 = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '14');
             })
@@ -379,7 +397,7 @@ class ReportController extends Controller
         $rateHead_order_15 = RateHead::where('order_no', '15')->first();
         // Assuming $session_info is already available
         $rateAmount_order_15 = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '15');
             })
@@ -392,7 +410,7 @@ class ReportController extends Controller
         $rateHead_order_16 = RateHead::where('order_no', '16')->first();
         // Assuming $session_info is already available
         $rateAmount_order_16 = RateAmount::where('session_id', $session_info->id)
-            ->where('exam_type_id',1)
+            ->where('exam_type_id',$exam_type)
             ->whereHas('rateHead', function ($query) {
                 $query->where('order_no', '16');
             })
@@ -404,6 +422,7 @@ class ReportController extends Controller
 
         $pdf = Pdf::loadView('report.pdf_download.regular_report', [
             'teachers' => $teachers,
+            'employees' => $employees,
             'session_info' => $session_info,
 
             'rateHead_order_1' => $rateHead_order_1,

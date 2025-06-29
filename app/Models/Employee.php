@@ -19,4 +19,8 @@ class Employee extends Model
     public function designation(){
         return $this->belongsTo(Designation::class);
     }
+    public function rateAssigns()
+    {
+        return $this->hasMany(RateAssign::class);
+    }
 }

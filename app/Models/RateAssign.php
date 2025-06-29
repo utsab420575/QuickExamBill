@@ -14,6 +14,10 @@ class RateAssign extends Model
     {
         return $this->belongsTo(Teacher::class);
     }
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class);
+    }
 
     public function rateHead()
     {
