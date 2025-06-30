@@ -649,7 +649,7 @@
 
 
 
-        @include('committee_input.patritals.regular.list_scrutinizing_theory_grade_sheet')
+         @include('committee_input.patritals.regular.list_scrutinizing_theory_grade_sheet')
 
 
 
@@ -668,14 +668,14 @@
 
 
 
-        @include('committee_input.patritals.regular.list_stencil_cutting_question_paper')
+         @include('committee_input.patritals.regular.list_stencil_cutting_question_paper')
 
 
         @include('committee_input.patritals.regular.list_printing_question_paper')
 
 
 
-        @include('committee_input.patritals.regular.list_comparison_question_paper')
+       @include('committee_input.patritals.regular.list_comparison_question_paper')
 
 
        {{-- order-13:not done--}}
@@ -696,7 +696,6 @@
            @if($session_info->year!=6&& $session_info->semester!=3)
                @include('committee_input.patritals.regular.list_involved_survey')
            @endif
-
 
         {{-- order-6.c--}}
         @if($session_info->year!=6&& $session_info->semester!=3)

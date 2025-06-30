@@ -87,6 +87,8 @@ class CommitteeInputController extends Controller
         //create session record
         $exam_type = ExamType::where('type', 'regular')->first();
         $session_info = LocalData::getOrCreateRegularSession($sid,$exam_type->id);
+
+        //return $session_info;
         //filter by department
         $order = ['Arch', 'CE', 'ChE', 'Chem','CSE','EEE','FE','HSS','IPE','Math','ME','MME','Phy','TE']; // Custom order of departments
 
@@ -143,6 +145,7 @@ class CommitteeInputController extends Controller
         //return $all_theory_sessional_courses_with_student_count;
         //all student advisor in specific student
         $all_advisor_with_student_count = ApiData::getSessionWiseStudentAdvisor($sid);
+        //return $all_advisor_with_student_count;
 
         //active coordinator(we will
         //

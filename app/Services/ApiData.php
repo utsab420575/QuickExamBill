@@ -13,7 +13,7 @@ class ApiData{
     {
         $response = Http::withHeaders([
             'X-API-KEY' => 'EXAMBILL_98745012'
-        ])->get('https://ugr.duetbd.org/api/cse/regular-sessions');
+        ])->get('https://ugr.duetbd.org/api/architecture/regular-sessions');
 
         if ($response->failed()) {
             Log::error('Session import failed from API.');
@@ -29,7 +29,7 @@ class ApiData{
     {
         $response = Http::withHeaders([
             'X-API-KEY' => 'EXAMBILL_98745012'
-        ])->get('https://ugr.duetbd.org/api/cse/regular-sessions');
+        ])->get('https://ugr.duetbd.org/api/architecture/regular-sessions');
 
         if ($response->failed()) {
             Log::error('Session import failed from API.');
@@ -45,7 +45,7 @@ class ApiData{
     {
         $response = Http::withHeaders([
             'X-API-KEY' => 'EXAMBILL_98745012'
-        ])->get('https://ugr.duetbd.org/api/cse/review-sessions');
+        ])->get('https://ugr.duetbd.org/api/architecture/review-sessions');
 
         if ($response->failed()) {
             Log::error('Session import failed from API.');
@@ -107,7 +107,7 @@ class ApiData{
     {
         $authKey = 'OE3KFIE649MRECGQ';
         //$authKey = $request->authKey;
-        $url = 'https://ugr.duetbd.org/get-cse-previous-review-session-data';
+        $url = 'https://ugr.duetbd.org/get-architecture-previous-review-session-data';
 
         $curl = curl_init();
 
@@ -179,11 +179,11 @@ class ApiData{
     public static function  getSessionWiseStudentAdvisor($sid){
         $response = Http::withHeaders([
             'X-API-KEY' => 'EXAMBILL_98745012'
-        ])->get("https://ugr.duetbd.org/api/teacher-student-cse/{$sid}");
+        ])->get("https://ugr.duetbd.org/api/teacher-student-architecture/{$sid}");
 
         // Handle response
         if ($response->failed()) {
-            Log::error('Theory Sessional course fetch failed', [
+            Log::error('Session Wise Advisor failed', [
                 'status' => $response->status(),
                 'body' => $response->body()
             ]);
@@ -200,7 +200,7 @@ class ApiData{
     public static function  getCoOrdinator(){
         $response = Http::withHeaders([
             'X-API-KEY' => 'EXAMBILL_98745012'
-        ])->get("https://ugr.duetbd.org/api/coordinator-cse");
+        ])->get("https://ugr.duetbd.org/api/coordinator-architecture");
 
         // Handle response
         if ($response->failed()) {
@@ -221,7 +221,7 @@ class ApiData{
     public static function  getHead(){
         $response = Http::withHeaders([
             'X-API-KEY' => 'EXAMBILL_98745012'
-        ])->get("https://ugr.duetbd.org/api/head-of-department-cse");
+        ])->get("https://ugr.duetbd.org/api/head-of-department-architecture");
 
         // Handle response
         if ($response->failed()) {
@@ -275,7 +275,7 @@ class ApiData{
     public static function  getTotalStudentInSession($sid){
         $response = Http::withHeaders([
             'X-API-KEY' => 'EXAMBILL_98745012'
-        ])->get("https://ugr.duetbd.org/api/total-student-in-a-session-cse/{$sid}");
+        ])->get("https://ugr.duetbd.org/api/total-student-in-a-session-architecture/{$sid}");
 
         // Handle response
         if ($response->failed()) {
