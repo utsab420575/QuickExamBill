@@ -36,17 +36,27 @@
             font-size: 12px;
         }
 
-        .pt-20 { padding-top: 20px; }
-        .pt-30 { padding-top: 30px; }
-        .pt-40 { padding-top: 40px; }
+        .pt-20 {
+            padding-top: 20px;
+        }
 
-        td.textstart{
+        .pt-30 {
+            padding-top: 30px;
+        }
+
+        .pt-40 {
+            padding-top: 40px;
+        }
+
+        td.textstart {
             text-align: left;
         }
-        td.textend{
+
+        td.textend {
             text-align: right;
         }
-        td.textcenter{
+
+        td.textcenter {
             text-align: center;
         }
 
@@ -130,11 +140,13 @@
 
         <!-- Teacher Info -->
         <tr>
-            <td colspan="1" style="padding-top: 15px; text-align: left;padding-left: 10px;">
+            <td colspan="2" style="padding-top: 15px; text-align: left;padding-left: 5px;">
                 <strong>Name:</strong> {{ $teacher->user->name }}
             </td>
-            <td colspan="2" style="padding-top: 15px;padding-right:5px;">
-                <strong>Designation:</strong> {{ $teacher->designation->designation }}
+            <td colspan="1" style="padding-top: 15px;">
+                <div style="transform: translateX(-90px);">
+                    <strong>Designation:</strong> {{ $teacher->designation->designation }}
+                </div>
             </td>
             <td style="padding-top: 15px;">
                 <strong>Department:</strong> {{ $teacher->department->shortname }}, DUET
@@ -197,13 +209,20 @@
             <td class="textstart" colspan="2" rowspan="2">{{ $head }}</td>
             <td rowspan="2"></td>
             <td rowspan="2">{{ $no_of_item == 0 ? '' : $no_of_item }}</td>
-            <td class="textend">max. {{ $max_rate !== '' ? number_format($max_rate, 0) : '' }}</td>
+            @if($assigns_order_1->isNotEmpty())
+                <td class="textend">max. {{ number_format($max_rate, 0) }}</td>
+            @else
+                <td></td>
+            @endif
             <td rowspan="2" class="textend">{{ $total_taka == 0 ? '' : number_format($total_taka, 2) }}</td>
         </tr>
         <tr>
-            <td class="textend">min. {{ $min_rate !== '' ? number_format($min_rate, 0) : '' }}</td>
+            @if($assigns_order_1->isNotEmpty())
+                <td class="textend">min. {{ number_format($min_rate, 0) }}</td>
+            @else
+                <td></td>
+            @endif
         </tr>
-
 
 
         {{-- Order = 2 --}}
@@ -388,7 +407,8 @@
                     <td>{{ $assign->course_code ?? '' }}</td>
                     {{--here we show total week--}}
                     <td>{{$assign->total_students}} weeks</td>
-                    <td class="textend">{{ number_format($default_rate, 2) }}</td>
+                    {{--<td class="textend">{{ number_format($default_rate, 2) }}</td>--}}
+                    <td class="textend">{{ number_format($default_rate * $assign->no_of_items, 0) }}</td>
                     <td class="textend">{{ isset($assign->total_amount) ? number_format($assign->total_amount, 2) : '' }}</td>
                 </tr>
                 @php $loopIndex++; @endphp
@@ -436,7 +456,7 @@
             <td>{{ $assign_6a->total_students ?? '' }}</td>
             <td class="textend">
                 @if(isset($default_rate_6a) && $assign_6a)
-                    {{ number_format($default_rate_6a, 2) }}
+                    {{ number_format($default_rate_6a, 0) }}
                 @endif
             </td>
             {{-- <td class="textend">{{ number_format($default_rate_6a, 2) }}</td>--}}
@@ -466,7 +486,7 @@
             <td>{{ $assign_6b->total_students ?? '' }}</td>
             <td class="textend">
                 @if(isset($default_rate_6b) && $assign_6b)
-                    {{ number_format($default_rate_6b, 2) }}
+                    {{ number_format($default_rate_6b, 0) }}
                 @endif
             </td>
             {{--<td class="textend">{{ number_format($default_rate_6b, 2) }}</td>--}}
@@ -496,7 +516,7 @@
             <td>{{ $assign_6c->total_students ?? '' }}</td>
             <td class="textend">
                 @if(isset($default_rate_6c) && $assign_6c)
-                    {{ number_format($default_rate_6c, 2) }}
+                    {{ number_format($default_rate_6c, 0) }}
                 @endif
             </td>
             {{--<td class="textend">{{ number_format($default_rate_6c, 2) }}</td>--}}
@@ -532,8 +552,6 @@
             {{--<td class="textend">{{ number_format($default_rate_6d, 2) }}</td>--}}
             <td class="textend">{{ isset($assign_6d->total_amount) ? number_format($assign_6d->total_amount, 2) : '' }}</td>
         </tr>
-
-
 
 
         {{-- Order 7.e/7.f --}}
@@ -600,10 +618,6 @@
         </tr>
 
 
-
-
-
-
         @php
             //$assigns_order_8a = $teacher->rateAssigns->where('rateHead.order_no', '8.a');
             $assigns_order_8a = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
@@ -664,7 +678,8 @@
                 <tr>
                     @if ($loop->first)
                         <td rowspan="{{ $rowspan_8_block }}">8</td>
-                        <td class="textstart" rowspan="{{ max(1, $total_assigns_8a) + max(1, $total_assigns_8b) }}">{{ $head_8a }}</td>
+                        <td class="textstart"
+                            rowspan="{{ max(1, $total_assigns_8a) + max(1, $total_assigns_8b) }}">{{ $head_8a }}</td>
                         <td class="textstart" rowspan="{{ $total_assigns_8a }}">{{ $sub_head_8a }}</td>
                     @endif
                     <td>{{ $assign->course_code ?? '' }}</td>
@@ -677,7 +692,8 @@
         @else
             <tr>
                 <td rowspan="{{ $rowspan_8_block }}">8</td>
-                <td rowspan="{{ max(1, $total_assigns_8a) + max(1, $total_assigns_8b) }}" class="textstart">{{ $head_8a }}</td>
+                <td rowspan="{{ max(1, $total_assigns_8a) + max(1, $total_assigns_8b) }}"
+                    class="textstart">{{ $head_8a }}</td>
                 <td class="textstart">{{ $sub_head_8a }}</td>
                 <td></td>
                 <td></td>
@@ -738,7 +754,6 @@
              </td>--}}
             <td class="textend">{{ isset($assigns_order_8c->total_amount) ? number_format((float)$assigns_order_8c->total_amount, 2) : '' }}</td>
         </tr>
-
 
 
         {{-- Order = 8.d --}}
@@ -823,7 +838,7 @@
                     @endif
                     <td>{{ $assign->course_code ?? '' }}</td>
                     <td>{{$assign->total_students}}/{{$assign->total_teachers}}</td>
-                    <td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>
+                    <td class="textend">{{ isset($default_rate) ? number_format($default_rate, 0) : '' }}</td>
                     <td class="textend">{{ isset($assign->total_amount) ? number_format($assign->total_amount, 2) : '' }}</td>
                 </tr>
                 @php $loopIndex++; @endphp
@@ -1016,8 +1031,6 @@
         </tr>
 
 
-
-
         {{-- Order 12.a/12.b --}}
         @php
             //$assign_12_a = $teacher->rateAssigns->where('rateHead.order_no', '12.a')->first();
@@ -1087,7 +1100,6 @@
         </tr>
 
 
-
         {{-- Order 13 --}}
         @php
             //$assign_13 = $teacher->rateAssigns->where('rateHead.order_no', '13')->first();
@@ -1117,7 +1129,6 @@
             @endif
             <td class="textend">{{ isset($assign_13->total_amount) ? number_format($assign_13->total_amount, 2) : '' }}</td>
         </tr>
-
 
 
         {{-- Order 14 --}}
@@ -1170,12 +1181,6 @@
         </tr>
 
 
-
-
-
-
-
-
         {{-- Order 16 --}}
         @php
             //$assign_16 = $teacher->rateAssigns->where('rateHead.order_no', '16')->first();
@@ -1207,22 +1212,11 @@
         </tr>
 
 
-
-
         //Final Calculation
         <tr>
             <td colspan="6" class="textend">Total:</td>
             <td class="textend">{{ isset($global_sum) ? number_format($global_sum, 2) : '' }}</td>
         </tr>
-
-
-
-
-
-
-
-
-
 
 
         </tbody>
@@ -1254,7 +1248,9 @@
         <tr>
             <td style="width: 20%;" class="pt-20">Taka ---<br>Received</td>
             <td style="width: 20%;" class="pt-20">------------ In words</td>
-            <td style="width: 30%;" class="pt-20">----------------------------------------------------------------------</td>
+            <td style="width: 30%;" class="pt-20">
+                ----------------------------------------------------------------------
+            </td>
             <td style="width: 30%;" class="pt-20" style="text-align: right">-----------approved</td>
         </tr>
         <tr>
@@ -1277,7 +1273,7 @@
 @php
     if ($user->hasRole('Employee') || $user->hasRole('Admin') || $user->hasRole('SuperAdmin')) {
 @endphp
-    @foreach($employees as  $employee)
+@foreach($employees as  $employee)
 
     @php
         // Skip other teachers if the user is a teacher
@@ -1416,7 +1412,6 @@
         <tr>
             <td class="textend">min. {{ $min_rate !== '' ? number_format($min_rate, 0) : '' }}</td>
         </tr>
-
 
 
         {{-- Order = 2 --}}
@@ -1679,7 +1674,7 @@
             <td>{{ $assign_6b->total_students ?? '' }}</td>
             <td class="textend">
                 @if(isset($default_rate_6b) && $assign_6b)
-                    {{ number_format($default_rate_6b, 2) }}
+                    {{ number_format($default_rate_6b, 0) }}
                 @endif
             </td>
             {{--<td class="textend">{{ number_format($default_rate_6b, 2) }}</td>--}}
@@ -1709,7 +1704,7 @@
             <td>{{ $assign_6c->total_students ?? '' }}</td>
             <td class="textend">
                 @if(isset($default_rate_6c) && $assign_6c)
-                    {{ number_format($default_rate_6c, 2) }}
+                    {{ number_format($default_rate_6c, 0) }}
                 @endif
             </td>
             {{--<td class="textend">{{ number_format($default_rate_6c, 2) }}</td>--}}
@@ -1739,14 +1734,12 @@
             <td>{{ $assign_6d->total_students ?? '' }}</td>
             <td class="textend">
                 @if(isset($default_rate_6d) && $assign_6d)
-                    {{ number_format($default_rate_6d, 2) }}
+                    {{ number_format($default_rate_6d, 0) }}
                 @endif
             </td>
             {{--<td class="textend">{{ number_format($default_rate_6d, 2) }}</td>--}}
             <td class="textend">{{ isset($assign_6d->total_amount) ? number_format($assign_6d->total_amount, 2) : '' }}</td>
         </tr>
-
-
 
 
         {{-- Order 7.e/7.f --}}
@@ -1775,7 +1768,7 @@
             <td>{{ $assign_7e->total_students ?? '' }}</td>
             <td class="textend">
                 @if(isset($default_rate_7e) && $assign_7e)
-                    {{ number_format($default_rate_7e, 2) }}
+                    {{ number_format($default_rate_7e, 0) }}
                 @endif
             </td>
             {{--<td class="textend">{{ number_format($default_rate_7e, 2) }}</td>--}}
@@ -1805,16 +1798,12 @@
             <td>{{ $assign_7f->total_students ?? '' }}</td>
             <td class="textend">
                 @if(isset($default_rate_7f) && $assign_7f)
-                    {{ number_format($default_rate_7f, 2) }}
+                    {{ number_format($default_rate_7f, 0) }}
                 @endif
             </td>
             {{--<td class="textend">{{ number_format($default_rate_7f, 2) }}</td>--}}
             <td class="textend">{{ isset($assign_7f->total_amount) ? number_format($assign_7f->total_amount, 2) : '' }}</td>
         </tr>
-
-
-
-
 
 
         @php
@@ -1877,12 +1866,13 @@
                 <tr>
                     @if ($loop->first)
                         <td rowspan="{{ $rowspan_8_block }}">8</td>
-                        <td class="textstart" rowspan="{{ max(1, $total_assigns_8a) + max(1, $total_assigns_8b) }}">{{ $head_8a }}</td>
+                        <td class="textstart"
+                            rowspan="{{ max(1, $total_assigns_8a) + max(1, $total_assigns_8b) }}">{{ $head_8a }}</td>
                         <td class="textstart" rowspan="{{ $total_assigns_8a }}">{{ $sub_head_8a }}</td>
                     @endif
                     <td>{{ $assign->course_code ?? '' }}</td>
                     <td>{{$assign->total_students}}/{{$assign->total_teachers}}</td>
-                    <td class="textend">{{ number_format((float)$rateAmount_8a_default_rate, 2) }}</td>
+                    <td class="textend">{{ number_format((float)$rateAmount_8a_default_rate, 0) }}</td>
                     <td class="textend">{{ number_format((float)($assign->total_amount ?? 0), 2) }}</td>
                     @php $global_sum += $assign->total_amount ?? 0; @endphp
                 </tr>
@@ -1890,7 +1880,8 @@
         @else
             <tr>
                 <td rowspan="{{ $rowspan_8_block }}">8</td>
-                <td rowspan="{{ max(1, $total_assigns_8a) + max(1, $total_assigns_8b) }}" class="textstart">{{ $head_8a }}</td>
+                <td rowspan="{{ max(1, $total_assigns_8a) + max(1, $total_assigns_8b) }}"
+                    class="textstart">{{ $head_8a }}</td>
                 <td class="textstart">{{ $sub_head_8a }}</td>
                 <td></td>
                 <td></td>
@@ -1909,7 +1900,7 @@
                     @endif
                     <td>{{ $assign->course_code ?? '' }}</td>
                     <td>{{$assign->total_students}}/{{$assign->total_teachers}}</td>
-                    <td class="textend">{{ number_format((float)$rateAmount_8b_default_rate, 2) }}</td>
+                    <td class="textend">{{ number_format((float)$rateAmount_8b_default_rate, 0) }}</td>
                     <td class="textend">{{ number_format((float)($assign->total_amount ?? 0), 2) }}</td>
                     @php $global_sum += $assign->total_amount ?? 0; @endphp
                 </tr>
@@ -1939,7 +1930,7 @@
                     {{ $assigns_order_8c->total_students ?? '' }}/{{ $assigns_order_8c->total_teachers ?? '' }}
                 </td>
                 <td class="textend">
-                    {{ is_numeric($rateAmount_8c_default_rate) ? number_format((float) $rateAmount_8c_default_rate, 2) : '' }}
+                    {{ is_numeric($rateAmount_8c_default_rate) ? number_format((float) $rateAmount_8c_default_rate, 0) : '' }}
                 </td>
             @else
                 <td></td>
@@ -1951,7 +1942,6 @@
              </td>--}}
             <td class="textend">{{ isset($assigns_order_8c->total_amount) ? number_format((float)$assigns_order_8c->total_amount, 2) : '' }}</td>
         </tr>
-
 
 
         {{-- Order = 8.d --}}
@@ -1988,7 +1978,7 @@
                 <td>{{ $total_assigns }} courses</td>
                 {{--<td>{{ $total_student_all_course }}/2</td>--}}
                 <td>{{ $total_student_all_course }}</td>
-                <td class="textend">{{ number_format($default_rate_8_d, 2) }}</td>
+                <td class="textend">{{ number_format($default_rate_8_d, 0) }}</td>
                 <td class="textend">{{ number_format($total_amount_all_course, 2) }}</td>
             </tr>
         @else
@@ -2036,7 +2026,7 @@
                     @endif
                     <td>{{ $assign->course_code ?? '' }}</td>
                     <td>{{$assign->total_students}}/{{$assign->total_teachers}}</td>
-                    <td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>
+                    <td class="textend">{{ isset($default_rate) ? number_format($default_rate, 0) : '' }}</td>
                     <td class="textend">{{ isset($assign->total_amount) ? number_format($assign->total_amount, 2) : '' }}</td>
                 </tr>
                 @php $loopIndex++; @endphp
@@ -2096,7 +2086,7 @@
                 <td>{{ $total_assigns }} courses</td>
                 {{--<td>{{ $total_student_all_course }}/2</td>--}}
                 <td>{{ $total_student_all_course }}</td>
-                <td class="textend">{{ number_format($default_rate_10_a, 2) }}</td>
+                <td class="textend">{{ number_format($default_rate_10_a, 0) }}</td>
                 <td class="textend">{{ number_format($total_amount_all_course, 2) }}</td>
             </tr>
         @else
@@ -2178,7 +2168,7 @@
                 <td>{{ $total_assigns }} courses</td>
                 {{--<td>{{ $total_student_all_course }}/2</td>--}}
                 <td>{{ $total_student_all_course }}</td>
-                <td class="textend">{{ number_format($default_rate_10_b, 2) }}</td>
+                <td class="textend">{{ number_format($default_rate_10_b, 0) }}</td>
                 <td class="textend">{{ number_format($total_amount_all_course, 2) }}</td>
             </tr>
         @else
@@ -2227,8 +2217,6 @@
             </td>
             <td class="textend">{{ isset($assigns_order_11->total_amount) ? number_format($assigns_order_11->total_amount, 2) : '' }}</td>
         </tr>
-
-
 
 
         {{-- Order 12.a/12.b --}}
@@ -2300,7 +2288,6 @@
         </tr>
 
 
-
         {{-- Order 13 --}}
         @php
             //$assign_13 = $employee->rateAssigns->where('rateHead.order_no', '13')->first();
@@ -2330,7 +2317,6 @@
             @endif
             <td class="textend">{{ isset($assign_13->total_amount) ? number_format($assign_13->total_amount, 2) : '' }}</td>
         </tr>
-
 
 
         {{-- Order 14 --}}
@@ -2383,12 +2369,6 @@
         </tr>
 
 
-
-
-
-
-
-
         {{-- Order 16 --}}
         @php
             //$assign_16 = $employee->rateAssigns->where('rateHead.order_no', '16')->first();
@@ -2420,22 +2400,11 @@
         </tr>
 
 
-
-
         //Final Calculation
         <tr>
             <td colspan="6" class="textend">Total:</td>
             <td class="textend">{{ isset($global_sum) ? number_format($global_sum, 2) : '' }}</td>
         </tr>
-
-
-
-
-
-
-
-
-
 
 
         </tbody>
@@ -2467,12 +2436,14 @@
         <tr>
             <td style="width: 20%;" class="pt-20">Taka ---<br>Received</td>
             <td style="width: 20%;" class="pt-20">------------ In words</td>
-            <td style="width: 30%;" class="pt-20">----------------------------------------------------------------------</td>
+            <td style="width: 30%;" class="pt-20">
+                ----------------------------------------------------------------------
+            </td>
             <td style="width: 30%;" class="pt-20" style="text-align: right">-----------approved</td>
         </tr>
         <tr>
             <td class="pt-40">Signature of Examiner</td>
-            <td class="pt-40">Prepared by</td>
+            <td class="pt-40" style="padding-left: 10px;">Prepared by</td>
             <td class="pt-40">Assistant Comptroller</td>
             <td class="pt-40">Comptroller (In Charge)</td>
         </tr>

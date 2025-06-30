@@ -106,7 +106,9 @@
                 </form>
             </div>
         </div>
-        <p class="text-center text-muted mt-3 mb-3">&copy; Copyright 2023. All Rights Reserved.</p>
+        <p class="text-center text-muted mt-3 mb-3">
+            &copy; Copyright {{ date('Y') }}. All Rights Reserved.
+        </p>
     </div>
 </section>
 <!-- end: page -->

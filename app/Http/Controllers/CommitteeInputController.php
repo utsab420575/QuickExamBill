@@ -783,6 +783,7 @@ class CommitteeInputController extends Controller
                     'default_rate' => $sessional_per_hour_rate,
                     'min_rate'     => $sessional_examiner_min_rate,
                     'max_rate'     => null,
+                    'total_week'   => $total_week
                 ]
             );
 
@@ -806,14 +807,14 @@ class CommitteeInputController extends Controller
                             'teacher_id' => $teacherId,
                             'course_id' => $courseId,
                             'contact_hour' => $contactHour,
-                            'total_week' => $total_week,
+                            /*'total_week' => $total_week,*/
                             'total_amount' => $totalAmount,
                         ]);
                         RateAssign::create([
                             'teacher_id' => $teacherId,
                             'rate_head_id' => $rateHead->id,
                             'session_id' => $session_info->id,
-                            'total_week' => $total_week,
+                           /* 'total_week' => $total_week,*/
                             'no_of_items' => $contactHour,
                             'total_amount' => $totalAmount,
                             'exam_type_id' => $exam_type,

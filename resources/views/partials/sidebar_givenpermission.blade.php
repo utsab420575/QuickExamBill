@@ -170,7 +170,7 @@
                     @endif
 
                     {{-- Roles And Permission --}}
-                    @if(Auth::user()->can('role_permisssion.menu'))
+                    @if(Auth::user()->can('role_permission.menu'))
                         <li class="nav-parent {{ request()->routeIs('permission.*') || request()->routeIs('roles.*') ? 'nav-expanded nav-active' : '' }}">
                             <a class="nav-link" href="#">
                                 <i class="fa-solid fa-toolbox" aria-hidden="true"></i>
@@ -214,7 +214,7 @@
                     @endif
 
                     {{-- Role Assignment --}}
-                    @if(Auth::user()->can('role_assign.menu.menu'))
+                    @if(Auth::user()->can('role_assign.menu'))
                         <li class="nav-parent {{ request()->routeIs('role.assignments.*') ? 'nav-expanded nav-active' : '' }}">
                             <a class="nav-link" href="#">
                                 <i class="fa-solid fa-lock-open" aria-hidden="true"></i>

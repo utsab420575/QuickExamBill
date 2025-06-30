@@ -64,9 +64,13 @@
     if ($user->hasRole('Teacher') || $user->hasRole('Admin') || $user->hasRole('SuperAdmin')) {
 @endphp
     @foreach($teachers as  $teacher)
-    @php
-        $global_sum=0;
-    @endphp
+        @php
+            // Skip other teachers if the user is a teacher
+            if (auth()->user()->hasRole('Teacher') && auth()->user()->id !== $teacher->user_id) {
+                continue;
+            }
+            $global_sum=0;
+        @endphp
 
     {{-- Repeatable Header --}}
     <table class="header_table " style=" table-layout: fixed;">
@@ -125,11 +129,13 @@
 
         <!-- Teacher Info -->
         <tr>
-            <td colspan="1" style="padding-top: 15px; text-align: left;padding-left: 10px;">
+            <td colspan="2" style="padding-top: 15px; text-align: left;padding-left: 10px;">
                 <strong>Name:</strong> {{ $teacher->user->name }}
             </td>
-            <td colspan="2" style="padding-top: 15px;padding-right:5px;">
-                <strong>Designation:</strong> {{ $teacher->designation->designation }}
+            <td colspan="1" style="padding-top: 15px;">
+                <div style="transform: translateX(-90px);">
+                    <strong>Designation:</strong> {{ $teacher->designation->designation }}
+                </div>
             </td>
             <td style="padding-top: 15px;">
                 <strong>Department:</strong> {{ $teacher->department->shortname }}, DUET
@@ -192,11 +198,19 @@
             <td class="textstart" colspan="2" rowspan="2">{{ $head }}</td>
             <td rowspan="2"></td>
             <td rowspan="2">{{ $no_of_item == 0 ? '' : $no_of_item }}</td>
-            <td class="textend">max. {{ $max_rate !== '' ? number_format($max_rate, 0) : '' }}</td>
+            @if($assigns_order_1->isNotEmpty())
+                <td class="textend">max. {{ number_format($max_rate, 0) }}</td>
+            @else
+                <td></td>
+            @endif
             <td rowspan="2" class="textend">{{ $total_taka == 0 ? '' : number_format($total_taka, 2) }}</td>
         </tr>
         <tr>
-            <td class="textend">min. {{ $min_rate !== '' ? number_format($min_rate, 0) : '' }}</td>
+            @if($assigns_order_1->isNotEmpty())
+                <td class="textend">min. {{ number_format($min_rate, 0) }}</td>
+            @else
+                <td></td>
+            @endif
         </tr>
 
 
@@ -919,22 +933,26 @@
         </tr>
     </table>
 
-    @if (!$loop->last)
+
         <div class="page-break"></div>
-    @endif
+
 
 @endforeach
 @php } @endphp
 
 
-{{-- ✅ For Employee, Admin, SuperAdmin --}}
+{{--  For Employee, Admin, SuperAdmin --}}
 @php
     if ($user->hasRole('Employee') || $user->hasRole('Admin') || $user->hasRole('SuperAdmin')) {
 @endphp
     @foreach($employees as  $employee)
-    @php
-        $global_sum=0;
-    @endphp
+        @php
+            // Skip other teachers if the user is a teacher
+            if (auth()->user()->hasRole('Employee') && auth()->user()->id !== $employee->user_id) {
+                continue;
+            }
+            $global_sum=0;
+        @endphp
 
     {{-- Repeatable Header --}}
     <table class="header_table " style=" table-layout: fixed;">
