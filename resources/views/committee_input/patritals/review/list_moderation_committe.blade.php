@@ -75,6 +75,7 @@
 @push('scripts')
 
     <script>
+        const numberOfCourses = {{ $number_of_theory_courses }};
         let moderationCommitteeRowCount = 0;
         const moderationCommitteeTeachers = @json($teachers);
         const savedModerationAssigns = @json($savedModerationAssigns);
@@ -122,8 +123,38 @@
             // Delete button logic
             row.querySelector('.remove-row').addEventListener('click', function () {
                 row.remove();
+                recalculateModerationAmounts(); // recalculate when a row is removed
+            });
+
+            recalculateModerationAmounts(); // recalculate when a row is removed
+        }
+
+        function recalculateModerationAmounts() {
+            const minRate = parseFloat(document.querySelector('input[name="moderation_committee_min_rate"]').value) || 1500;
+            const maxRate = parseFloat(document.querySelector('input[name="moderation_committee_max_rate"]').value) || 5000;
+            const paperSetterRate = parseFloat(document.querySelector('input[name="paper_setter_rate"]').value) || 3600;
+            // const paperSetterRate = 1000; // as per your assumption
+
+            const teacherInputs = document.querySelectorAll('.amount-input');
+            const totalTeachers = teacherInputs.length;
+
+            if (totalTeachers === 0) return;
+
+            // Apply formula
+            let calculatedAmount = (paperSetterRate * 2 * numberOfCourses) / totalTeachers;
+
+            // Apply min/max boundaries
+            if (calculatedAmount < minRate) calculatedAmount = minRate;
+            if (calculatedAmount > maxRate) calculatedAmount = maxRate;
+
+            calculatedAmount = calculatedAmount.toFixed(2);
+
+            // Set amount in each teacher row
+            teacherInputs.forEach(input => {
+                input.value = calculatedAmount;
             });
         }
+
 
         // Load pre-filled rows from DB
         if (savedModerationAssigns && savedModerationAssigns.length > 0) {

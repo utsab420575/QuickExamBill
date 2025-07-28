@@ -80,7 +80,6 @@
 
     <script>
         const numberOfCourses = {{ $number_of_theory_courses }};
-       // const paperSetterRate = {{ $number_of_theory_courses }};
         let moderationCommitteeRowCount = 0;
         const moderationCommitteeTeachers = @json($teachers);
         const savedModerationAssigns = @json($savedModerationAssigns);
@@ -162,7 +161,7 @@
         }
 
         //if min rate change than update amount
-        document.querySelector('input[name="moderation_committee_min_rate"]').addEventListener('input', recalculateModerationAmounts);
+        //document.querySelector('input[name="moderation_committee_min_rate"]').addEventListener('input', recalculateModerationAmounts);
 
         // Load pre-filled rows from DB
         if (savedModerationAssigns && savedModerationAssigns.length > 0) {

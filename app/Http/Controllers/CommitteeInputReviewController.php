@@ -113,6 +113,13 @@ class CommitteeInputReviewController extends Controller
         $all_course_with_teacher = ApiData::getSessionWiseTheoryCoursesReview($sid);
         //return $all_course_with_teacher;
 
+        // Count number of theory courses
+        $number_of_theory_courses = isset($all_course_with_teacher->courses)
+            ? count($all_course_with_teacher->courses)
+            : 0;
+
+       // return $number_of_theory_courses;
+
         //no need to call again for class test(class test for theory course)
         // $all_course_with_class_test_teacher=ApiData::getSessionWiseTheoryCourses(sid);
         //all sessional course with teacher
@@ -137,6 +144,7 @@ class CommitteeInputReviewController extends Controller
             ->with('teacher_head', $teacher_head)
             ->with('groupedTeachers', $groupedTeachers)
             ->with('all_course_with_teacher', $all_course_with_teacher)
+            ->with('number_of_theory_courses', $number_of_theory_courses)
             ->with('all_course_with_class_test_teacher', $all_course_with_teacher)
             ->with('all_sessional_course_with_teacher', $all_sessional_course_with_teacher)
             ->with('all_theory_sessional_courses_with_student_count', $all_theory_sessional_courses_with_student_count)
