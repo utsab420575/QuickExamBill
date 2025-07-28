@@ -140,6 +140,7 @@ class CommitteeInputController extends Controller
             ? count($all_course_with_teacher->courses)
             : 0;
         //return $number_of_theory_courses;
+        //return $number_of_theory_courses;
 
         //no need to call again for class test(class test for theory course)
         // $all_course_with_class_test_teacher=ApiData::getSessionWiseTheoryCourses(sid);

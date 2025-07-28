@@ -26,8 +26,14 @@
     <div class="row mb-5">
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
-                <header class="card-header">
-                    <h2 class="card-title">List of Examination Committee/Moderation Committee Members @ min***</h2>
+                <header class="card-header ps-1" style="padding-top: 0.40rem; padding-bottom: 0.40rem;">
+                    <h2 class="card-title d-flex align-items-center">
+                        <span class="fa-stack" style="font-size: 1em; margin-right: 0.5rem;">
+                            <i class="fa-solid fa-circle fa-stack-2x text-info"></i>
+                            <i class="fa-solid fa-1 fa-stack-1x text-light"></i>
+                        </span>
+                            List of Examination Committee/Moderation Committee Members @ min***
+                    </h2>
                 </header>
 
                 <div class="card-body card-list-of-moderation-committee">
@@ -130,8 +136,11 @@
                 recalculateModerationAmounts(); // recalculate when a row is removed
             });
 
-            //auto calculate amount
-            recalculateModerationAmounts();
+
+            // Only recalculate if no amount is passed in (i.e. new row, not from DB)
+            if (amount === '') {
+                recalculateModerationAmounts();
+            }
         }
 
         function recalculateModerationAmounts() {

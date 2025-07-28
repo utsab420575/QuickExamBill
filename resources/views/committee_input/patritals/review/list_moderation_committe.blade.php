@@ -19,14 +19,21 @@
     </style>
 @endpush
 
-<form id="form-list-of-moderation-committee" action="{{ route('committee.input.review.examination.moderation.committee.store') }}" method="POST">
+<form id="form-list-of-moderation-committee"
+      action="{{ route('committee.input.review.examination.moderation.committee.store') }}" method="POST">
     @csrf
     <input type="hidden" id="{{$sid}}" name="sid" value="{{$sid}}">
     <div class="row mb-5">
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
-                <header class="card-header">
-                    <h2 class="card-title">List of Examination Committee/Moderation Committee Members @ min***</h2>
+                <header class="card-header ps-1" style="padding-top: 0.40rem; padding-bottom: 0.40rem;">
+                    <h2 class="card-title d-flex align-items-center">
+                        <span class="fa-stack" style="font-size: 1em; margin-right: 0.5rem;">
+                            <i class="fa-solid fa-circle fa-stack-2x text-info"></i>
+                            <i class="fa-solid fa-1 fa-stack-1x text-light"></i>
+                        </span>
+                        List of Examination Committee/Moderation Committee Members @ min***
+                    </h2>
                 </header>
 
                 <div class="card-body card-list-of-moderation-committee">
@@ -34,7 +41,8 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="total_week">Min rate per member</label>
-                                <input type="number" name="moderation_committee_min_rate" value="{{$mc_min_rate??1500}}" step="any"
+                                <input type="number" name="moderation_committee_min_rate" value="{{$mc_min_rate??1500}}"
+                                       step="any"
                                        class="form-control" placeholder="Min rate per member" required="">
                             </div>
                         </div>
@@ -42,7 +50,8 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="total_week">Max rate per member:</label>
-                                <input type="number" name="moderation_committee_max_rate" value="{{$mc_max_rate??5000}}" step="any"
+                                <input type="number" name="moderation_committee_max_rate" value="{{$mc_max_rate??5000}}"
+                                       step="any"
                                        class="form-control" placeholder="Max rate per member" required="">
                             </div>
                         </div>
@@ -58,7 +67,9 @@
                     <div id="dynamic-moderation-container"></div>
 
                     <div class="mt-3 text-end">
-                        <button type="button" id="add-moderation-committee-row" class="btn btn-sm btn-success me-2">+ Add Teacher</button>
+                        <button type="button" id="add-moderation-committee-row" class="btn btn-sm btn-success me-2">+
+                            Add Teacher
+                        </button>
                     </div>
 
                     <div class="text-end mt-3">
@@ -126,7 +137,10 @@
                 recalculateModerationAmounts(); // recalculate when a row is removed
             });
 
-            recalculateModerationAmounts(); // recalculate when a row is removed
+            // Only recalculate if no amount is passed in (i.e. new row, not from DB)
+            if (amount === '') {
+                recalculateModerationAmounts();
+            }
         }
 
         function recalculateModerationAmounts() {
