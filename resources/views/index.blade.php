@@ -18,9 +18,9 @@
         </header>
         <!-- start: page -->
         <div class="row">
-            <div class="col-md-6 col-lg-6">
+            <div class="col-md-12 col-lg-12">
                 <div class="row mb-3">
-                    <div class="col-md-6 col-xl-6">
+                    <div class="col-12 col-md-6 col-xl-6">
                         <section class="card card-featured-left card-featured-primary mb-3">
                             <div class="card-body">
                                 <div class="widget-summary d-flex align-items-center">
@@ -45,7 +45,7 @@
                         </section>
                     </div>
 
-                    <div class="col-md-6 col-xl-6">
+                    <div class="col-12 col-md-6 col-xl-6">
                         <section class="card card-featured-left card-featured-secondary">
                             <div class="card-body">
                                 <div class="widget-summary d-flex">
@@ -54,7 +54,7 @@
                                             <i class="fas fa-user-tie"></i>
                                         </div>
                                     </div>
-                                    <div class="widget-summary-col d-flex align-items-center justify-content-center">
+                                    <div class="widget-summary-col d-flex align-items-center justify-content-start" style="padding-left: 100px;">
                                         <div class="summary">
                                             <h4 class="title">Employee Count </h4>
                                             <div class="info">
