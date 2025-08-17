@@ -84,7 +84,6 @@
 </form>
 
 @push('scripts')
-
     <script>
         const numberOfCourses = {{ $number_of_theory_courses }};
         let moderationCommitteeRowCount = 0;
@@ -93,6 +92,9 @@
 
         function createTeacherRow(teacherId = '', amount = '') {
             moderationCommitteeRowCount++;
+            const uniqueInputId = `amount_input_${moderationCommitteeRowCount}`;
+
+            console.log(`🆕 Adding Teacher Row #${moderationCommitteeRowCount}`, { teacherId, amount, uniqueInputId });
 
             const container = document.getElementById('dynamic-moderation-container');
             const row = document.createElement('div');
@@ -112,8 +114,8 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <input type="number" name="moderation_committee_amounts[]" class="form-control amount-input"
-                        placeholder="Provide Amount" value="${amount}" required>
+                    <input type="number" id="${uniqueInputId}" name="moderation_committee_amounts[]" class="form-control amount-input"
+                        placeholder="Provide Amount" value="${amount}" step="0.01" required>
                 </div>
                 <div class="col-md-1 text-end">
                     <button type="button" class="btn btn-sm btn-danger remove-row">🗑️</button>
@@ -123,7 +125,7 @@
 
             container.appendChild(row);
 
-            // Initialize Select2
+            // Select2 init
             $(row).find('select').select2({
                 theme: 'bootstrap',
                 width: '100%',
@@ -131,14 +133,14 @@
                 placeholder: '-- Select Teacher --'
             });
 
-            // Delete button logic
             row.querySelector('.remove-row').addEventListener('click', function () {
+                console.log(`❌ Removing Row #${moderationCommitteeRowCount}`);
                 row.remove();
-                recalculateModerationAmounts(); // recalculate when a row is removed
+                recalculateModerationAmounts();
             });
 
-            // Only recalculate if no amount is passed in (i.e. new row, not from DB)
             if (amount === '') {
+                console.log('🔁 Recalculating amounts after new row...');
                 recalculateModerationAmounts();
             }
         }
@@ -146,43 +148,39 @@
         function recalculateModerationAmounts() {
             const minRate = parseFloat(document.querySelector('input[name="moderation_committee_min_rate"]').value) || 1500;
             const maxRate = parseFloat(document.querySelector('input[name="moderation_committee_max_rate"]').value) || 5000;
-            const paperSetterRate = parseFloat(document.querySelector('input[name="paper_setter_rate"]').value) || 3600;
-            // const paperSetterRate = 1000; // as per your assumption
+            const paperSetterRate = parseFloat(document.querySelector('input[name="paper_setter_rate"]')?.value) || 3600;
 
-            const teacherInputs = document.querySelectorAll('.amount-input');
+            const teacherInputs = document.querySelectorAll('#dynamic-moderation-container .amount-input');
             const totalTeachers = teacherInputs.length;
+
+            console.log(`📊 Recalculating: min=${minRate}, max=${maxRate}, paperSetterRate=${paperSetterRate}, courses=${numberOfCourses}, teachers=${totalTeachers}`);
 
             if (totalTeachers === 0) return;
 
-            // Apply formula
             let calculatedAmount = (paperSetterRate * 2 * numberOfCourses) / totalTeachers;
-
-            // Apply min/max boundaries
-            if (calculatedAmount < minRate) calculatedAmount = minRate;
-            if (calculatedAmount > maxRate) calculatedAmount = maxRate;
-
+            calculatedAmount = Math.max(minRate, Math.min(maxRate, calculatedAmount));
             calculatedAmount = calculatedAmount.toFixed(2);
 
-            // Set amount in each teacher row
-            teacherInputs.forEach(input => {
+            teacherInputs.forEach((input, index) => {
                 input.value = calculatedAmount;
+                console.log(`   ➤ Amount for input #${index + 1} set to ${calculatedAmount}`);
             });
         }
 
-
-        // Load pre-filled rows from DB
+        // Initial load
         if (savedModerationAssigns && savedModerationAssigns.length > 0) {
+            console.log('📥 Loading saved moderation committee data...');
             savedModerationAssigns.forEach(assign => {
                 createTeacherRow(assign.teacher_id, assign.total_amount);
             });
         }
 
-        // Add blank new row
         document.getElementById('add-moderation-committee-row').addEventListener('click', function () {
+            console.log('➕ Add Teacher button clicked');
             createTeacherRow();
         });
 
-        // Submit logic
+        // Submit form
         document.getElementById('form-list-of-moderation-committee').addEventListener('submit', function (e) {
             e.preventDefault();
 
@@ -199,18 +197,13 @@
                 select.classList.remove('is-invalid');
                 inputs[index].classList.remove('is-invalid');
 
-                if (!teacherId) {
+                if (!teacherId || teacherIds.includes(teacherId)) {
                     select.classList.add('is-invalid');
                     valid = false;
                 }
 
-                if (!amount || amount <= 0) {
+                if (!amount || parseFloat(amount) <= 0) {
                     inputs[index].classList.add('is-invalid');
-                    valid = false;
-                }
-
-                if (teacherIds.includes(teacherId)) {
-                    select.classList.add('is-invalid');
                     valid = false;
                 }
 
@@ -218,20 +211,22 @@
             });
 
             if (!valid) {
-                Swal.fire('Validation Failed', 'Make sure each selected row is complete and teachers are not duplicated.', 'error');
+                console.warn('⚠️ Form validation failed');
+                Swal.fire('Validation Failed', 'Ensure all teachers are selected, valid, and unique.', 'error');
                 return;
             }
 
             Swal.fire({
                 title: 'Are you sure?',
-                text: "Do you want to save the committee data?",
+                text: "Submit moderation committee data?",
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonText: 'Yes, save it!',
+                confirmButtonText: 'Yes, submit',
                 cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
                     const formData = new FormData(form);
+                    console.log('📤 Submitting data:', Object.fromEntries(formData));
 
                     fetch(form.action, {
                         method: 'POST',
@@ -264,11 +259,12 @@
                             });
                         })
                         .catch(error => {
+                            console.error('❌ Submission Error:', error);
                             Swal.fire('Error!', error.message || 'Something went wrong.', 'error');
                         });
                 }
             });
         });
     </script>
-
 @endpush
+
