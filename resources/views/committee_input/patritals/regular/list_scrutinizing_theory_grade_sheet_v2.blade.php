@@ -41,11 +41,6 @@
                         </div>
                     </div>
 
-
-                    <label class="ms-auto d-inline-flex align-items-center gap-2" style="cursor:pointer;">
-                        <input type="checkbox" id="copy-from-form1-all-theory">
-                        Same as “Preparation (Theory) Form” for all courses
-                    </label>
                     <div class="row">
                         <div class="col-md-12">
                             @if(isset($all_course_with_teacher->courses))
@@ -67,8 +62,6 @@
                                                 Course: {{ $single_course->courseno }} - {{ $single_course->coursetitle }}
                                             </h2>
                                         </header>
-
-
 
                                         <div class="card-body card-list-of-scrutinizers-theory-grade-sheet">
                                             <div class="row mb-3">
@@ -128,93 +121,6 @@
 
 
 @push('scripts')
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // ====== CONFIG: name prefixes for both forms ======
-            // Form1 (Preparation - Theory)
-            const SRC_TEACHER_PREFIX = 'prepares_theory_grade_sheet_teacher_ids';
-            const SRC_COUNT_PREFIX   = 'prepares_theory_grade_sheet_no_of_students';
-
-            // Form2 (Scrutinizing - Theory)
-            const DST_TEACHER_PREFIX = 'scrutinizing_theory_grade_sheet_teacher_ids';
-            const DST_COUNT_PREFIX   = 'scrutinizing_theory_grade_sheet_no_of_students';
-
-            const master = document.getElementById('copy-from-form1-all-theory');
-            if (!master) return;
-
-            // Extract courseId from input/select name like: prefix[123] or prefix[123][]
-            const getCourseId = (name) => {
-                const m = name.match(/\[(\d+)\]/);
-                return m ? m[1] : null;
-            };
-
-            // Build a map from Form1: { courseId: { values: [teacherIds], students: "123" } }
-            const readForm1Map = () => {
-                const map = {};
-                document.querySelectorAll(`select[name^="${SRC_TEACHER_PREFIX}["]`).forEach(srcSel => {
-                    const courseId = getCourseId(srcSel.name);
-                    if (!courseId) return;
-
-                    const values = Array.from(srcSel.selectedOptions).map(o => o.value);
-                    const studentsInput = document.querySelector(
-                        `input[name="${SRC_COUNT_PREFIX}[${courseId}]"]`
-                    );
-                    map[courseId] = {
-                        values,
-                        students: studentsInput ? studentsInput.value : ''
-                    };
-                });
-                return map;
-            };
-
-            // Copy from Form1 -> Form2 for all courses
-            const copyAll = () => {
-                const srcMap = readForm1Map();
-
-                // Apply to Form2 selects
-                document.querySelectorAll(`select[name^="${DST_TEACHER_PREFIX}["]`).forEach(dstSel => {
-                    const courseId = getCourseId(dstSel.name);
-                    if (!courseId || !srcMap[courseId]) return;
-
-                    const { values, students } = srcMap[courseId];
-
-                    // Ensure all options exist (in case some teacher isn't in the list for some reason)
-                    values.forEach(val => {
-                        if (!dstSel.querySelector(`option[value="${val}"]`)) {
-                            const opt = new Option(val, val, false, false);
-                            dstSel.add(opt);
-                        }
-                    });
-
-                    // If Select2, use jQuery to set and trigger change
-                    if (window.$ && $(dstSel).data('select2')) {
-                        $(dstSel).val(values).trigger('change');
-                    } else {
-                        // Plain <select multiple>
-                        Array.from(dstSel.options).forEach(o => {
-                            o.selected = values.includes(o.value);
-                        });
-                    }
-
-                    // Copy the student count too (optional)
-                    const dstCount = document.querySelector(
-                        `input[name="${DST_COUNT_PREFIX}[${courseId}]"]`
-                    );
-                    if (dstCount && (students ?? '') !== '') {
-                        dstCount.value = students;
-                    }
-                });
-            };
-
-            // When checked: copy; when unchecked: leave as-is (user can edit anytime)
-            master.addEventListener('change', function () {
-                if (this.checked) {
-                    copyAll();
-                }
-            });
-        });
-    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const form = document.getElementById('form-list-of-scrutinizers-theory-grade-sheet');
