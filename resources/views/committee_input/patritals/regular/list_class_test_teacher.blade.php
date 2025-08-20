@@ -24,8 +24,11 @@
     <div class="row mb-5">
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
-                <header class="card-header">
-                    <h2 class="card-title">Internal Assessment/Class Test @**/- per class test per student</h2>
+                <header class="card-header d-flex align-items-center">
+
+                    <h2 class="card-title">
+                        <span class="step-badge">4</span>Internal Assessment/Class Test @**/- per class test per student
+                    </h2>
                 </header>
                 <div class="card-body">
                     <div class="row mb-2">

@@ -26,7 +26,9 @@
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
                 <header class="card-header">
-                    <h2 class="card-title">List of Printing of Question paper (@ ****/- per stencil)</h2>
+                    <h2 class="card-title d-flex align-items-center">
+                        <span class="step-badge">12.b</span>
+                        List of Printing of Question paper (@ ****/- per stencil)</h2>
                 </header>
 
                 <div class="card-body card-list-of-printing-question-paper">

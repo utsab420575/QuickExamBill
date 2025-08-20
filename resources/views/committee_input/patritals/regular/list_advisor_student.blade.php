@@ -24,7 +24,8 @@
     <div class="row mb-5">
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary ">
-                <header class="card-header">
+                <header class="card-header d-flex align-items-center">
+                    <span class="step-badge">13</span>
                     <h2 class="card-title">Advisory (@***/- per student per semester):</h2>
                 </header>
 

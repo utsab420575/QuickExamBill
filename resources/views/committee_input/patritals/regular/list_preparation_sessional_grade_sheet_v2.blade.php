@@ -1,120 +1,36 @@
 @push('styles')
     <style>
-        .card-list-of-scrutinizers-theory-grade-sheet {
+        .card-list-of-prepare-sessional-grade-sheet {
             background-color: white; /* starting point */
             transition: background-color 0.6s ease-in-out;
         }
 
-        .card-list-of-scrutinizers-theory-grade-sheet.fade-highlight {
+        .card-list-of-prepare-sessional-grade-sheet.fade-highlight {
             background-color: #28a745; /* strong green */
         }
 
-        .card-list-of-scrutinizers-theory-grade-sheet.fade-out {
+        .card-list-of-prepare-sessional-grade-sheet.fade-out {
             background-color: white;
         }
-        select.is-invalid {
-            border-color: red;
-        }
-    </style>
-
-    {{--copy toggle style--}}
-    <style>
-        /* Pretty toggle + chip text */
-        .copy-toggle {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            user-select: none;
-            font-weight: 600;
-        }
-        .copy-toggle input {
-            position: absolute;
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .copy-toggle .track {
-            width: 56px;
-            height: 30px;
-            background: linear-gradient(to bottom, #eef2f7, #e7ecf2);
-            border-radius: 999px;
-            position: relative;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,.08);
-            transition: all .25s ease;
-        }
-        .copy-toggle .knob {
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: #fff;
-            box-shadow: 0 2px 6px rgba(0,0,0,.18);
-            transition: transform .25s ease, box-shadow .25s ease;
-        }
-        .copy-toggle:hover .track { filter: brightness(1.03); }
-
-        .copy-toggle input:checked + .track {
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            box-shadow: 0 0 0 4px rgba(34,197,94,.15);
-        }
-        .copy-toggle input:checked + .track .knob {
-            transform: translateX(26px);
-            box-shadow: 0 4px 10px rgba(22,163,74,.35);
-        }
-
-        .copy-toggle input:focus-visible + .track {
-            outline: 2px solid #16a34a;
-            outline-offset: 2px;
-        }
-
-        .copy-toggle .label-text {
-            font-size: .95rem;
-            color: #334155;
-            padding: .25rem .6rem;
-            border: 1px solid #e2e8f0;
-            border-radius: .5rem;
-            background: #ffffff;
-            box-shadow: 0 1px 2px rgba(0,0,0,.04);
-            transition: color .2s ease, border-color .2s ease, background .2s ease;
-            white-space: nowrap;
-        }
-        .copy-toggle input:checked ~ .label-text {
-            color: #167c3a;
-            border-color: #86efac;
-            background: linear-gradient(to bottom, #f0fdf4, #dcfce7);
-        }
-
-        /* Optional: keep header items on one line nicely spaced */
-        .card-header.d-flex { gap: 14px; }
     </style>
 @endpush
-<form id="form-list-of-scrutinizers-theory-grade-sheet" action="{{ route('committee.input.review.scrutinizers.theory.grade.sheet.store') }}" method="POST">
+<form id="form-list-of-prepare-sessional-grade-sheet" action="{{ route('committee.input.sessional.grade.sheet.store') }}" method="POST">
     @csrf
     <input type="hidden" id="sid" name="sid" value="{{$sid}}">
     <div class="row mb-5">
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
-                <header class="card-header d-flex align-items-center">
-                    <h2 class="card-title mb-0">
-                        <span class="step-badge">10.a</span>
-                        List of Teachers for the Scrutinizing of Grade Sheet (Theoretical) (@**/- per student per subject)
+                <header class="card-header">
+                    <h2 class="card-title">List of Teachers for the Preparation of Grade Sheet(Sessional) (@**/- per student per subject):
                     </h2>
-
-                    <label class="copy-toggle ms-auto" title="Copy teachers from Preparation (Theory) form">
-                        <input type="checkbox" id="copy-in-scrutinizing-theory-grade-sheet">
-                        <span class="track"><span class="knob"></span></span>
-                        <span class="label-text">Same as “Preparation (Theory) Form”</span>
-                    </label>
                 </header>
 
                 <div class="card-body">
                     <div class="row mb-2">
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
-                                <label for="scrutinize_theory_grade_sheet_rate">Per Student Per Subject Rate</label>
-                                <input type="number"  name="scrutinize_theory_grade_sheet_rate" value="{{$scrunizing_theory_grade_sheet_per_subject_rate??20}}" step="any" class="form-control" placeholder="Enter per student per subject rate" required>
+                                <label for="sessional_grade_sheet_rate">Per Student Per Subject Rate</label>
+                                <input type="number"  name="sessional_grade_sheet_rate" value="{{$sessional_grade_sheet_per_subject_rate??35}}" step="any" class="form-control" placeholder="Enter per student per subject rate" required>
                             </div>
                         </div>
                         <div class="col-md-4 mb-4">
@@ -123,14 +39,16 @@
                         </div>
                     </div>
 
+
+
                     <div class="row">
                         <div class="col-md-12">
-                            @if(isset($all_course_with_teacher->courses))
-                                @foreach($all_course_with_teacher->courses as $courseData)
+                            @if(isset($all_sessional_course_with_teacher->courses))
+                                @foreach($all_sessional_course_with_teacher->courses as $courseData)
                                     @php
                                         $single_course = $courseData->courseObject;
-                                         $course_code = $single_course->courseno;
-				                         $savedForScrutinizersTheoryGradeSheet = $savedRateAssignScrutinizersTheoryGradeSheet[$course_code] ?? collect(); // Collection of RateAssigns
+                                        $course_code = $single_course->courseno;
+				                        $savedForSessionalGradeSheet = $savedRateAssignSessionalGradeSheet[$course_code] ?? collect(); // Collection of RateAssigns
                                     @endphp
                                         <!-- Hidden course-level metadata -->
                                     <input type="hidden" name="courseno[{{ $single_course->id }}]" value="{{ $single_course->courseno }}">
@@ -145,19 +63,19 @@
                                             </h2>
                                         </header>
 
-                                        <div class="card-body card-list-of-scrutinizers-theory-grade-sheet">
+                                        <div class="card-body card-list-of-prepare-sessional-grade-sheet">
                                             <div class="row mb-3">
                                                 <div class="col-md-9">
-                                                    <label for="scrutinizing_theory_grade_sheet_teacher_{{ $single_course->id }}_{{ $loop->index }}">Select Scrutinizers</label>
-                                                    <select name="scrutinizing_theory_grade_sheet_teacher_ids[{{ $single_course->id }}][]"
+                                                    <label for="prepare_theory_grade_sheet_teacher_{{ $single_course->id }}_{{ $loop->index }}">Select Scrutinizers</label>
+                                                    <select name="prepare_sessional_grade_sheet_teacher_ids[{{ $single_course->id }}][]"
                                                             multiple data-plugin-selectTwo
-                                                            id="prepare_theory_grade_sheet_teacher_{{ $single_course->id }}_{{ $loop->index }}"
+                                                            id="prepare_sessional_grade_sheet_teacher_{{ $single_course->id }}_{{ $loop->index }}"
                                                             class="form-control  populate"  required>
                                                         <option value="" disabled>-- Select Teacher --</option>
                                                         @foreach($groupedTeachers as $deptFullName => $deptTeachers)
                                                             <optgroup label="{{ $deptFullName }}">
                                                                 @foreach($deptTeachers as $teacher)
-                                                                    <option value="{{ $teacher->id }}" {{ $savedForScrutinizersTheoryGradeSheet->pluck('teacher_id')->contains($teacher->id) ? 'selected' : '' }}>
+                                                                    <option value="{{ $teacher->id }}" {{ $savedForSessionalGradeSheet->pluck('teacher_id')->contains($teacher->id) ? 'selected' : '' }}>
                                                                         {{ $teacher->user->name }}  - {{ $teacher->department->shortname }}
                                                                     </option>
                                                                 @endforeach
@@ -170,16 +88,16 @@
                                                 <div class="col-md-3">
                                                     @php
                                                         // Check if there is saved data, and if yes, get total_students from the first teacher's entry
-                                                        $noOfItems = $savedForScrutinizersTheoryGradeSheet->isNotEmpty()
-                                                                    ? $savedForScrutinizersTheoryGradeSheet->first()->total_students
+                                                        $noOfItems = $savedForSessionalGradeSheet->isNotEmpty()
+                                                                    ? $savedForSessionalGradeSheet->first()->total_students
                                                                     : $courseData->registered_students_count;
                                                     @endphp
-                                                    <label for="scrutinizing_theory_grade_sheet_no_of_students">Per Script Rate</label>
-                                                    <input name="scrutinizing_theory_grade_sheet_no_of_students[{{ $single_course->id }}]"
+                                                    <label for="prepare_sessional_grade_sheet_no_of_students">Per Script Rate</label>
+                                                    <input name="prepare_sessional_grade_sheet_no_of_students[{{ $single_course->id }}]"
                                                            type="number" min="1" step="any"
                                                            class="form-control"
                                                            {{--value="{{ $courseData->registered_students_count }}"--}}
-                                                           value="{{ old('scrutinizing_theory_grade_sheet_no_of_students.' . $single_course->id, $noOfItems) }}"
+                                                           value="{{ old('prepare_sessional_grade_sheet_no_of_students.' . $single_course->id, $noOfItems) }}"
                                                            required>
                                                 </div>
                                             </div>
@@ -189,8 +107,8 @@
                             @endif
 
                             <div class="text-end mt-3">
-                                <button id="submit-list-of-scrutinizers-theory-grade-sheet" type="submit" class="btn btn-primary">
-                                    Submit Theoretical Scrutinizing Committee
+                                <button id="submit-list-of-prepare-sessional-grade-sheet" type="submit" class="btn btn-primary">
+                                    Submit Theory Grade Sheet Committee
                                 </button>
                             </div>
                         </div>
@@ -203,45 +121,12 @@
 
 
 @push('scripts')
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            wireCopyAcrossForms({
-                srcTeacherPrefix: 'prepares_theory_grade_sheet_teacher_ids',
-                srcCountPrefix:   'prepares_theory_grade_sheet_no_of_students',
-                dstTeacherPrefix: 'scrutinizing_theory_grade_sheet_teacher_ids',
-                dstCountPrefix:   'scrutinizing_theory_grade_sheet_no_of_students',
-                checkboxId:       'copy-in-scrutinizing-theory-grade-sheet'
-            });
-        });
-    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const form = document.getElementById('form-list-of-scrutinizers-theory-grade-sheet');
+            const form = document.getElementById('form-list-of-prepare-sessional-grade-sheet');
 
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
-                // ✅ Validate teacher selections
-                const teacherSelects = form.querySelectorAll('select[name^="teachers"]');
-                let allSelected = true;
-
-                teacherSelects.forEach(select => {
-                    if (select.selectedOptions.length === 0) {
-                        allSelected = false;
-                        select.classList.add('is-invalid'); // red border if invalid
-                    } else {
-                        select.classList.remove('is-invalid');
-                    }
-                });
-
-                if (!allSelected) {
-                    Swal.fire({
-                        title: 'Missing Teacher',
-                        text: 'Please select at least one teacher for each course.',
-                        icon: 'warning'
-                    });
-                    return; // ❌ stop form submission
-                }
 
                 Swal.fire({
                     title: 'Are you sure?',
@@ -279,12 +164,12 @@
                                     confirmButtonText: 'OK'
                                 });
 
-                                const submitBtn = document.getElementById('submit-list-of-scrutinizers-theory-grade-sheet');
-                                submitBtn.textContent = 'Update Theoretical Scrutinizing Committee';  // ✅ New label
+                                const submitBtn = document.getElementById('submit-list-of-prepare-sessional-grade-sheet');
+                                submitBtn.textContent = 'Update Theory Grade Sheet Committee';  // ✅ New label
                                 submitBtn.classList.remove('btn-primary');
                                 submitBtn.classList.add('btn-warning');
 
-                                const cards = document.querySelectorAll('.card-list-of-scrutinizers-theory-grade-sheet');
+                                const cards = document.querySelectorAll('.card-list-of-prepare-sessional-grade-sheet');
 
                                 cards.forEach(card => {
                                     card.classList.add('fade-highlight');
@@ -304,7 +189,7 @@
                                 console.error('Error:', error);
                                 Swal.fire({
                                     title: 'Error!',
-                                    text: error.message || 'Something went wrong. Please try again.',
+                                    text: error.message||'Something went wrong. Please try again.',
                                     icon: 'error'
                                 });
                             });

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
-class CommitteeInputController extends Controller
+class CommitteeInputController_v3 extends Controller
 {
     //regular session list
     public function regularSessionShow(){
@@ -146,7 +146,7 @@ class CommitteeInputController extends Controller
         // $all_course_with_class_test_teacher=ApiData::getSessionWiseTheoryCourses(sid);
         //all sessional course with teacher
         $all_sessional_course_with_teacher = ApiData::getSessionWiseSessionalCourses($sid);
-        //return $all_sessional_course_with_teacher;
+
         //all theory sessional courses
         $all_theory_sessional_courses_with_student_count = ApiData::getSessionWiseTheorySessionalCourses($sid);
         //return $all_theory_sessional_courses_with_student_count;
@@ -2606,20 +2606,30 @@ class CommitteeInputController extends Controller
     //order=7.e
     public function storeConductedCentralOralExam(Request $request)
     {
-        $teacherGroups = (array) $request->input('conducted_central_oral_examination_teacher_ids', []);
-        $studentCounts = (array) $request->input('conducted_central_oral_examination_student_amounts', []);
-        $sessionId     = $request->sid;
-        $rate          = (float) $request->oral_central_exam_thesis_project;
+        $teacherIds = $request->input('conducted_central_oral_examination_teacher_ids', []);
+        $no_of_students = $request->input('conducted_central_oral_examination_student_amounts', []);
+        $sessionId = $request->sid;
+        $central_examination_thesis_rate = $request->oral_central_exam_thesis_project;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
-        $exam_type = ExamType::where('type','regular')->value('id');
+        Log::info('📥 Received Prepared Computerized Result Data', [
+            'session_id' => $sessionId,
+            'teacher_data' => $teacherIds,
+            'student_data' => $no_of_students,
+            'rate' => $central_examination_thesis_rate
+        ]);
 
-        if (empty($teacherGroups) || empty($studentCounts)) {
-            return response()->json(['message' => 'Teacher IDs and student counts are required.'], 422);
+        if (empty($teacherIds) || empty($no_of_students)) {
+            return response()->json([
+                'message' => 'Teacher IDs and amounts are required.'
+            ], 422);
         }
 
-        DB::beginTransaction();
         try {
-            // 1) RateHead
+            DB::beginTransaction();
+
+            // Step 1: Get or create RateHead
             $rateHead = $this->getOrCreateRateHead('7.e', [
                 'head' => 'Sessional',
                 'sub_head' => 'Central Viva',
@@ -2632,63 +2642,77 @@ class CommitteeInputController extends Controller
                 'status' => 1,
             ]);
 
-            // 2) Session
-            $session = LocalData::getOrCreateRegularSession($sessionId, $exam_type);
+            Log::info('✅ RateHead confirmed', $rateHead->toArray());
 
-            // 3) RateAmount
+            // Step 2: Get or create Session
+            $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+
+            // Step 3: Get or create RateAmount
             $rateAmount = $this->getOrCreateRateAmount(
-                $rateHead->id, $session->id, $exam_type,
-                ['default_rate' => $rate, 'min_rate' => null, 'max_rate' => null]
+                $rateHead->id,
+                $session->id,
+                $exam_type,
+                [
+                    'default_rate' => $central_examination_thesis_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
             );
 
-            // Replace existing rows for this block
             RateAssign::where('session_id', $session->id)
                 ->where('exam_type_id', $exam_type)
                 ->where('rate_head_id', $rateHead->id)
                 ->delete();
 
-            // 4) Save by group_no (row key)
-            foreach ($teacherGroups as $groupNo => $teacherIds) {
-                $teacherIds   = array_values(array_filter((array)$teacherIds)); // sanitize
-                $studentCount = (float) ($studentCounts[$groupNo] ?? 0);
-                $teacherCount = max(1, count($teacherIds));                    // avoid div by zero
-                if ($studentCount <= 0 || $teacherCount <= 0) {
-                    continue;
-                }
+            // Step 4: Assign each teacher
+            foreach ($teacherIds as $index => $teacherId) {
+                $studentCount = (int) ($no_of_students[$index] ?? 0);
 
-                $studentsPerTeacher = $studentCount / $teacherCount;           // <- float division
-                foreach ($teacherIds as $teacherId) {
-                    $amount = $studentsPerTeacher * (float)$rateAmount->default_rate;
+                if ($studentCount > 0) {
+                    //$totalAmount = max($rateAmount->min_rate, $studentCount * $rateAmount->default_rate);
+                    $totalAmount=$studentCount * $rateAmount->default_rate;
 
-                    RateAssign::create([
-                        'teacher_id'      => (int)$teacherId,
-                        'rate_head_id'    => $rateHead->id,
-                        'session_id'      => $session->id,
-                        'exam_type_id'    => $exam_type,
-                        'group_no'        => (int)$groupNo,
+                    Log::info('📘 Preparation Of Advisor Student', [
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $studentCount,
+                        'total_amount' => $totalAmount,
 
-                        // audit / math fields
-                        'total_students'  => $studentCount,
-                        'total_teachers'  => $teacherCount,
-                        'no_of_items'     => $studentsPerTeacher, // you were already using this as “per-teacher”
-                        'total_amount'    => $amount,
+                        'total_students'=>$studentCount,
                     ]);
+                    $rateAssign = RateAssign::create([
+                        'teacher_id' => $teacherId,
+                        'rate_head_id' => $rateHead->id,
+                        'session_id' => $session->id,
+                        'no_of_items' => $studentCount,
+                        'total_amount' => $totalAmount,
+                        'total_students'=>$studentCount,
+                        'exam_type_id'=>$exam_type,
+                    ]);
+
+                    Log::info("✅ RateAssign created for Teacher ID $teacherId", $rateAssign->toArray());
                 }
             }
 
             DB::commit();
-            return response()->json(['message' => 'Verified Central Oral Examination saved successfully!']);
-        } catch (\Throwable $e) {
+
+            return response()->json([
+                'message' => 'Verified Cetral Oral Examination saved successfully!',
+            ]);
+        } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('❌ Central Oral save error: '.$e->getMessage());
-            return response()->json(['message' => 'An error occurred.', 'error' => $e->getMessage()], 500);
+            Log::error('❌ Error saving Verified Final Graduation Result: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'An error occurred.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
-
-
     //order=7.f
-    /*public function storeInvolvedSurvey(Request $request)
+    public function storeInvolvedSurvey(Request $request)
     {
         $teacherIds = $request->input('involved_survey_teacher_ids'); // array
         $no_of_students = $request->input('involved_survey_student_amounts');        // array (indexed)
@@ -2792,178 +2816,7 @@ class CommitteeInputController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
-    }*/
-    public function storeInvolvedSurvey(Request $request)
-    {
-        $teacherData  = $request->input('involved_survey_teacher_ids', []);   // [courseId => [teacherId, ...]]
-        $studentData  = $request->input('involved_survey_no_of_students', []); // [courseId => total_students]
-        $sessionId    = $request->sid;
-        $servey_rate  = $request->servey_rate;
-
-        // Hidden course metadata
-        $courseNos    = $request->input('courseno', []);                     // [courseId => courseno]
-        $courseTitles = $request->input('coursetitle', []);                  // [courseId => coursetitle]
-        $regCounts    = $request->input('registered_students_count', []);    // [courseId => registered_students_count]
-
-        $exam_type_record = ExamType::where('type', 'regular')->first();
-        $exam_type        = $exam_type_record->id ?? null;
-
-        Log::info('📥 Received Involved Survey (per course)', [
-            'session_id'   => $sessionId,
-            'teacher_data' => $teacherData,
-            'student_data' => $studentData,
-            'rate'         => $servey_rate,
-        ]);
-
-        // ---------- Basic validation ----------
-        $errors = [];
-
-        if (empty($teacherData)) {
-            $errors['involved_survey_teacher_ids'] = 'You must select at least one teacher.';
-        }
-        if (empty($studentData)) {
-            $errors['involved_survey_no_of_students'] = 'You must provide number of students.';
-        }
-
-        foreach ($teacherData as $courseId => $teacherIds) {
-            // teachers
-            if (empty($teacherIds)) {
-                $errors["involved_survey_teacher_ids.$courseId"] = "Select at least one teacher for course ID $courseId.";
-            }
-
-            // students
-            $count = $studentData[$courseId] ?? null;
-            if ($count === null || $count === '' || (float)$count < 1) {
-                $errors["involved_survey_no_of_students.$courseId"] = "Enter a valid number of students for course ID $courseId.";
-            }
-
-            // course metadata (optional but helpful)
-            if (empty($courseNos[$courseId]) || empty($courseTitles[$courseId])) {
-                $errors["course_meta.$courseId"] = "Missing course metadata for course ID $courseId.";
-            }
-        }
-
-        if (!empty($errors)) {
-            return response()->json([
-                'message' => 'Validation failed.',
-                'errors'  => $errors,
-            ], 422);
-        }
-        // --------------------------------------
-
-        try {
-            DB::beginTransaction();
-
-            // 1) RateHead (7.f)
-            $rateHead = $this->getOrCreateRateHead('7.f', [
-                'head'             => 'Sessional',
-                'sub_head'         => 'Survey',
-                'dist_type'        => 'Individual', // keep as Individual for per-teacher payout
-                'enable_min'       => 0,
-                'enable_max'       => 0,
-                'is_course'        => 1,            // now per-course (was 0 in row-based version)
-                'is_student_count' => 1,
-                'marge_with'       => null,
-                'status'           => 1,
-            ]);
-            Log::info('✅ RateHead confirmed', $rateHead->toArray());
-
-            // 2) Session
-            $session = LocalData::getOrCreateRegularSession($sessionId, $exam_type);
-
-            // 3) RateAmount
-            $rateAmount = $this->getOrCreateRateAmount(
-                $rateHead->id,
-                $session->id,
-                $exam_type,
-                [
-                    'default_rate' => $servey_rate,
-                    'min_rate'     => null,
-                    'max_rate'     => null,
-                ]
-            );
-            Log::info('✅ RateAmount confirmed', $rateAmount->toArray());
-
-            // 4) Clear previous assignments for this head/session/exam_type
-            RateAssign::where('session_id', $session->id)
-                ->where('exam_type_id', $exam_type)
-                ->where('rate_head_id', $rateHead->id)
-                ->delete();
-
-            // 5) Save per course: split students equally among selected teachers
-            foreach ($teacherData as $courseId => $teacherIds) {
-                $teacherIds      = array_values(array_unique(array_filter((array)$teacherIds)));
-                $totalStudents   = (float) ($studentData[$courseId] ?? 0);
-                $teacherCount    = count($teacherIds);
-
-                $courseno        = $courseNos[$courseId]    ?? null;
-                $coursetitle     = $courseTitles[$courseId] ?? null;
-                $registeredCount = $regCounts[$courseId]    ?? null;
-
-                if ($teacherCount <= 0 || $totalStudents <= 0) {
-                    continue;
-                }
-
-                $studentsPerTeacher = $totalStudents / $teacherCount; // keep fractional if needed
-                $rate               = (float) $rateAmount->default_rate;
-
-                foreach ($teacherIds as $tid) {
-                    $amount = $studentsPerTeacher * $rate;
-
-                    Log::info('📘 Involved Survey Assign (per course)', [
-                        'teacher_id'      => $tid,
-                        'rate_head_id'    => $rateHead->id,
-                        'session_id'      => $session->id,
-                        'exam_type_id'    => $exam_type,
-                        'no_of_items'     => $studentsPerTeacher,
-                        'total_amount'    => $amount,
-                        'course_code'     => $courseno,
-                        'course_title'    => $coursetitle,
-                        'total_students'  => $totalStudents,
-                        'total_teachers'  => $teacherCount,
-                        'registered_cnt'  => $registeredCount,
-                    ]);
-
-                    RateAssign::create([
-                        'teacher_id'      => $tid,
-                        'rate_head_id'    => $rateHead->id,
-                        'session_id'      => $session->id,
-                        'exam_type_id'    => $exam_type,
-
-                        'no_of_items'     => $studentsPerTeacher,
-                        'total_amount'    => $amount,
-
-                        // helpful metadata
-                        'course_code'     => $courseno,
-                        'course_name'     => $coursetitle,
-                        'total_students'  => $totalStudents,
-                        'total_teachers'  => $teacherCount,
-                    ]);
-                }
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'message' => 'Involved Survey saved successfully!',
-                'involved_survey_teacher_ids'     => $teacherData,
-                'involved_survey_no_of_students'  => $studentData,
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('❌ Error saving Involved Survey: '.$e->getMessage());
-
-            return response()->json([
-                'message' => 'An error occurred while saving Involved Survey data.',
-                'error'   => $e->getMessage(),
-            ], 500);
-        }
     }
-
-
-
-
-
 
     //order=6.c
     public function storeConductedPreliminaryViva(Request $request)

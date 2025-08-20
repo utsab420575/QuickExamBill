@@ -25,8 +25,11 @@
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
                 <header class="card-header">
-                    <h2 class="card-title">List of Examiners (@ ***/- per script,min ****/- per examiner) &Paper Setters
-                        (@****/- per paper setter)</h2>
+                    <h2 class="card-title d-flex align-items-center">
+                        <span class="step-badge">2</span>
+                        <span class="step-badge grey">3</span>
+                        List of Examiners (@ ***/- per script, min ****/- per examiner) & Paper Setters (@ ****/- per paper setter)
+                    </h2>
                 </header>
                 <div class="card-body">
                     <div class="row mb-2">

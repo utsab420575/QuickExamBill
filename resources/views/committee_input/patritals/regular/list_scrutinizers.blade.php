@@ -20,8 +20,10 @@
     <div class="row mb-5">
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
-                <header class="card-header">
-                    <h2 class="card-title">List of Scrutinizers (@ **/- per script,min ****/- per scrutinizers)
+                <header class="card-header d-flex align-items-center">
+                    <h2 class="card-title">
+                        <span class="step-badge">9</span>
+                        List of Scrutinizers (@ **/- per script,min ****/- per scrutinizers)
                     </h2>
                 </header>
 

@@ -1,4 +1,77 @@
 @push('styles')
+    {{--1st copy this--}}
+    <style>
+        /* Pretty toggle + chip text */
+        .copy-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            user-select: none;
+            font-weight: 600;
+        }
+        .copy-toggle input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .copy-toggle .track {
+            width: 56px;
+            height: 30px;
+            background: linear-gradient(to bottom, #eef2f7, #e7ecf2);
+            border-radius: 999px;
+            position: relative;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,.08);
+            transition: all .25s ease;
+        }
+        .copy-toggle .knob {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,.18);
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+        .copy-toggle:hover .track { filter: brightness(1.03); }
+
+        .copy-toggle input:checked + .track {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            box-shadow: 0 0 0 4px rgba(34,197,94,.15);
+        }
+        .copy-toggle input:checked + .track .knob {
+            transform: translateX(26px);
+            box-shadow: 0 4px 10px rgba(22,163,74,.35);
+        }
+
+        .copy-toggle input:focus-visible + .track {
+            outline: 2px solid #16a34a;
+            outline-offset: 2px;
+        }
+
+        .copy-toggle .label-text {
+            font-size: .95rem;
+            color: #334155;
+            padding: .25rem .6rem;
+            border: 1px solid #e2e8f0;
+            border-radius: .5rem;
+            background: #ffffff;
+            box-shadow: 0 1px 2px rgba(0,0,0,.04);
+            transition: color .2s ease, border-color .2s ease, background .2s ease;
+            white-space: nowrap;
+        }
+        .copy-toggle input:checked ~ .label-text {
+            color: #167c3a;
+            border-color: #86efac;
+            background: linear-gradient(to bottom, #f0fdf4, #dcfce7);
+        }
+
+        /* Optional: keep header items on one line nicely spaced */
+        .card-header.d-flex { gap: 14px; }
+    </style>
+
     <style>
         .card-list-of-prepared-computerized-result {
             background-color: white; /* starting point */
@@ -23,10 +96,30 @@
     <div class="row mb-5">
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
-                <header class="card-header">
-                    <h2 class="card-title">List of Teachers Prepared Computerized Result (@ **/- per student per subject)
+                {{-- 2nd change heaader class also--}}
+                <header class="card-header d-flex align-items-center">
+                    <h2 class="card-title">
+                        <span class="step-badge">8.d </span>
+                        List of Teachers Prepared Computerized Result (@ **/- per student per subject)
                     </h2>
+
+                    <div class="ms-auto d-flex align-items-center gap-3 flex-wrap">
+                        {{-- Copy from Preparation (Theory) --}}
+                        <label class="copy-toggle" title="Copy teachers from Preparation (Theory) form">
+                            <input type="checkbox" id="copy-in-computerized-result-theory">
+                            <span class="track"><span class="knob"></span></span>
+                            <span class="label-text">Same as “Preparation (Theory)”</span>
+                        </label>
+
+                        {{-- Copy from Preparation (Sessional) --}}
+                        <label class="copy-toggle" title="Copy teachers from Preparation (Sessional) form">
+                            <input type="checkbox" id="copy-in-computerized-result-sessional">
+                            <span class="track"><span class="knob"></span></span>
+                            <span class="label-text">Same as “Preparation (Sessional)”</span>
+                        </label>
+                    </div>
                 </header>
+
 
                 <div class="card-body">
                     <div class="row mb-2">
@@ -130,11 +223,49 @@
 
 @push('scripts')
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // From Preparation (Theory) -> Prepared Computerized Result
+            wireCopyAcrossForms({
+                srcTeacherPrefix: 'prepares_theory_grade_sheet_teacher_ids',
+                srcCountPrefix:   'prepares_theory_grade_sheet_no_of_students',
+                dstTeacherPrefix: 'prepared_computerized_result_teacher_ids',
+                dstCountPrefix:   'prepared_computerized_result_no_of_students',
+                checkboxId:       'copy-in-computerized-result-theory'
+            });
+
+            // From Preparation (Sessional) -> Prepared Computerized Result
+            wireCopyAcrossForms({
+                srcTeacherPrefix: 'prepare_sessional_grade_sheet_teacher_ids',
+                srcCountPrefix:   'prepare_sessional_grade_sheet_no_of_students',
+                dstTeacherPrefix: 'prepared_computerized_result_teacher_ids',
+                dstCountPrefix:   'prepared_computerized_result_no_of_students',
+                checkboxId:       'copy-in-computerized-result-sessional'
+            });
+
+            // Make the toggles mutually exclusive (last one checked wins)
+            const cbTheory    = document.getElementById('copy-in-computerized-result-theory');
+            const cbSessional = document.getElementById('copy-in-computerized-result-sessional');
+
+            if (cbTheory && cbSessional) {
+                cbTheory.addEventListener('change', () => {
+                    if (cbTheory.checked) cbSessional.checked = false;
+                });
+                cbSessional.addEventListener('change', () => {
+                    if (cbSessional.checked) cbTheory.checked = false;
+                });
+            }
+        });
+    </script>
+
+
+    <script>
         document.addEventListener('DOMContentLoaded', function () {
             const form = document.getElementById('form-list-of-prepared-computerized-result');
 
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
+
+
                 // ✅ Validate teacher selections(we're done it by using required)
                 /* const teacherSelects = form.querySelectorAll('select[name^="teachers"]');
                 let allSelected = true;

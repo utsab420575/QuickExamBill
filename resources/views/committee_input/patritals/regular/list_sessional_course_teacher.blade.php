@@ -5,8 +5,10 @@
     <div class="row mb-5">
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
-                <header class="card-header">
-                    <h2 class="card-title">Sessional (@ ***/- per contact hour per week; min ****/- per examiner)
+                <header class="card-header d-flex align-items-center">
+                    <h2 class="card-title">
+                        <span class="step-badge">5</span>
+                        Sessional (@ ***/- per contact hour per week; min ****/- per examiner)
                     </h2>
                 </header>
 

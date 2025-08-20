@@ -460,7 +460,7 @@
                  //For ConductedCentralOralExam
                 $rateConductedCentralOralExam = RateHead::where('order_no', '=','7.e')->first();
                 if($rateConductedCentralOralExam){
-                      $savedRateAssignConductedCentralOralExam = RateAssign::getTeacherWithGroup(
+                      $savedRateAssignConductedCentralOralExam = RateAssign::getTeachersFromCommittee(
                         $session_info->id,
                         $exam_type,
                         $rateConductedCentralOralExam->id
@@ -478,7 +478,7 @@
                  //For InvolvedSurvey
                 $rateInvolvedSurvey = RateHead::where('order_no', '=','7.f')->first();
                 if($rateInvolvedSurvey){
-                      $savedRateAssignInvolvedSurvey = RateAssign::getTeacherWithCourse(
+                      $savedRateAssignInvolvedSurvey = RateAssign::getTeachersFromCommittee(
                         $session_info->id,
                         $exam_type,
                         $rateInvolvedSurvey->id

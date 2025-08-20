@@ -106,4 +106,76 @@ class RateAssign extends Model
 
         return $data;
     }
+
+
+    public static function getTeacherWithGroup($sessionId, $examTypeId, $rateHeadId)
+    {
+        Log::info('📥 getTeacherWithGroup() input received', [
+            'session_id' => $sessionId,
+            'exam_type_id' => $examTypeId,
+            'rate_head_id' => $rateHeadId,
+        ]);
+
+        $records = self::with([
+            'teacher.user',
+            'teacher.designation',
+            'teacher.department'
+        ])
+            ->where('session_id', $sessionId)
+            ->where('exam_type_id', $examTypeId)
+            ->where('rate_head_id', $rateHeadId)
+            ->get();
+
+        if ($records->isEmpty()) {
+            Log::info("📘 No records found for getTeacherWithGroup()");
+            return (object) [
+                'grouped_keys' => [],
+                'full_grouped_data' => []
+            ];
+        }
+
+        // Group by group_no, but if group_no is null, create artificial groups
+        $grouped = $records->groupBy(function($item) {
+            if (!is_null($item->group_no)) {
+                return $item->group_no;
+            }
+
+            // If group_no is null, create artificial groups based on total_students
+            // This will group teachers with the same student count together
+           /* return 'group_' . ($item->total_students ?? 'default');*/
+        });
+
+        $result = [];
+        $groupedKeys = [];
+        $groupIndex = 1;
+
+        foreach ($grouped as $groupKey => $items) {
+            // For artificial groups, use numeric keys for consistency
+            if (strpos($groupKey, 'group_') === 0) {
+                $finalKey = $groupIndex;
+                $groupIndex++;
+            } else {
+                $finalKey = $groupKey;
+            }
+
+            $groupedKeys[] = $finalKey;
+            $result[$finalKey] = $items->toArray();
+        }
+
+        Log::info("📘 getTeacherWithGroup() grouped results:\n" . json_encode([
+                'session_id' => $sessionId,
+                'exam_type_id' => $examTypeId,
+                'rate_head_id' => $rateHeadId,
+                'grouped_keys' => $groupedKeys,
+                'record_count' => $records->count(),
+                'groups_count' => count($result),
+                'raw_groups' => array_keys($grouped->toArray())
+            ], JSON_PRETTY_PRINT));
+
+        // Return in the expected format
+        return (object) [
+            'grouped_keys' => $groupedKeys,
+            'full_grouped_data' => $result
+        ];
+    }
 }

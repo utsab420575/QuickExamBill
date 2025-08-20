@@ -56,6 +56,24 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
 
 
+    {{--this is for styling serial number of form--}}
+    <style>
+        .step-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.8rem;              /* make bigger for more padding */
+            height: 2.8rem;             /* make bigger for more padding */
+            border-radius: 999px;
+            background: #079992;      /* green */
+            color: #fff;
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin-right: .5rem;      /* space after each badge */
+        }
+        .step-badge.grey { background: #4b6584; }
+    </style>
+
 
     @stack('styles')
 
@@ -222,7 +240,66 @@
     });
 </script>
 
+{{--this is for copying data from one blade to another--}}
+<script>
+    function wireCopyAcrossForms({
+                                     srcTeacherPrefix,  // e.g. 'prepares_theory_grade_sheet_teacher_ids'
+                                     srcCountPrefix,    // e.g. 'prepares_theory_grade_sheet_no_of_students'
+                                     dstTeacherPrefix,  // e.g. 'scrutinizing_theory_grade_sheet_teacher_ids'
+                                     dstCountPrefix,    // e.g. 'scrutinizing_theory_grade_sheet_no_of_students'
+                                     checkboxId         // e.g. 'copy-from-form1-all-theory'
+                                 }) {
+        const master = document.getElementById(checkboxId);
+        if (!master) return;
 
+        const getCourseId = (name) => (name.match(/\[(\d+)\]/) || [])[1];
+
+        const readSrcMap = () => {
+            const map = {};
+            document.querySelectorAll(`select[name^="${srcTeacherPrefix}["]`).forEach(sel => {
+                const cid = getCourseId(sel.name);
+                if (!cid) return;
+                map[cid] = {
+                    values: Array.from(sel.selectedOptions).map(o => o.value),
+                    students: (document.querySelector(`input[name="${srcCountPrefix}[${cid}]"]`) || {}).value || ''
+                };
+            });
+            return map;
+        };
+
+        const applyToDest = (srcMap) => {
+            document.querySelectorAll(`select[name^="${dstTeacherPrefix}["]`).forEach(dstSel => {
+                const cid = getCourseId(dstSel.name);
+                if (!cid || !srcMap[cid]) return;
+                const { values, students } = srcMap[cid];
+
+                // ensure options exist (edge case)
+                values.forEach(v => {
+                    if (!dstSel.querySelector(`option[value="${v}"]`)) {
+                        dstSel.add(new Option(v, v, false, false));
+                    }
+                });
+
+                if (window.$ && $(dstSel).data('select2')) {
+                    $(dstSel).val(values).trigger('change');
+                } else {
+                    Array.from(dstSel.options).forEach(o => o.selected = values.includes(o.value));
+                }
+
+                const dstCount = document.querySelector(`input[name="${dstCountPrefix}[${cid}]"]`);
+                if (dstCount && !dstCount.value && (students ?? '') !== '') {
+                    dstCount.value = students; // only fill if empty
+                }
+            });
+        };
+
+        master.addEventListener('change', () => {
+            if (!master.checked) return;
+            const srcMap = readSrcMap();
+            applyToDest(srcMap);
+        });
+    }
+</script>
 
 @stack('scripts')
 </body>

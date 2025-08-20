@@ -25,8 +25,10 @@
     <div class="row mb-5">
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
-                <header class="card-header">
-                    <h2 class="card-title">List of Teachers supervised the thesis/projects (@ ****/- thesis/projects)</h2>
+                <header class="card-header d-flex align-items-center">
+                    <h2 class="card-title">
+                        <span class="step-badge">6.b</span>
+                        List of Teachers supervised the thesis/projects (@ ****/- thesis/projects)</h2>
                 </header>
 
                 <div class="card-body card-list-of-supervised-thesis-project">

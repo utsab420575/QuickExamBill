@@ -554,68 +554,88 @@
         </tr>
 
 
-        {{-- Order 7.e/7.f --}}
+        {{-- Order 7.e/7.f --}} {{--for teacher--}}
         @php
-            //$assign_7e = $teacher->rateAssigns->where('rateHead.order_no', '7.e')->first();
-             $assign_7e = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 1 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '7.e';
-               })->first();
-            $rateAmount_7e = $rateAmount_order_7e ?? null;
-            $head = $rateHead_order_7e->head ?? '';
-            $sub_head_7e = $rateHead_order_7e->sub_head ?? '';
+            // 7.e (usually single)
+            $assign_7e = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
+                return $assign->session_id == $session_info->id &&
+                       $assign->exam_type_id == 1 &&
+                       $assign->rateHead &&
+                       $assign->rateHead->order_no == '7.e';
+            });
+
+             // Sum totals for this teacher across all 7.e rows (groups)
+            $sum_students_7e = $assign_7e->sum('no_of_items');   // sum of group totals the teacher participated in
+            $sum_amount_7e   = $assign_7e->sum('total_amount');     // sum of amounts for this teacher
+
+            $rateAmount_7e   = $rateAmount_order_7e ?? null;
+            $head_7          = $rateHead_order_7e->head ?? '';      // common head for section 7
+            $sub_head_7e     = $rateHead_order_7e->sub_head ?? '';
             $default_rate_7e = $rateAmount_7e->default_rate ?? 0;
 
-            if ($assign_7e && $assign_7e->total_amount) {
-                $global_sum += $assign_7e->total_amount;
+            if ($sum_amount_7e) {
+                 $global_sum += $sum_amount_7e;
             }
-        @endphp
-        <tr>
-            <td rowspan="2">7</td>
-            <td class="textstart" rowspan="2">{{ $head }}</td>
-            <td class="textstart">{{ $sub_head_7e }}</td>
-            <td></td>
-            <td>{{ $assign_7e->total_students ?? '' }}</td>
-            <td class="textend">
-                @if(isset($default_rate_7e) && $assign_7e)
-                    {{ number_format($default_rate_7e, 2) }}
-                @endif
-            </td>
-            {{--<td class="textend">{{ number_format($default_rate_7e, 2) }}</td>--}}
-            <td class="textend">{{ isset($assign_7e->total_amount) ? number_format($assign_7e->total_amount, 2) : '' }}</td>
-        </tr>
 
-        {{-- Order 7.f --}}
-        @php
-            //$assign_7f = $teacher->rateAssigns->where('rateHead.order_no', '7.f')->first();
-            $assign_7f = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 1 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '7.f';
-               })->first();
-            $rateAmount_7f = $rateAmount_order_7f ?? null;
-            $sub_head_7f = $rateHead_order_7f->sub_head ?? '';
+            // 7.f (can be multiple like 8.b)
+            $assigns_7f = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
+                return $assign->session_id == $session_info->id &&
+                       $assign->exam_type_id == 1 &&
+                       $assign->rateHead &&
+                       $assign->rateHead->order_no == '7.f';
+            });
+
+            $total_assigns_7f = $assigns_7f->count();
+
+            $rateAmount_7f   = $rateAmount_order_7f ?? null;
+            $sub_head_7f     = $rateHead_order_7f->sub_head ?? '';
             $default_rate_7f = $rateAmount_7f->default_rate ?? 0;
 
-            if ($assign_7f && $assign_7f->total_amount) {
-                $global_sum += $assign_7f->total_amount;
-            }
+            // total rows under section 7 = one row for 7.e + one-or-more for 7.f
+            $rowspan_7_block = 1 + max(1, $total_assigns_7f);
         @endphp
+
+        {{-- 7.e row (first row of section 7) --}}
         <tr>
-            <td class="textstart">{{ $sub_head_7f }}</td>
+            <td rowspan="{{ $rowspan_7_block }}">7</td>
+            <td class="textstart" rowspan="{{ $rowspan_7_block }}">{{ $head_7 }}</td>
+            <td class="textstart">{{ $sub_head_7e }}</td>
             <td></td>
-            <td>{{ $assign_7f->total_students ?? '' }}</td>
-            <td class="textend">
-                @if(isset($default_rate_7f) && $assign_7f)
-                    {{ number_format($default_rate_7f, 2) }}
-                @endif
+            <td>
+                {{ $sum_students_7e ? $sum_students_7e : '' }}
             </td>
-            {{--<td class="textend">{{ number_format($default_rate_7f, 2) }}</td>--}}
-            <td class="textend">{{ isset($assign_7f->total_amount) ? number_format($assign_7f->total_amount, 2) : '' }}</td>
+            <td class="textend">
+                {{ $assign_7e->isNotEmpty() ? number_format((float)$default_rate_7e, 2) : '' }}
+            </td>
+            <td class="textend">{{ $sum_amount_7e ? number_format((float)$sum_amount_7e, 2) : '' }}</td>
         </tr>
+
+        {{-- 7.f rows (multi like 8.b) --}}
+        @if ($total_assigns_7f > 0)
+            @foreach ($assigns_7f as $assign)
+                <tr>
+                    @if ($loop->first)
+                        {{-- sub-head cell spans all 7.f rows --}}
+                        <td class="textstart" rowspan="{{ $total_assigns_7f }}">{{ $sub_head_7f }}</td>
+                    @endif
+                    <td>{{ $assign->course_code ?? '' }}</td>
+                    <td>{{ $assign->total_students ?? '' }}{{ isset($assign->total_teachers) ? '/'.$assign->total_teachers : '' }}</td>
+                    <td class="textend">{{ number_format((float)$default_rate_7f, 2) }}</td>
+                    <td class="textend">{{ number_format((float)($assign->total_amount ?? 0), 2) }}</td>
+                </tr>
+                @php $global_sum += $assign->total_amount ?? 0; @endphp
+            @endforeach
+        @else
+            {{-- Fallback when no 7.f data --}}
+            <tr>
+                <td class="textstart">{{ $sub_head_7f }}</td>
+                <td></td>
+                <td></td>
+                <td class="textend"></td>
+                <td class="textend"></td>
+            </tr>
+        @endif
+
 
 
         @php
@@ -1742,7 +1762,7 @@
         </tr>
 
 
-        {{-- Order 7.e/7.f --}}
+        {{-- Order 7.e/7.f --}} {{--for employee--}}
         @php
             //$assign_7e = $employee->rateAssigns->where('rateHead.order_no', '7.e')->first();
              $assign_7e = $employee->rateAssigns->filter(function($assign) use ($session_info) {

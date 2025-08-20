@@ -25,8 +25,10 @@
     <div class="row mb-5">
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
-                <header class="card-header">
-                    <h2 class="card-title">List of Stencill Cutting of Question paper (@ ****/- per stencil)</h2>
+                <header class="card-header d-flex align-items-center">
+                    <h2 class="card-title">
+                        <span class="step-badge">12.a</span>
+                        List of Stencill Cutting of Question paper (@ ****/- per stencil)</h2>
                 </header>
 
                 <div class="card-body card-list-of-stencil-cutting-question-paper">

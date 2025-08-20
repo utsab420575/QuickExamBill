@@ -21,7 +21,9 @@
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
                 <header class="card-header">
-                    <h2 class="card-title">List of Teachers for the Preparation of Grade Sheet(Theoritical (@**/- per student per subject))
+                    <h2 class="card-title">
+                        <span class="step-badge">8.a</span>
+                        List of Teachers for the Preparation of Grade Sheet(Theoritical (@**/- per student per subject))
                     </h2>
                 </header>
 
@@ -119,6 +121,8 @@
 
 
 @push('scripts')
+
+
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

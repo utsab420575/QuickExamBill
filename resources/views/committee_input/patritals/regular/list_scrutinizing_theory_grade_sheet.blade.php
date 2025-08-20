@@ -1,4 +1,77 @@
 @push('styles')
+    {{--1.toggle button style--}}
+    <style>
+        /* Pretty toggle + chip text */
+        .copy-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            user-select: none;
+            font-weight: 600;
+        }
+        .copy-toggle input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .copy-toggle .track {
+            width: 56px;
+            height: 30px;
+            background: linear-gradient(to bottom, #eef2f7, #e7ecf2);
+            border-radius: 999px;
+            position: relative;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,.08);
+            transition: all .25s ease;
+        }
+        .copy-toggle .knob {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,.18);
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+        .copy-toggle:hover .track { filter: brightness(1.03); }
+
+        .copy-toggle input:checked + .track {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            box-shadow: 0 0 0 4px rgba(34,197,94,.15);
+        }
+        .copy-toggle input:checked + .track .knob {
+            transform: translateX(26px);
+            box-shadow: 0 4px 10px rgba(22,163,74,.35);
+        }
+
+        .copy-toggle input:focus-visible + .track {
+            outline: 2px solid #16a34a;
+            outline-offset: 2px;
+        }
+
+        .copy-toggle .label-text {
+            font-size: .95rem;
+            color: #334155;
+            padding: .25rem .6rem;
+            border: 1px solid #e2e8f0;
+            border-radius: .5rem;
+            background: #ffffff;
+            box-shadow: 0 1px 2px rgba(0,0,0,.04);
+            transition: color .2s ease, border-color .2s ease, background .2s ease;
+            white-space: nowrap;
+        }
+        .copy-toggle input:checked ~ .label-text {
+            color: #167c3a;
+            border-color: #86efac;
+            background: linear-gradient(to bottom, #f0fdf4, #dcfce7);
+        }
+
+        /* Optional: keep header items on one line nicely spaced */
+        .card-header.d-flex { gap: 14px; }
+    </style>
+
     <style>
         .card-list-of-scrutinizers-theory-grade-sheet {
             background-color: white; /* starting point */
@@ -23,8 +96,17 @@
     <div class="row mb-5">
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
-                <header class="card-header">
-                    <h2 class="card-title">List of Teachers for the Scrutinizing of Grade Sheet(Theoretical) (@**/- per student per subject)</h2>
+                <header class="card-header d-flex align-items-center">
+                    <h2 class="card-title mb-0">
+                        <span class="step-badge">10.a</span>
+                        List of Teachers for the Scrutinizing of Grade Sheet (Theoretical) (@**/- per student per subject)
+                    </h2>
+
+                    <label class="copy-toggle ms-auto" title="Copy teachers from Preparation (Theory) form">
+                        <input type="checkbox" id="copy-in-scrutinizing-theory-grade-sheet">
+                        <span class="track"><span class="knob"></span></span>
+                        <span class="label-text">Same as “Preparation (Theory) Form”</span>
+                    </label>
                 </header>
 
                 <div class="card-body">
@@ -42,10 +124,10 @@
                     </div>
 
 
-                    <label class="ms-auto d-inline-flex align-items-center gap-2" style="cursor:pointer;">
+                    {{--<label class="ms-auto d-inline-flex align-items-center gap-2" style="cursor:pointer;">
                         <input type="checkbox" id="copy-from-form1-all-theory">
-                        Same as “Preparation (Theory) Form” for all courses
-                    </label>
+                        Same as “Preparation (Theory) Form”
+                    </label>--}}
                     <div class="row">
                         <div class="col-md-12">
                             @if(isset($all_course_with_teacher->courses))
@@ -76,7 +158,7 @@
                                                     <label for="scrutinizing_theory_grade_sheet_teacher_{{ $single_course->id }}_{{ $loop->index }}">Select Scrutinizers</label>
                                                     <select name="scrutinizing_theory_grade_sheet_teacher_ids[{{ $single_course->id }}][]"
                                                             multiple data-plugin-selectTwo
-                                                            id="prepare_theory_grade_sheet_teacher_{{ $single_course->id }}_{{ $loop->index }}"
+                                                            id="scrutinizing_theory_grade_sheet_teacher_{{ $single_course->id }}_{{ $loop->index }}"
                                                             class="form-control  populate"  required>
                                                         <option value="" disabled>-- Select Teacher --</option>
                                                         @foreach($groupedTeachers as $deptFullName => $deptTeachers)
@@ -130,91 +212,18 @@
 @push('scripts')
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // ====== CONFIG: name prefixes for both forms ======
-            // Form1 (Preparation - Theory)
-            const SRC_TEACHER_PREFIX = 'prepares_theory_grade_sheet_teacher_ids';
-            const SRC_COUNT_PREFIX   = 'prepares_theory_grade_sheet_no_of_students';
-
-            // Form2 (Scrutinizing - Theory)
-            const DST_TEACHER_PREFIX = 'scrutinizing_theory_grade_sheet_teacher_ids';
-            const DST_COUNT_PREFIX   = 'scrutinizing_theory_grade_sheet_no_of_students';
-
-            const master = document.getElementById('copy-from-form1-all-theory');
-            if (!master) return;
-
-            // Extract courseId from input/select name like: prefix[123] or prefix[123][]
-            const getCourseId = (name) => {
-                const m = name.match(/\[(\d+)\]/);
-                return m ? m[1] : null;
-            };
-
-            // Build a map from Form1: { courseId: { values: [teacherIds], students: "123" } }
-            const readForm1Map = () => {
-                const map = {};
-                document.querySelectorAll(`select[name^="${SRC_TEACHER_PREFIX}["]`).forEach(srcSel => {
-                    const courseId = getCourseId(srcSel.name);
-                    if (!courseId) return;
-
-                    const values = Array.from(srcSel.selectedOptions).map(o => o.value);
-                    const studentsInput = document.querySelector(
-                        `input[name="${SRC_COUNT_PREFIX}[${courseId}]"]`
-                    );
-                    map[courseId] = {
-                        values,
-                        students: studentsInput ? studentsInput.value : ''
-                    };
-                });
-                return map;
-            };
-
-            // Copy from Form1 -> Form2 for all courses
-            const copyAll = () => {
-                const srcMap = readForm1Map();
-
-                // Apply to Form2 selects
-                document.querySelectorAll(`select[name^="${DST_TEACHER_PREFIX}["]`).forEach(dstSel => {
-                    const courseId = getCourseId(dstSel.name);
-                    if (!courseId || !srcMap[courseId]) return;
-
-                    const { values, students } = srcMap[courseId];
-
-                    // Ensure all options exist (in case some teacher isn't in the list for some reason)
-                    values.forEach(val => {
-                        if (!dstSel.querySelector(`option[value="${val}"]`)) {
-                            const opt = new Option(val, val, false, false);
-                            dstSel.add(opt);
-                        }
-                    });
-
-                    // If Select2, use jQuery to set and trigger change
-                    if (window.$ && $(dstSel).data('select2')) {
-                        $(dstSel).val(values).trigger('change');
-                    } else {
-                        // Plain <select multiple>
-                        Array.from(dstSel.options).forEach(o => {
-                            o.selected = values.includes(o.value);
-                        });
-                    }
-
-                    // Copy the student count too (optional)
-                    const dstCount = document.querySelector(
-                        `input[name="${DST_COUNT_PREFIX}[${courseId}]"]`
-                    );
-                    if (dstCount && (students ?? '') !== '') {
-                        dstCount.value = students;
-                    }
-                });
-            };
-
-            // When checked: copy; when unchecked: leave as-is (user can edit anytime)
-            master.addEventListener('change', function () {
-                if (this.checked) {
-                    copyAll();
-                }
+        document.addEventListener('DOMContentLoaded', () => {
+            wireCopyAcrossForms({
+                srcTeacherPrefix: 'prepares_theory_grade_sheet_teacher_ids',
+                srcCountPrefix:   'prepares_theory_grade_sheet_no_of_students',
+                dstTeacherPrefix: 'scrutinizing_theory_grade_sheet_teacher_ids',
+                dstCountPrefix:   'scrutinizing_theory_grade_sheet_no_of_students',
+                checkboxId:       'copy-in-scrutinizing-theory-grade-sheet'
             });
         });
     </script>
+
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const form = document.getElementById('form-list-of-scrutinizers-theory-grade-sheet');
@@ -222,7 +231,9 @@
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
                 // ✅ Validate teacher selections
-                const teacherSelects = form.querySelectorAll('select[name^="teachers"]');
+                const teacherSelects = form.querySelectorAll(
+                    'select[name^="scrutinizing_theory_grade_sheet_teacher_ids["]'
+                );
                 let allSelected = true;
 
                 teacherSelects.forEach(select => {

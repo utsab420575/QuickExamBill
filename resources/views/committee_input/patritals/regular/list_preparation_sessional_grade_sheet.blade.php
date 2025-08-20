@@ -13,6 +13,7 @@
             background-color: white;
         }
     </style>
+
 @endpush
 <form id="form-list-of-prepare-sessional-grade-sheet" action="{{ route('committee.input.sessional.grade.sheet.store') }}" method="POST">
     @csrf
@@ -20,8 +21,10 @@
     <div class="row mb-5">
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
-                <header class="card-header">
-                    <h2 class="card-title">List of Teachers for the Preparation of Grade Sheet(Sessional) (@**/- per student per subject):
+                <header class="card-header d-flex align-items-center">
+                    <h2 class="card-title">
+                        <span class="step-badge">8.b</span>
+                        List of Teachers for the Preparation of Grade Sheet(Sessional) (@**/- per student per subject):
                     </h2>
                 </header>
 

@@ -4,8 +4,10 @@
     <div class="row mb-5">
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
-                <header class="card-header">
-                    <h2 class="card-title">Honorarium for course co-ordinator (UG) (@****/-)</h2>
+                <header class="card-header d-flex align-items-center">
+                    <h2 class="card-title">
+                        <span class="step-badge">14</span>
+                        Honorarium for course co-ordinator (UG) (@****/-)</h2>
                 </header>
                 <div class="card-body">
                     <table id="table-list-of-honorarium-coordinator" class="table table-responsive-md table-striped  mb-0">

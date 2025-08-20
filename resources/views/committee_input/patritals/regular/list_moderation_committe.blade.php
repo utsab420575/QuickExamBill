@@ -27,12 +27,9 @@
     <div class="row mb-5">
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
-                <header class="card-header ps-1" style="padding-top: 0.40rem; padding-bottom: 0.40rem;">
+                <header class="card-header">
                     <h2 class="card-title d-flex align-items-center">
-                        <span class="fa-stack" style="font-size: 1em; margin-right: 0.5rem;">
-                            <i class="fa-solid fa-circle fa-stack-2x text-info"></i>
-                            <i class="fa-solid fa-1 fa-stack-1x text-light"></i>
-                        </span>
+                        <span class="step-badge">1</span>
                         List of Examination Committee/Moderation Committee Members @ min***
                     </h2>
                 </header>
