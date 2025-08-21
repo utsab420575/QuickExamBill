@@ -23,4 +23,9 @@ class Teacher extends Model
     {
         return $this->hasMany(RateAssign::class);
     }
+
+    public function university()
+    {
+        return $this->belongsTo(University::class);
+    }
 }

@@ -117,6 +117,25 @@
 
 
 
+                                {{-- University (NEW) --}}
+                                <div class="row mb-4">
+                                    <div class="form-group col">
+                                        <label for="university">Select University</label>
+                                        <select class="form-control" name="university" id="university" required>
+                                            <option value="" disabled {{ old('university', $teacher->university_id) ? '' : 'selected' }}>
+                                                Select University
+                                            </option>
+                                            @foreach($universities as $university)
+                                                <option value="{{ $university->id }}"
+                                                    {{ (string) old('university', $teacher->university_id) === (string) $university->id ? 'selected' : '' }}>
+                                                    {{ $university->name }}{{ $university->short_name ? ' (' . $university->short_name . ')' : '' }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('university') <span class="text-danger">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+
 
                                 <div class="row mb-4">
                                     <div class="form-group col">

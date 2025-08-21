@@ -178,4 +178,41 @@ class RateAssign extends Model
             'full_grouped_data' => $result
         ];
     }
+
+    public static function getInternalExternalTeacher($sessionId, $examTypeId, $rateHeadId)
+    {
+        // Pull only rows that have a real group_no
+        $records = self::query()
+            ->with(['teacher.user','teacher.designation','teacher.department']) // optional; remove if not needed
+            ->where('session_id', $sessionId)
+            ->where('exam_type_id', $examTypeId)
+            ->where('rate_head_id', $rateHeadId)
+            ->whereNotNull('group_no')
+            ->orderBy('group_no')
+            ->orderBy('id')
+            ->get();
+
+        if ($records->isEmpty()) {
+            return [];
+        }
+
+        // Group strictly by group_no and shape for Blade prefill
+        $rows = $records->groupBy('group_no')->map(function ($items, $groupNo) {
+            $internalIds   = $items->where('is_internal', 1)->pluck('teacher_id')->unique()->values()->all();
+            $externalIds   = $items->where('is_external', 1)->pluck('teacher_id')->unique()->values()->all();
+            $studentCount  = (int) ($items->first()->total_students ?? 0); // per-row total stored at save time
+
+            return [
+                'group_no'             => (int) $groupNo,
+                'internal_teacher_ids' => $internalIds,
+                'external_teacher_ids' => $externalIds,
+                'student_count'        => $studentCount,
+            ];
+        })
+            ->values()     // drop group keys, keep array of rows
+            ->toArray();
+
+        return $rows;
+    }
+
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Department;
 use App\Models\Designation;
 use App\Models\Teacher;
+use App\Models\University;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +21,8 @@ class TeacherController extends Controller
     public function AddTeacher(){
         $designations=Designation::all();
         $departments=Department::all();
-        return view('teacher.add_teacher',compact('designations','departments'));
+        $universities=University::all();
+        return view('teacher.add_teacher', compact('designations', 'departments', 'universities'));
     }
 
     public function StoreTeacher(Request $request)
@@ -43,6 +45,7 @@ class TeacherController extends Controller
             'address' => 'nullable|string|max:500',
             'designation' => 'required|exists:designations,id',
             'department' => 'required|exists:departments,id',
+            'university' => 'required|exists:universities,id', // <-- NEW
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
@@ -81,19 +84,19 @@ class TeacherController extends Controller
                 Log::warning("Role 'Teacher' not found. Skipped role assignment for: {$user->email}");
             }
 
-
             $user->save();
             Log::info('User saved', ['user_id' => $user->id]);
 
             // Create teacher
             $teacher = new Teacher();
-            $teacher->teachername = $request->name;
-            $teacher->phoneno = $request->phone;
-            $teacher->preaddress = $request->address ?? null;
-            $teacher->designation_id = $request->designation;
-            $teacher->department_id = $request->department;
-            $teacher->user_id = $user->id;
-            $teacher->photo = $user->photo ?? null;
+            $teacher->teachername     = $request->name;
+            $teacher->phoneno         = $request->phone;
+            $teacher->preaddress      = $request->address ?? null;
+            $teacher->designation_id  = $request->designation;
+            $teacher->department_id   = $request->department;
+            $teacher->university_id   = $request->university;   // <-- NEW
+            $teacher->user_id         = $user->id;
+            $teacher->photo           = $user->photo ?? null;
 
             $teacher->save();
             Log::info('Teacher saved', ['teacher_id' => $teacher->id]);
@@ -116,6 +119,7 @@ class TeacherController extends Controller
     }
 
 
+
     public function AllTeacher(){
         $teachers = Teacher::with('department')
             ->orderByRaw('department_id = 2 DESC') // Architecture department (id=2) first
@@ -128,7 +132,8 @@ class TeacherController extends Controller
         $teacher=Teacher::find($id);
         $designations=Designation::all();
         $departments=Department::all();
-        return view('teacher.edit_teacher',compact('teacher','designations','departments'));
+        $universities=University::all();
+        return view('teacher.edit_teacher',compact('teacher','designations','departments','universities'));
     }
 
     public function UpdateTeacher(Request $request)
@@ -151,6 +156,7 @@ class TeacherController extends Controller
             'address' => 'nullable|string|max:500',
             'designation' => 'required|exists:designations,id',
             'department' => 'required|exists:departments,id',
+            'university' => 'required|exists:universities,id', // <-- NEW
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
@@ -160,12 +166,11 @@ class TeacherController extends Controller
             $user = $teacher->user;
 
             if ($user) {
-                $user->name = $request->name;
+                $user->name  = $request->name;
                 $user->email = $request->email;
                 $user->phone = $request->phone;
 
                 if ($request->file('photo')) {
-                    // Delete old photo
                     if ($user->photo && file_exists(public_path($user->photo))) {
                         unlink(public_path($user->photo));
                     }
@@ -174,8 +179,7 @@ class TeacherController extends Controller
                     $name_gen = hexdec(uniqid()) . '.' . $recive_image->getClientOriginalExtension();
 
                     $manager = new ImageManager(new Driver());
-                    $image = $manager->read($recive_image);
-                    $image->resize(300, 300);
+                    $image = $manager->read($recive_image)->resize(300, 300);
 
                     $path = public_path('upload/user_image/');
                     if (!file_exists($path)) {
@@ -189,9 +193,10 @@ class TeacherController extends Controller
                 $user->save();
             }
 
-            $teacher->preaddress = $request->address;
+            $teacher->preaddress     = $request->address;
             $teacher->designation_id = $request->designation;
-            $teacher->department_id = $request->department;
+            $teacher->department_id  = $request->department;
+            $teacher->university_id  = $request->university; // <-- NEW
             $teacher->save();
 
             DB::commit();
@@ -210,6 +215,7 @@ class TeacherController extends Controller
             ]);
         }
     }
+
 
     public function DeleteTeacher($id)
     {

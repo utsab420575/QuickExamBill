@@ -3078,125 +3078,139 @@ class CommitteeInputController extends Controller
     //order=6.a
     public function storeExaminedThesisProject(Request $request)
     {
-        $teacherIds = $request->input('examined_thesis_project_teacher_ids', []);
-        $internal_no_of_students = $request->input('examined_internal_thesis_project_student_amounts', []);
-        $external_no_of_students = $request->input('examined_external_thesis_project_student_amounts', []);
-        $sessionId = $request->sid;
-        $examined_thesis_project_rate = $request->examined_thesis_project_rate;
-        $exam_type_record=ExamType::where('type','regular')->first();
-        $exam_type = $exam_type_record->id;
+        // Incoming arrays (indexed by Blade row id)
+        $internals     = $request->input('examined_internal_thesis_project_teacher_ids', []); // [rowId => [t1, t2, ...]]
+        $externals     = $request->input('examined_external_thesis_project_teacher_ids', []); // [rowId => [t3, ...]]
+        $studentCounts = $request->input('examined_thesis_project_student_counts', []);       // [rowId => N]
+        $sessionId     = $request->sid;
 
+        // Keep rate as string for bcmath (exact decimal math)
+        $rateInput = (string) $request->examined_thesis_project_rate;
 
-        Log::info('📥 Received Examined Thesis Project Data', [
-            'session_id' => $sessionId,
-            'teacher_data' => $teacherIds,
-            'internal_no_of_students' => $internal_no_of_students,
-            'external_no_of_students' => $external_no_of_students,
-            'rate' => $examined_thesis_project_rate
-        ]);
+        $examTypeRecord = ExamType::where('type', 'regular')->firstOrFail();
+        $examTypeId     = $examTypeRecord->id;
 
-
-        if (empty($teacherIds)) {
-            return response()->json(['message' => 'No teacher data submitted.'], 422);
+        if (empty($studentCounts)) {
+            return response()->json(['message' => 'No row data submitted.'], 422);
         }
 
         try {
-            // Step 1: Get or create Session
-            $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
-            Log::info('✅ Session Info Created', $session->toArray());
-
+            // Get or create session
+            $session = LocalData::getOrCreateRegularSession($sessionId, $examTypeId);
 
             DB::beginTransaction();
 
-            // 2. Get or Create RateHead
+            // Ensure a RateHead exists for 6.a
             $rateHead = $this->getOrCreateRateHead('6.a', [
-                'head' => 'Project/Thesis',
-                'sub_head' => 'Examination',
-                'dist_type' => 'Individual',
-                'enable_min' => 0,
-                'enable_max' => 0,
-                'is_course' => 0,
+                'head'             => 'Project/Thesis',
+                'sub_head'         => 'Examination',
+                'dist_type'        => 'Individual',
+                'enable_min'       => 0,
+                'enable_max'       => 0,
+                'is_course'        => 0,
                 'is_student_count' => 1,
-                'marge_with' => null,
-                'status' => 1,
+                'marge_with'       => null,
+                'status'           => 1,
             ]);
-            Log::info('✅ RateHead confirmed', $rateHead->toArray());
 
-
-            // 3. Get or Create RateAmount
+            // Ensure a RateAmount record; store rate as provided
             $rateAmount = $this->getOrCreateRateAmount(
                 $rateHead->id,
                 $session->id,
-                $exam_type,
+                $examTypeId,
                 [
-                    'default_rate' => $examined_thesis_project_rate,
+                    'default_rate' => $rateInput,
                     'min_rate'     => null,
                     'max_rate'     => null,
                 ]
             );
 
-            Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
-
-
+            // Remove any previous assignments for this session/head/type
             RateAssign::where('session_id', $session->id)
-                ->where('exam_type_id', $exam_type)
+                ->where('exam_type_id', $examTypeId)
                 ->where('rate_head_id', $rateHead->id)
                 ->delete();
 
+            // Use high precision math without rounding
+            $scale = 10; // matches DECIMAL(20,10) recommendation
 
-            // 4. Create RateAssign for each teacher
-            foreach ($teacherIds as $index => $teacherId) {
-                $internal = (int) ($internal_no_of_students[$index] ?? 0);
-                $external = (int) ($external_no_of_students[$index] ?? 0);
-                $totalStudents = $internal + $external;
+            foreach ($studentCounts as $rowId => $studentsRaw) {
+                $students = (int) $studentsRaw;
 
-                if ($totalStudents > 0) {
-                    // $totalAmount = max($rateAmount->min_rate, $totalStudents * $rateAmount->default_rate);
-                    $totalAmount=$totalStudents*$rateAmount->default_rate;
+                // Collect and sanitize IDs for the row
+                $internalIds = array_values(array_filter((array)($internals[$rowId] ?? []), static function ($v) {
+                    return $v !== null && $v !== '' && is_numeric($v);
+                }));
+                $externalIds = array_values(array_filter((array)($externals[$rowId] ?? []), static function ($v) {
+                    return $v !== null && $v !== '' && is_numeric($v);
+                }));
 
-                    Log::info('📘 Preparation Of RateAssign', [
-                        'teacher_id' => $teacherId,
-                        'rate_head_id' => $rateHead->id,
-                        'session_id' => $session->id,
-                        'no_of_items' => $totalStudents,
-                        'total_amount' => $totalAmount,
-                        'total_students'=>$totalStudents,
-                        'exam_type_id'=>$exam_type,
+                // If the same teacher is in both lists, prefer INTERNAL
+                if (!empty($internalIds) && !empty($externalIds)) {
+                    $externalIds = array_values(array_diff($externalIds, $internalIds));
+                }
+
+                // Unique full set for the row
+                $teacherIds    = array_values(array_unique(array_merge($internalIds, $externalIds)));
+                $totalTeachers = count($teacherIds);
+
+                // Skip invalid row
+                if ($students <= 0 || $totalTeachers <= 0) {
+                    continue;
+                }
+
+                // Share per teacher (exact decimal string) and amount
+                if (function_exists('bcdiv') && function_exists('bcmul')) {
+                    $sharePerTeacher  = bcdiv((string) $students, (string) $totalTeachers, $scale);               // e.g. "6.6666666667"
+                    $amountPerTeacher = bcmul($sharePerTeacher, (string) $rateAmount->default_rate, $scale);     // exact product
+                } else {
+                    // Fallback to float if BCMath not available (DB DECIMAL(20,10) still stores scale)
+                    $sharePerTeacher  = $students / $totalTeachers;
+                    $amountPerTeacher = $sharePerTeacher * (float) $rateAmount->default_rate;
+                }
+
+                // Create one RateAssign per teacher with role flags + group_no
+                foreach ($teacherIds as $tid) {
+                    $isInternal = in_array($tid, $internalIds) ? 1 : null;
+                    $isExternal = in_array($tid, $externalIds) ? 1 : null;
+
+                    RateAssign::create([
+                        'teacher_id'     => $tid,
+                        'rate_head_id'   => $rateHead->id,
+                        'session_id'     => $session->id,
+                        'exam_type_id'   => $examTypeId,
+
+                        // meta per row
+                        'group_no'       => (int) $rowId,
+                        'total_students' => $students,        // row total
+                        'total_teachers' => $totalTeachers,   // row total
+
+                        // EXACT values (no rounding) — ensure DB columns are DECIMAL(20,10)
+                        'no_of_items'    => $sharePerTeacher,
+                        'total_amount'   => $amountPerTeacher,
+
+                        // role flags
+                        'is_internal'    => $isInternal,
+                        'is_external'    => $isExternal,
                     ]);
-
-                    //for store internal and external student
-                    //we use total_student=internal
-                    //we use total_teacher=external
-                    //no_of_items store total students(internal+external)
-                    $rateAssign = RateAssign::create([
-                        'teacher_id' => $teacherId,
-                        'rate_head_id' => $rateHead->id,
-                        'session_id' => $session->id,
-                        'no_of_items' => $totalStudents,
-                        'total_amount' => $totalAmount,
-                        'total_students'=>$internal,
-                        'total_teachers'=>$external,
-                        'exam_type_id'=>$exam_type,
-                    ]);
-
-                    Log::info("✅ RateAssign created for Teacher ID {$teacherId}", $rateAssign->toArray());
                 }
             }
 
             DB::commit();
 
-            return response()->json([
-                'message' => 'Examined Thesis/Project data saved successfully!',
-            ]);
-        } catch (\Exception $e) {
+            return response()->json(['message' => 'Examined Thesis/Project data saved successfully!']);
+        } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('❌ Error storing Examined Thesis/Project: ' . $e->getMessage());
             return response()->json([
                 'message' => 'An error occurred while saving data.',
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }
+
+
+
+
 
     //order=6.d
     public function storeConductedOralExamination(Request $request)

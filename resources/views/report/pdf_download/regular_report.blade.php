@@ -430,38 +430,71 @@
 
 
 
+
         {{-- Order 6.a/b/c/d --}}
         @php
-            //$assign_6a = $teacher->rateAssigns->where('rateHead.order_no', '6.a')->first();
-            $assign_6a = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
-                  return $assign->session_id == $session_info->id &&
-                         $assign->exam_type_id == 1 &&
-                         $assign->rateHead &&
-                         $assign->rateHead->order_no == '6.a';
-              })->first();
-           $rateAmount_6a = $rateAmount_order_6a ?? null;
-           $head = $rateHead_order_6a->head ?? '';
-           $sub_head_6a = $rateHead_order_6a->sub_head ?? '6.A';
-           $default_rate_6a = $rateAmount_6a->default_rate ?? 0;
+            // ALL 6.a rows for this teacher (session + exam type)
+            $assigns_6a = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
+                return $assign->session_id == $session_info->id
+                    && $assign->exam_type_id == 1
+                    && $assign->rateHead
+                    && $assign->rateHead->order_no == '6.a';
+            });
 
-           if ($assign_6a && $assign_6a->total_amount) {
-               $global_sum += $assign_6a->total_amount;
-           }
+            $rateAmount_6a   = $rateAmount_order_6a ?? null;
+            $head            = $rateHead_order_6a->head ?? '';
+            $sub_head_6a     = $rateHead_order_6a->sub_head ?? '6.A';
+            $default_rate_6a = $rateAmount_6a->default_rate ?? 0;
+
+            // Accurate sums with BCMath (fall back to float if BCMath missing)
+            $scale = 10;
+            $sum_no_of_items = '0';
+            $sum_total_amount = '0';
+
+            foreach ($assigns_6a as $a) {
+                if (function_exists('bcadd')) {
+                    $sum_no_of_items  = bcadd($sum_no_of_items,  (string)$a->no_of_items,  $scale);
+                    $sum_total_amount = bcadd($sum_total_amount, (string)$a->total_amount, $scale);
+                } else {
+                    $sum_no_of_items  = (string)((float)$sum_no_of_items  + (float)$a->no_of_items);
+                    $sum_total_amount = (string)((float)$sum_total_amount + (float)$a->total_amount);
+                }
+            }
+
+            // Pretty display: no_of_items without trailing zeros, currency with 2 dp
+            $sum_no_of_items_disp = ($sum_no_of_items === '0') ? '' : rtrim(rtrim($sum_no_of_items, '0'), '.');
+            $sum_total_amount_disp = ($sum_total_amount === '0')
+                ? ''
+                : number_format((float)$sum_total_amount, 2);
+
+            // Update global
+            if ($sum_total_amount !== '0') {
+                $global_sum = isset($global_sum) ? $global_sum + (float)$sum_total_amount : (float)$sum_total_amount;
+            }
         @endphp
+
         <tr>
             <td rowspan="4">6</td>
             <td class="textstart" rowspan="4">{{ $head }}</td>
             <td class="textstart">{{ $sub_head_6a }}</td>
             <td></td>
-            <td>{{ $assign_6a->total_students ?? '' }}</td>
+
+            {{-- sum(no_of_items) shown neatly --}}
+            <td>{{ $sum_no_of_items_disp }}</td>
+
             <td class="textend">
-                @if(isset($default_rate_6a) && $assign_6a)
-                    {{ number_format($default_rate_6a, 0) }}
+                @if($assigns_6a->isNotEmpty())
+                    {{ number_format((float)$default_rate_6a, 0) }}
                 @endif
             </td>
-            {{-- <td class="textend">{{ number_format($default_rate_6a, 2) }}</td>--}}
-            <td class="textend">{{ isset($assign_6a->total_amount) ? number_format($assign_6a->total_amount, 2) : '' }}</td>
+
+            {{-- sum(total_amount) with 2 decimals --}}
+            <td class="textend">{{ $sum_total_amount_disp }}</td>
         </tr>
+
+
+
+
 
         {{-- Order 6.b --}}
         @php

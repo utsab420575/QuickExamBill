@@ -679,35 +679,38 @@
 
 
         {{-- order-7.e--}}
-        @if($session_info->year == 5 && $session_info->semester == 2)
-            @include('committee_input.patritals.regular.list_conducted_central_oral_examination')
-        @endif
+         @if($session_info->year!=6&& $session_info->semester!=3)
+             @include('committee_input.patritals.regular.list_conducted_central_oral_examination')
+         @endif
+
 
         {{-- order-7.f--}}
-        @if($session_info->year == 5 && $session_info->semester == 2)
-            @include('committee_input.patritals.regular.list_involved_survey')
-        @endif
+           @if($session_info->year!=6&& $session_info->semester!=3)
+               @include('committee_input.patritals.regular.list_involved_survey')
+           @endif
 
         {{-- order-6.c--}}
-        @if($session_info->year == 5 && $session_info->semester == 2)
+        @if($session_info->year!=6&& $session_info->semester!=3)
             @include('committee_input.patritals.regular.list_conducted_priliminary_viva')
         @endif
 
+
         {{-- order-6.a--}}
-        @if($session_info->year == 5 && $session_info->semester == 2)
-            @include('committee_input.patritals.regular.list_examined_thesis_project')
-        @endif
+         @if($session_info->year!=6&& $session_info->semester!=3)
+             @include('committee_input.patritals.regular.list_examined_thesis_project')
+         @endif
+
 
         {{-- order-6.d--}}
-        @if($session_info->year == 5 && $session_info->semester == 2)
-            @include('committee_input.patritals.regular.list_conducted_oral_examination')
-        @endif
+           @if($session_info->year!=6&& $session_info->semester!=3)
+               @include('committee_input.patritals.regular.list_conducted_oral_examination')
+           @endif
+
 
         {{-- order-6.b--}}
-        @if($session_info->year == 5 && $session_info->semester == 2)
+        @if($session_info->year!=6&& $session_info->semester!=3)
             @include('committee_input.patritals.regular.list_supervised_thesis_project')
         @endif
-
 
 
         {{-- order-14--}}
