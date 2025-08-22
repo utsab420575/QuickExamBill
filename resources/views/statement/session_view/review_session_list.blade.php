@@ -28,10 +28,10 @@
             <div class="col">
                 <section class="card">
                     <header class="card-header">
-                        <h2 class="card-title">Select Review Session</h2>
+                        <h2 class="card-title">Select Regular Session</h2>
                     </header>
                     <div class="card-body">
-                        <form class="form-horizontal form-bordered" method="post" action="{{route('committee.input.review.session.form')}}">
+                        <form class="form-horizontal form-bordered" method="post" action="{{route('statement.review.generate')}}">
                             @csrf
                             <div class="form-group row pb-1">
                                 <label class="col-lg-3 control-label text-lg-end pt-2">Select Session</label>

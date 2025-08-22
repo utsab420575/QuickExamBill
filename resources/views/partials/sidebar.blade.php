@@ -71,7 +71,7 @@
                         </li>
                     @endif
 
-                    {{-- Committee Record Manage --}}
+                    {{-- Committee Record Manage --}}{{--
                     @if(Auth::user()->can('committee_record.menu'))
                         <li class="nav-parent">
                             <a class="nav-link" href="#">
@@ -83,7 +83,20 @@
                                 <li><a class="nav-link" href="#">All Review Session</a></li>
                             </ul>
                         </li>
-                    @endif
+                    @endif--}}
+
+                    {{--  @if(Auth::user()->can('committee_record.menu'))--}}
+                    <li class="nav-parent">
+                        <a class="nav-link" href="#">
+                            <i class="bx bx-file" aria-hidden="true"></i>
+                            <span>Statement Manage</span>
+                        </a>
+                        <ul class="nav nav-children">
+                            <li><a class="nav-link" href="{{ route('statement.regular.session') }}">All Regular Session</a></li>
+                            <li><a class="nav-link" href="{{ route('statement.regular.session') }}">All Review Session</a></li>
+                        </ul>
+                    </li>
+                    {{--  @endif--}}
 
                     {{-- Committee Teacher Manage --}}
                     @if(Auth::user()->can('teacher.menu'))

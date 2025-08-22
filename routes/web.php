@@ -9,6 +9,8 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReportReviewController;
 use App\Http\Controllers\RoleAssignmentController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\StatementController;
+use App\Http\Controllers\StatementReviewController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserController;
 use App\Models\Employee;
@@ -133,6 +135,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/review/generate', 'reviewReportGenerate')->name('report.review.generate');
     });
 
+
+
     Route::controller(TeacherController::class)->group(function () {
         Route::get('/teacher/all', 'AllTeacher')->name('teacher.all');
         Route::get('/teacher/add', 'AddTeacher')->name('teacher.add');
@@ -194,6 +198,22 @@ Route::middleware('auth')->group(function () {
         Route::get('/role/assignments/edit/{id}','EditRoleAssignments')->name('role.assignments.edit');
         Route::post('/role/assignments/update','UpdateRoleAssignments')->name('role.assignments.update');
         Route::get('/role/assignments/delete/{id}','DeleteRoleAssignments')->name('role.assignments.delete');
+    });
+
+
+
+    //For statement
+    //For Regular statement
+    Route::prefix('statement')->controller(StatementController::class)->group(function () {
+        //show review session list form
+        Route::get('/regular/session', 'regularSessionShow')->name('statement.regular.session');
+        Route::post('/regular/generate', 'regularStatementGenerate')->name('statement.regular.generate');
+    });
+
+    //For Review Session
+    Route::prefix('statement')->controller(StatementReviewController::class)->group(function () {
+        Route::get('/review/session', 'reviewSessionShow')->name('statement.review.session');
+        Route::post('/review/generate', 'reviewStatementGenerate')->name('statement.review.generate');
     });
 
 
