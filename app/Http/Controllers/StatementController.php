@@ -63,16 +63,198 @@ class StatementController extends Controller
             return $email === $headEmail ? 1 : 0;
         })->values();
 
+
+
+
+        //order 2/3
+        $rateHead_order_2 = RateHead::where('order_no', '2')->first();
+
+        $assigns_order_2 = RateAssign::with([
+            'teacher.user','teacher.designation','teacher.department',
+            'employee.user','employee.designation','employee.department','rateHead'
+        ])
+            ->where('session_id',  $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->where('rate_head_id', $rateHead_order_2->id)
+            ->whereNotNull('course_code')
+            ->orderBy('course_code')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('course_code');
+
+
+
+        //order 4
+        $rateHead_order_4 = RateHead::where('order_no', '4')->first();
+
+        $assigns_order_4 = RateAssign::with([
+            'teacher.user','teacher.designation','teacher.department',
+            'employee.user','employee.designation','employee.department','rateHead'
+        ])
+            ->where('session_id',  $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->where('rate_head_id', $rateHead_order_4->id)
+            ->whereNotNull('course_code')
+            ->orderBy('course_code')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('course_code');
+
+
+        //order 5
+        $rateHead_order_5 = RateHead::where('order_no', '5')->first();
+
+        $assigns_order_5 = RateAssign::with([
+            'teacher.user','teacher.designation','teacher.department',
+            'employee.user','employee.designation','employee.department','rateHead'
+        ])
+            ->where('session_id',  $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->where('rate_head_id', $rateHead_order_5->id)
+            ->whereNotNull('course_code')
+            ->orderBy('course_code')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('course_code');
+
+
+        //order 9
+        $rateHead_order_9 = RateHead::where('order_no', '9')->first();
+
+        $assigns_order_9 = RateAssign::with([
+            'teacher.user','teacher.designation','teacher.department',
+            'employee.user','employee.designation','employee.department','rateHead'
+        ])
+            ->where('session_id',  $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->where('rate_head_id', $rateHead_order_9->id)
+            ->whereNotNull('course_code')
+            ->orderBy('course_code')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('course_code');
+
+
+        //8.a
+        $rateHead_order_8_a = RateHead::where('order_no', '8.a')->first();
+
+        $assigns_order_8_a = RateAssign::with([
+            'teacher.user','teacher.designation','teacher.department',
+            'employee.user','employee.designation','employee.department','rateHead'
+        ])
+            ->where('session_id',  $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->where('rate_head_id', $rateHead_order_8_a->id)
+            ->whereNotNull('course_code')
+            ->orderBy('course_code')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('course_code');
+
+
+
+        //8.b
+        //order 9
+        $rateHead_order_8_b = RateHead::where('order_no', '8.b')->first();
+
+        $assigns_order_8_b = RateAssign::with([
+            'teacher.user','teacher.designation','teacher.department',
+            'employee.user','employee.designation','employee.department','rateHead'
+        ])
+            ->where('session_id',  $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->where('rate_head_id', $rateHead_order_8_b->id)
+            ->whereNotNull('course_code')
+            ->orderBy('course_code')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('course_code');
+
+
+        //10.a
+        $rateHead_order_10_a = RateHead::where('order_no', '10.a')->first();
+
+        $assigns_order_10_a = RateAssign::with([
+            'teacher.user','teacher.designation','teacher.department',
+            'employee.user','employee.designation','employee.department','rateHead'
+        ])
+            ->where('session_id',  $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->where('rate_head_id', $rateHead_order_10_a->id)
+            ->whereNotNull('course_code')
+            ->orderBy('course_code')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('course_code');
+
+
+
+        //10.b
+        $rateHead_order_10_b = RateHead::where('order_no', '10.b')->first();
+
+        $assigns_order_10_b = RateAssign::with([
+            'teacher.user','teacher.designation','teacher.department',
+            'employee.user','employee.designation','employee.department','rateHead'
+        ])
+            ->where('session_id',  $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->where('rate_head_id', $rateHead_order_10_b->id)
+            ->whereNotNull('course_code')
+            ->orderBy('course_code')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('course_code');
+
+
+        //8.d
+        $rateHead_order_8_d = RateHead::where('order_no', '8.d')->first();
+
+        $assigns_order_8_d = RateAssign::with([
+            'teacher.user','teacher.designation','teacher.department',
+            'employee.user','employee.designation','employee.department','rateHead'
+        ])
+            ->where('session_id',  $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->where('rate_head_id', $rateHead_order_8_d->id)
+            ->whereNotNull('course_code')
+            ->orderBy('course_code')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('teacher_id');
+
+
+        //return $assigns_order_8_d;
+
+
         //return $assigns_order_1;
         $pdf = Pdf::loadView('statement.statement_download.regular_statement', [
             'session_info'     => $session_info,
             'exam_type'        => $exam_type,
             'assigns_order_1'  => $assigns_order_1,
             'headEmail'        => $headEmail,   // pass to Blade
-        ])
-            ->setPaper('legal', 'portrait');
 
-        return $pdf->stream('demo_exam_bill.pdf');
+            'assigns_order_2'  => $assigns_order_2,
+
+            'assigns_order_4'  => $assigns_order_4,
+            'assigns_order_5'  => $assigns_order_5,
+            'assigns_order_9'  => $assigns_order_9,
+            'assigns_order_8_a'  => $assigns_order_8_a,
+            'assigns_order_8_b'  => $assigns_order_8_b,
+            'assigns_order_10_a'  => $assigns_order_10_a,
+            'assigns_order_10_b'  => $assigns_order_10_b,
+            'assigns_order_8_d'  => $assigns_order_8_d
+        ])->setPaper('legal', 'portrait');
+
+        $yearText     = $session_info->year ?? '';
+        $semesterText = $session_info->semester ?? '';
+        $sessionName  = $session_info->session ?? '';
+        $examTypeName =  ExamType::where('type','Regular')->value('type');
+
+        // Build a safe filename
+        $fileName = "{$sessionName}_{$yearText}_{$semesterText}_{$examTypeName}.pdf";
+
+        // Stream PDF
+        return $pdf->stream($fileName);
     }
 
 
