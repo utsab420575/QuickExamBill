@@ -106,7 +106,7 @@
             row.innerHTML = `
             <div class="col-md-8">
                 <select name="conducted_central_oral_examination_teacher_ids[${rowCount}][]"
-                        class="form-control teacher-select"
+                        class="form-control teacher-select-conducted_central_oral_examination_student_amounts"
                         multiple required>
                     ${teacherOptions}
                 </select>
@@ -129,7 +129,7 @@
 
             // Initialize Select2 if available
             if (window.$ && $.fn.select2) {
-                $(row).find('.teacher-select').select2({
+                $(row).find('.teacher-select-conducted_central_oral_examination_student_amounts').select2({
                     theme: 'bootstrap',
                     width: '100%',
                     placeholder: '-- Select Teacher(s) --',
@@ -204,32 +204,42 @@
          * Validate form before submission
          */
         function validateForm() {
-            const teacherSelects = document.querySelectorAll('.teacher-select');
-            const studentInputs = document.querySelectorAll('input[name*="student_amounts"]');
+            const teacherSelects = document.querySelectorAll('.teacher-select-conducted_central_oral_examination_student_amounts');
+            const studentInputs = document.querySelectorAll('input[name^="conducted_central_oral_examination_student_amounts"]');
             let isValid = true;
 
-            // Check each row
+            console.log("🔍 Starting validation...");
+            console.log("Found rows:", teacherSelects.length);
+
             teacherSelects.forEach((select, index) => {
                 const selectedTeachers = Array.from(select.selectedOptions).map(option => option.value);
                 const studentAmount = studentInputs[index]?.value || '';
 
-                // Remove previous error styling
+                console.log(`Row ${index + 1}:`, {
+                    selectedTeachers,
+                    studentAmount
+                });
+
+                // Clear old errors
                 select.classList.remove('is-invalid');
                 studentInputs[index]?.classList.remove('is-invalid');
 
                 // Validate teacher selection
                 if (selectedTeachers.length === 0) {
+                    console.warn(`❌ Row ${index + 1} has no teachers selected`);
                     select.classList.add('is-invalid');
                     isValid = false;
                 }
 
                 // Validate student amount
                 if (!studentAmount || Number(studentAmount) <= 0) {
+                    console.warn(`❌ Row ${index + 1} has invalid student amount:`, studentAmount);
                     studentInputs[index]?.classList.add('is-invalid');
                     isValid = false;
                 }
             });
 
+            console.log("✅ Validation result:", isValid);
             return isValid;
         }
 
