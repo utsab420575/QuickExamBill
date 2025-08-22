@@ -26,7 +26,8 @@ class StatementController extends Controller
         return view('statement.session_view.regular_session_list',compact('sessions'));
     }
 
-    public function regularStatementGenerate(Request $request){
+
+  public function regularStatementGenerate(Request $request){
         $sid=$request->sid;
         $exam_type_record=ExamType::where('type','Regular')->first();
         $exam_type=$exam_type_record->id;
@@ -416,7 +417,7 @@ class StatementController extends Controller
         Log::info('📦 RateAmount Order 1', optional($rateHead_order_16)->toArray() ?? []);
         //dd($rateAmount_order_1);
 
-        $pdf = Pdf::loadView('report.pdf_download.regular_report', [
+        $pdf = Pdf::loadView('statement.statement_download.regular_statement', [
             'teachers' => $teachers,
             'employees' => $employees,
             'session_info' => $session_info,
