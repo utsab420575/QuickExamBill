@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
-class CommitteeInputController extends Controller
+class CommitteeInputController_v4 extends Controller
 {
     //regular session list
     public function regularSessionShow(){
@@ -2118,108 +2118,133 @@ class CommitteeInputController extends Controller
     }
 
     //order 12.b
-
-
     public function storePrintingQuestion(Request $request)
     {
-        Log::info('📥 Printing Question Request', ['data' => $request->all()]);
+        // Log all request data with a custom message
+        Log::info('Printing Question', [
+            'request_data' => $request->all()  // Log all input data from the request
+        ]);
+        $teacherIds = $request->input('print_question_committee_teacher_ids'); // array
+        $number_of_stencil = $request->input('printing_question_committee_amounts');        // array (indexed)
+        $sessionId = $request->sid;
+        $per_printing_question_paper_rate=$request->printing_question_paper_rate;
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
 
-        // Grouped inputs from the multi-select Blade
-        $teacherGroups  = (array) $request->input('print_question_committee_teacher_ids', []); // [row => [ids...]]
-        $stencilCounts  = (array) $request->input('printing_question_committee_amounts', []);  // [row => count]
-        $sessionId      =  $request->sid;
-        $ratePerStencil = (float) $request->printing_question_paper_rate;
 
-        $examType = ExamType::where('type', 'regular')->value('id');
-
-        // ---- Validation ----
-        $request->validate([
-            'sid' => ['required', 'integer'],
-            'printing_question_paper_rate' => ['required', 'numeric', 'gt:0'],
-            'print_question_committee_teacher_ids' => ['required', 'array', 'min:1'],
-            'print_question_committee_teacher_ids.*' => ['array', 'min:1'],      // each row must have >=1 selection
-            'printing_question_committee_amounts' => ['required', 'array', 'min:1'],
-            'printing_question_committee_amounts.*' => ['required', 'numeric', 'gt:0'],
+        Log::info('📥 Received Printing Question Committee Data', [
+            'teacherId' => $teacherIds,
+            'number_of_stencil' => $number_of_stencil,
+            'rate' => $per_printing_question_paper_rate,
+            'sessionId' => $sessionId,
         ]);
 
+        // Step 1: Validate teacher inputs
+        if (empty($teacherIds) || !is_array($teacherIds) || count($teacherIds) !== count($number_of_stencil)) {
+            return response()->json([
+                'message' => 'Invalid data submitted. Please select teachers and their respective student count.'
+            ], 422);
+        }
+
+
+        Log::info('pass out1');
+        // Step 2: Check for duplicates
+        if (count($teacherIds) !== count(array_unique($teacherIds))) {
+            return response()->json([
+                'message' => 'Duplicate teacher selection detected. Please choose unique teachers.'
+            ], 422);
+        }
+
+
+
+
+        Log::info('pass out2');
         DB::beginTransaction();
         try {
-            // ---- RateHead ----
+            // Step 3: Ensure RateHead exists
             $rateHead = $this->getOrCreateRateHead('12.b', [
-                'head'             => 'Question',
-                'sub_head'         => 'Printing',
-                'is_course'        => 0,
-                'dist_type'        => 'Share',
-                'is_student_count' => 1,   // using as "count of stencils"
-                'marge_with'       => null,
-                'status'           => 1,
+                'head' => 'Question',
+                'sub_head' => 'Printing',
+                'is_course' => 0,
+                'dist_type' => 'Individual',
+                'is_student_count' => 1,
+                'marge_with' => null,
+                'status' => 1,
             ]);
 
-            // ---- Session ----
-            $session = LocalData::getOrCreateRegularSession($sessionId, $examType);
+            //ensure session exist
+            $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
 
-            // ---- RateAmount ----
+
+
+
+
+            // Step 4: Ensure  RateAmount exists(Rate Amount Exist for Rate Head=1)
             $rateAmount = $this->getOrCreateRateAmount(
                 $rateHead->id,
-                $session->id,
-                $examType,
+                $session_info->id,
+                $exam_type,
                 [
-                    'default_rate' => $ratePerStencil,
+                    'default_rate' => $per_printing_question_paper_rate,
                     'min_rate'     => null,
                     'max_rate'     => null,
                 ]
             );
 
-            // ---- Clear old block ----
-            RateAssign::where('session_id', $session->id)
-                ->where('exam_type_id', $examType)
+
+            RateAssign::where('session_id', $session_info->id)
+                ->where('exam_type_id', $exam_type)
                 ->where('rate_head_id', $rateHead->id)
                 ->delete();
 
-            // ---- Save by group_no (row key) ----
-            foreach ($teacherGroups as $groupNo => $teacherIds) {
-                // sanitize
-               /* $teacherIds      = array_values(array_filter((array) $teacherIds, fn($v) => $v !== null && $v !== ''));*/
-                $teacherIds   = array_values(array_filter((array)$teacherIds)); // sanitize
-                $stencilCount = (float) ($stencilCounts[$groupNo] ?? 0);
-                $teacherCount = count($teacherIds);
-                if ($stencilCount <= 0 || $teacherCount <= 0) {
-                    continue;
+
+            // Step 5: Loop and store teacher-wise rate_assign
+            foreach ($teacherIds as $index => $teacherId) {
+                $stencil_count=$number_of_stencil[$index];
+                $calculatedAmount =  $stencil_count * $rateAmount->default_rate;
+
+                if ($calculatedAmount <= 0) {
+                    //  DB::rollBack();
+                    return response()->json([
+                        'message' => "Invalid amount for teacher ID: $teacherId."
+                    ], 422);
                 }
 
-                // Equal split: each teacher gets (stencils / total_teachers)
-                $stencilsPerTeacher = $stencilCount / $teacherCount;
+                Log::info('📘 Question Comparison Store', [
+                    'teacher_id' => $teacherId,
+                    'rate_head_id' => $rateHead->id,
+                    'session_id' => $session_info->id,
+                    'exam_type_id'=>$exam_type,
+                    'no_of_items' => $stencil_count,
+                    'total_amount' => $calculatedAmount,
+                ]);
 
-                foreach ($teacherIds as $teacherId) {
-                    $amount = round($stencilsPerTeacher * (float) $rateAmount->default_rate, 2);
-
-                    RateAssign::create([
-                        // using employee-based payout here (as in your previous implementation)
-                        'teacher_id'    => (int)$teacherId,
-                        'rate_head_id'   => $rateHead->id,
-                        'session_id'     => $session->id,
-                        'exam_type_id'   => $examType,
-                        'group_no'       => (int) $groupNo,
-
-                        // audit/math fields
-                        'total_students'  => $stencilCount,
-                        'total_teachers' => $teacherCount,
-                        'no_of_items'    => $stencilsPerTeacher,   // per-teacher stencil count after split
-                        'total_amount'   => $amount,
-                    ]);
-                }
+                RateAssign::create([
+                    /*'teacher_id' => $teacherId,*/
+                    /* $teacherId worked as  employeeId here*/
+                    'employee_id' => $teacherId,
+                    'rate_head_id' => $rateHead->id,
+                    'session_id' => $session_info->id,
+                    'exam_type_id'=>$exam_type,
+                    'no_of_items' => $stencil_count,
+                    'total_amount' => $calculatedAmount,
+                ]);
             }
 
             DB::commit();
-            return response()->json(['message' => 'Printing question committee saved successfully.']);
-        } catch (\Throwable $e) {
+
+            return response()->json([
+                'message' => 'Stencill cutting data stored successfully.'
+            ]);
+        } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('❌ Printing question save error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return response()->json(['message' => 'Something went wrong.', 'error' => $e->getMessage()], 500);
+            Log::info($e->getMessage());
+            return response()->json([
+                'message' => 'Something went wrong.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
-
-
 
     //order=11
     public function storeComparisonCommittee(Request $request)

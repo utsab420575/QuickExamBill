@@ -207,7 +207,7 @@
                     //For PrintingQuestion
                     $ratePrintingQuestion = RateHead::where('order_no', '=','12.b')->first();
                     if($ratePrintingQuestion){
-                        $savedRateAssignPrintingQuestion = RateAssign::getTeachersFromCommittee(
+                        $savedRateAssignPrintingQuestion = RateAssign::getTeacherWithGroup(
                             $session_info->id,
                             $exam_type,
                             $ratePrintingQuestion->id

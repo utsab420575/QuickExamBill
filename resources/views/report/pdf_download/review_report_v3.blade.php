@@ -776,35 +776,27 @@
                           $assign->exam_type_id == 2 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '12.b';
-               });
+               })->first();
 
-
-              // Totals (if you saved equal-split, no_of_items is the per-teacher share; sum is total for this teacher)
-            $sum_stencils_12_b = $assign_12_b->sum('no_of_items');
-            $sum_amount_12_b   = $assign_12_b->sum('total_amount');
-
-
-            // RateHead / RateAmount for 12.b (provided by controller like you did for 7.e)
-            $rateAmount_12_b   = $rateAmount_order_12_b ?? null;
-            $sub_head_12_b     = $rateHead_order_12_b->sub_head ?? '12.b';
+             $total_assigns = $assign_12_b ? $assign_12_b->count() : 0;
+            $rateAmount_12_b = $rateAmount_order_12_b ?? null;
+            $sub_head_12_b = $rateHead_order_12_b->sub_head ?? '6.B';
             $default_rate_12_b = $rateAmount_12_b->default_rate ?? 0;
 
-
-             // Add to global total
-            if ($sum_amount_12_b) {
-                $global_sum += $sum_amount_12_b;
+            if ($assign_12_b && $assign_12_b->total_amount) {
+                $global_sum += $assign_12_b->total_amount;
             }
         @endphp
         <tr>
             <td class="textstart">(b) {{ $sub_head_12_b }}</td>
             <td></td>
-            <td>{{ $sum_stencils_12_b ?: '' }}</td>
+            <td>{{ $assign_12_b->no_of_items ?? '' }}</td>
             <td class="textend">
-                {{ $assign_12_b->isNotEmpty() ? number_format((float) $default_rate_12_b, 2) : '' }}
+                @if($total_assigns > 0 && isset($rateAmount_order_12_b->default_rate))
+                    {{ $rateAmount_order_12_b->default_rate }}
+                @endif
             </td>
-            <td class="textend">
-                {{ $sum_amount_12_b ? number_format((float) $sum_amount_12_b, 2) : '' }}
-            </td>
+            <td class="textend">{{ isset($assign_12_b->total_amount) ? number_format($assign_12_b->total_amount, 2) : '' }}</td>
         </tr>
 
 
