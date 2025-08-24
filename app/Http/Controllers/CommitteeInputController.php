@@ -2119,7 +2119,6 @@ class CommitteeInputController extends Controller
 
     //order 12.b
 
-
     public function storePrintingQuestion(Request $request)
     {
         Log::info('📥 Printing Question Request', ['data' => $request->all()]);
@@ -2179,7 +2178,7 @@ class CommitteeInputController extends Controller
             // ---- Save by group_no (row key) ----
             foreach ($teacherGroups as $groupNo => $teacherIds) {
                 // sanitize
-               /* $teacherIds      = array_values(array_filter((array) $teacherIds, fn($v) => $v !== null && $v !== ''));*/
+                /* $teacherIds      = array_values(array_filter((array) $teacherIds, fn($v) => $v !== null && $v !== ''));*/
                 $teacherIds   = array_values(array_filter((array)$teacherIds)); // sanitize
                 $stencilCount = (float) ($stencilCounts[$groupNo] ?? 0);
                 $teacherCount = count($teacherIds);
@@ -2218,6 +2217,7 @@ class CommitteeInputController extends Controller
             return response()->json(['message' => 'Something went wrong.', 'error' => $e->getMessage()], 500);
         }
     }
+
 
 
 

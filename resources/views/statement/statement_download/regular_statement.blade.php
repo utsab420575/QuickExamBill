@@ -789,7 +789,7 @@
 {{-- J) (order 8.d) --}}
 @if($assigns_order_8_d->isNotEmpty())
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        I) List of Teachers Prepared Computerized Result (@ 10/- per student per subject)
+        J) List of Teachers Prepared Computerized Result (@ 10/- per student per subject)
     </h3>
 
     <table class="body_table_8_d" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -854,6 +854,565 @@
 @endif
 
 
+{{-- K) (order 8.c) --}}
+@if($assigns_order_8_c->isNotEmpty())
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        K) List of Teachers Verified Computerized Grade Sheets & GPA List (@24/- per student)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_8_c as $i => $assign)
+            @php
+                $person     = $assign->teacher ?? $assign->employee;
+                $students   = (int)($assign->total_students ?? 0);
+                $teachers   = (int)($assign->total_teachers ?? 1); // fallback
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $person?->user?->name }},
+                    {{ $person?->designation?->designation }},
+                    {{ $person?->department?->fullname }},
+                    DUET, Gazipur
+                </td>
+                <td style="text-align:center;">
+                    {{ $students }}/{{ $teachers }}
+                </td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+@endif
+
+
+{{-- L) (order 12.a) --}}
+@if($assigns_order_12_a->isNotEmpty())
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        L) Work Done Under the Supervision of the Chairman (Exam Committee)
+    </h3>
+
+
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        i) List of Stencill Cutting of Question paper (@ 115/- per stencil)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_12_a as $i => $assign)
+            @php
+                $t = $assign->employee;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                @php
+                    $students = (float) ($assign->total_students ?? 0);  // no (int) here
+                @endphp
+                <td style="text-align:center;">
+                    {{ fmod($students, 1) == 0 ? (int)$students : number_format($students, 2, '.', '') }}
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+
+{{-- L) (order 12.b) --}}
+@if($assigns_order_12_b->isNotEmpty())
+
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        ii) List of Printing of Question paper (@ 35/- per stencil)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_12_b as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                @php
+                    $students = (float) ($assign->total_students ?? 0);  // no (int) here
+                @endphp
+                <td style="text-align:center;">
+                    {{ fmod($students, 1) == 0 ? (int)$students : number_format($students, 2, '.', '') }}
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+{{-- L) (order 11) --}}
+@if($assigns_order_11->isNotEmpty())
+
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        iii) List of Comparison, Correction, Sketching & Distribution of Question Paper (@ 1350/- per stencil)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_11 as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                @php
+                    $students = (float) ($assign->total_students ?? 0);  // no (int) here
+                @endphp
+                <td style="text-align:center;">
+                    {{ fmod($students, 1) == 0 ? (int)$students : number_format($students, 2, '.', '') }}
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+
+
+{{-- M) (order 13) --}}
+@if($assigns_order_13->isNotEmpty())
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        M) Advisory (@ 225/- per student per semester):
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_13 as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                @php
+                    $total_student = (int) $assign->total_students;
+                @endphp
+                <td style="text-align:center;">
+                   {{$total_student}}
+                </td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+@endif
+
+
+{{-- N) (order 16) --}}
+@if($assigns_order_16->isNotEmpty())
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        N)  List of Teachers verified the final graduation results (@ 700/- per student)):
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_16 as $i => $assign)
+            @php
+                $person     = $assign->teacher ?? $assign->employee;
+                $students   = (int)($assign->total_students ?? 0);
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $person?->user?->name }},
+                    {{ $person?->designation?->designation }},
+                    {{ $person?->department?->fullname }},
+                    DUET, Gazipur
+                </td>
+                <td style="text-align:center;">
+                    {{ $students }}
+                </td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+@endif
+
+
+{{-- O) (order 7.e) --}}
+@if($assigns_order_7_e->isNotEmpty())
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        O)  List of Teachers conducted central oral examination/Jury of thesis/projects (@150/- thesis/projects)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_7_e as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                @php
+                    $students = (float) ($assign->total_students ?? 0);  // no (int) here
+                @endphp
+                <td style="text-align:center;">
+                    {{ fmod($students, 1) == 0 ? (int)$students : number_format($students, 2, '.', '') }}
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+
+{{-- P) (order 7.f) --}}
+@if($assigns_order_7_f->isNotEmpty())
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        P)   List of teachers involved survey (@ 900/- per student)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_7_f as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                @php
+                    $students = (float) ($assign->total_students ?? 0);  // no (int) here
+                @endphp
+                <td style="text-align:center;">
+                    {{ fmod($students, 1) == 0 ? (int)$students : number_format($students, 2, '.', '') }}
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+
+{{-- Q) (order 6.c) --}}
+@if($assigns_order_6_c->isNotEmpty())
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        Q)   List of Teachers conducted preliminary viva of thesis/projects (@ 100/- per student)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_6_c as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                @php
+                    $students = (float) ($assign->total_students ?? 0);  // no (int) here
+                @endphp
+                <td style="text-align:center;">
+                    {{ fmod($students, 1) == 0 ? (int)$students : number_format($students, 2, '.', '') }}
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+
+{{-- R) (order 6.a) --}}
+@if($assigns_order_6_a->isNotEmpty())
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        Q)   List of Teachers conducted preliminary viva of thesis/projects (@ 2700/- per student)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+            <tr>
+                <th rowspan="2" style="width:10%;">Sl. No.</th>
+                <th rowspan="2" style="width:65%;">Name and Address</th>
+                <th colspan="2" style="width:25%;">No. of Students</th>
+            </tr>
+            <tr>
+                <th>Internal</th>
+                <th>External</th>
+            </tr>
+        </thead>
+        <tbody>
+        @php
+            // int if whole; 2 decimals otherwise; empty if zero
+            $fmt = function ($num) {
+                $v = (float) $num;
+                if (abs($v) < 1e-9) return ''; // hide 0
+                return fmod($v, 1) == 0 ? (string)(int)$v : number_format($v, 2, '.', '');
+            };
+        @endphp
+
+        @foreach($assigns_order_6_a as $row)
+            @php
+                $t = $row->teacher;
+                $name = $t->user->name ?? 'N/A';
+                $des  = $t->designation->designation ?? '';
+                $dept = $t->department->fullname ?? '';
+                $internal = (float) $row->internal_students;
+                $external = (float) $row->external_students;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $sl++ }}</td>
+                <td style="text-align:left;">
+                    {{ $name }}@if($des), {{ $des }}@endif
+                    @if($dept), {{ $dept }}@endif, DUET, Gazipur
+                </td>
+                <td style="text-align:center;">{{ $fmt($internal) }}</td>
+                <td style="text-align:center;">{{ $fmt($external) }}</td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+@endif
+
+
+{{-- S) (order 6.d) --}}
+@if($assigns_order_6_d->isNotEmpty())
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        S)    List of Teachers conducted oral examination/Jury of thesis/projects (@225/- thesis/projects)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_6_d as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                @php
+                    $students = (float) ($assign->total_students ?? 0);  // no (int) here
+                @endphp
+                <td style="text-align:center;">
+                    {{ fmod($students, 1) == 0 ? (int)$students : number_format($students, 2, '.', '') }}
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+
+{{-- T) (order 6.b) --}}
+@if($assigns_order_6_b->isNotEmpty())
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        T)   List of Teachers supervised the thesis/projects (@ 5500/- thesis/projects)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_6_b as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                @php
+                    $students = (float) ($assign->total_students ?? 0);  // no (int) here
+                @endphp
+                <td style="text-align:center;">
+                    {{ fmod($students, 1) == 0 ? (int)$students : number_format($students, 2, '.', '') }}
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+
+{{-- U) (order 14) --}}
+@if($assigns_order_14->isNotEmpty())
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        U)   Honorarium for course co-ordinator (UG) (@3600/-)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_14 as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+
+{{-- V) (order 15) --}}
+@if($assigns_order_15->isNotEmpty())
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        V)    Honorarium for Chairman (@4500/-)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_15 as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
 @endhasanyrole
 
 </body>

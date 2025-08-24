@@ -223,7 +223,194 @@ class StatementController extends Controller
             ->groupBy('teacher_id');
 
 
-        //return $assigns_order_8_d;
+        //order 8.c
+        $rateHead_order_8_c = RateHead::where('order_no', '8.c')->first();
+
+        $assigns_order_8_c = RateAssign::with([
+            'teacher.user','teacher.designation','teacher.department',
+            'employee.user','employee.designation','employee.department','rateHead'
+        ])
+            ->where('session_id', $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->when($rateHead_order_8_c, fn($q) => $q->where('rate_head_id', $rateHead_order_8_c->id))
+            ->get();
+
+
+        // order 12.a
+        $rateHead_order_12_a = RateHead::where('order_no', '12.a')->first();
+
+        $assigns_order_12_a = RateAssign::with(['employee.user','employee.designation','employee.department'])
+            ->select('employee_id')
+            ->selectRaw('COALESCE(SUM(no_of_items), 0)   as total_students')  // sum of no_of_items
+            ->where('session_id', $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->when($rateHead_order_12_a, fn($q) => $q->where('rate_head_id', $rateHead_order_12_a->id))
+            ->groupBy('employee_id')
+            ->get();
+
+        //return $assigns_order_12_a;
+
+        // order 12.b
+        $rateHead_order_12_b = RateHead::where('order_no', '12.b')->first();
+
+        $assigns_order_12_b = RateAssign::with(['teacher.user','teacher.designation','teacher.department'])
+            ->select('teacher_id')
+            ->selectRaw('COALESCE(SUM(no_of_items), 0)   as total_students')  // sum of no_of_items
+            ->where('session_id', $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->when($rateHead_order_12_b, fn($q) => $q->where('rate_head_id', $rateHead_order_12_b->id))
+            ->groupBy('teacher_id')
+            ->get();
+
+        // order 11
+        $rateHead_order_11 = RateHead::where('order_no', '11')->first();
+
+        $assigns_order_11 = RateAssign::with(['teacher.user','teacher.designation','teacher.department'])
+            ->select('teacher_id')
+            ->selectRaw('COALESCE(SUM(no_of_items), 0)   as total_students')  // sum of no_of_items
+            ->where('session_id', $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->when($rateHead_order_11, fn($q) => $q->where('rate_head_id', $rateHead_order_11->id))
+            ->groupBy('teacher_id')
+            ->get();
+
+
+
+
+        //M) order 13
+        $rateHead_order_13 = RateHead::where('order_no', '13')->first();
+
+        $assigns_order_13 = RateAssign::with([
+            'teacher.user','teacher.designation','teacher.department',
+            'employee.user','employee.designation','employee.department','rateHead'
+        ])
+            ->where('session_id', $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->when($rateHead_order_13, fn($q) => $q->where('rate_head_id', $rateHead_order_13->id))
+            ->get();
+
+
+        //order 16
+        $rateHead_order_16 = RateHead::where('order_no', '16')->first();
+
+        $assigns_order_16 = RateAssign::with([
+            'teacher.user','teacher.designation','teacher.department',
+            'employee.user','employee.designation','employee.department','rateHead'
+        ])
+            ->where('session_id', $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->when($rateHead_order_16, fn($q) => $q->where('rate_head_id', $rateHead_order_16->id))
+            ->get();
+
+
+        // order 7.e
+        $rateHead_order_7_e = RateHead::where('order_no', '7.e')->first();
+
+        $assigns_order_7_e = RateAssign::with(['teacher.user','teacher.designation','teacher.department'])
+            ->select('teacher_id')
+            ->selectRaw('COALESCE(SUM(no_of_items), 0)   as total_students')  // sum of no_of_items
+            ->where('session_id', $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->when($rateHead_order_7_e, fn($q) => $q->where('rate_head_id', $rateHead_order_7_e->id))
+            ->groupBy('teacher_id')
+            ->get();
+
+        // order 7.f
+        $rateHead_order_7_f = RateHead::where('order_no', '7.f')->first();
+
+        $assigns_order_7_f = RateAssign::with(['teacher.user','teacher.designation','teacher.department'])
+            ->select('teacher_id')
+            ->selectRaw('COALESCE(SUM(no_of_items), 0)   as total_students')  // sum of no_of_items
+            ->where('session_id', $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->when($rateHead_order_7_f, fn($q) => $q->where('rate_head_id', $rateHead_order_7_f->id))
+            ->groupBy('teacher_id')
+            ->get();
+
+
+        // order 6.c
+        $rateHead_order_6_c = RateHead::where('order_no', '6.c')->first();
+
+        $assigns_order_6_c = RateAssign::with(['teacher.user','teacher.designation','teacher.department'])
+            ->select('teacher_id')
+            ->selectRaw('COALESCE(SUM(no_of_items), 0)   as total_students')  // sum of no_of_items
+            ->where('session_id', $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->when($rateHead_order_6_c, fn($q) => $q->where('rate_head_id', $rateHead_order_6_c->id))
+            ->groupBy('teacher_id')
+            ->get();
+
+
+        // order 6.a
+        $rateHead_order_6_a = RateHead::where('order_no', '6.a')->first();
+
+        $assigns_order_6_a = RateAssign::with(['teacher.user','teacher.designation','teacher.department'])
+            ->select('teacher_id')
+            // keep decimals by casting before SUM
+            ->selectRaw('COALESCE(SUM(CASE WHEN is_internal = 1 THEN CAST(no_of_items AS DECIMAL(18,6)) ELSE 0 END), 0) AS internal_students')
+            ->selectRaw('COALESCE(SUM(CASE WHEN is_external = 1 THEN CAST(no_of_items AS DECIMAL(18,6)) ELSE 0 END), 0) AS external_students')
+            ->where('session_id', $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->when($rateHead_order_6_a, fn($q) => $q->where('rate_head_id', $rateHead_order_6_a->id))
+            ->groupBy('teacher_id')
+            ->get();
+
+
+        // order 6.d
+        $rateHead_order_6_d = RateHead::where('order_no', '6.d')->first();
+
+        $assigns_order_6_d = RateAssign::with(['teacher.user','teacher.designation','teacher.department'])
+            ->select('teacher_id')
+            ->selectRaw('COALESCE(SUM(no_of_items), 0)   as total_students')  // sum of no_of_items
+            ->where('session_id', $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->when($rateHead_order_6_d, fn($q) => $q->where('rate_head_id', $rateHead_order_6_d->id))
+            ->groupBy('teacher_id')
+            ->get();
+
+        // order 6.b
+        $rateHead_order_6_b = RateHead::where('order_no', '6.b')->first();
+
+        $assigns_order_6_b = RateAssign::with(['teacher.user','teacher.designation','teacher.department'])
+            ->select('teacher_id')
+            ->selectRaw('COALESCE(SUM(no_of_items), 0)   as total_students')  // sum of no_of_items
+            ->where('session_id', $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->when($rateHead_order_6_b, fn($q) => $q->where('rate_head_id', $rateHead_order_6_b->id))
+            ->groupBy('teacher_id')
+            ->get();
+
+
+        // order 14
+        $rateHead_order_14 = RateHead::where('order_no', '14')->first();
+
+        $assigns_order_14 = RateAssign::with(['teacher.user','teacher.designation','teacher.department'])
+            ->select('teacher_id')
+            ->selectRaw('COALESCE(SUM(no_of_items), 0)   as total_students')  // sum of no_of_items
+            ->where('session_id', $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->when($rateHead_order_14, fn($q) => $q->where('rate_head_id', $rateHead_order_14->id))
+            ->groupBy('teacher_id')
+            ->get();
+
+
+        // order 15
+        $rateHead_order_15 = RateHead::where('order_no', '15')->first();
+
+        $assigns_order_15 = RateAssign::with(['teacher.user','teacher.designation','teacher.department'])
+            ->select('teacher_id')
+            ->selectRaw('COALESCE(SUM(no_of_items), 0)   as total_students')  // sum of no_of_items
+            ->where('session_id', $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->when($rateHead_order_15, fn($q) => $q->where('rate_head_id', $rateHead_order_15->id))
+            ->groupBy('teacher_id')
+            ->get();
+
+        //return $assigns_order_7_e;
+
+
+
+
 
 
         //return $assigns_order_1;
@@ -242,7 +429,23 @@ class StatementController extends Controller
             'assigns_order_8_b'  => $assigns_order_8_b,
             'assigns_order_10_a'  => $assigns_order_10_a,
             'assigns_order_10_b'  => $assigns_order_10_b,
-            'assigns_order_8_d'  => $assigns_order_8_d
+            'assigns_order_8_d'  => $assigns_order_8_d,
+            'assigns_order_8_c' => $assigns_order_8_c,
+
+            'assigns_order_12_a' => $assigns_order_12_a,
+            'assigns_order_12_b' => $assigns_order_12_b,
+            'assigns_order_11' => $assigns_order_11,
+
+            'assigns_order_13' => $assigns_order_13,
+            'assigns_order_16' => $assigns_order_16,
+            'assigns_order_7_e' => $assigns_order_7_e,
+            'assigns_order_7_f' => $assigns_order_7_f,
+            'assigns_order_6_c' => $assigns_order_6_c,
+            'assigns_order_6_a' => $assigns_order_6_a,
+            'assigns_order_6_d' => $assigns_order_6_d,
+            'assigns_order_6_b' => $assigns_order_6_b,
+            'assigns_order_14' => $assigns_order_14,
+            'assigns_order_15' => $assigns_order_15,
         ])->setPaper('legal', 'portrait');
 
         $yearText     = $session_info->year ?? '';
