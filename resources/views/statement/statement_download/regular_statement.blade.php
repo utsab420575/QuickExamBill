@@ -909,7 +909,7 @@
         <tr>
             <th style="width:10%;">Sl. No.</th>
             <th style="width:65%;">Name and Address</th>
-            <th style="width:25%;">No. of Students</th>
+            <th style="width:25%;">No. of Stencils</th>
         </tr>
         </thead>
         <tbody>
@@ -950,7 +950,7 @@
         <tr>
             <th style="width:10%;">Sl. No.</th>
             <th style="width:65%;">Name and Address</th>
-            <th style="width:25%;">No. of Students</th>
+            <th style="width:25%;">No. of Stencils</th>
         </tr>
         </thead>
         <tbody>
@@ -990,7 +990,7 @@
         <tr>
             <th style="width:10%;">Sl. No.</th>
             <th style="width:65%;">Name and Address</th>
-            <th style="width:25%;">No. of Students</th>
+            <th style="width:25%;">No. of Questions</th>
         </tr>
         </thead>
         <tbody>
@@ -1413,6 +1413,47 @@
         </tbody>
     </table>
 @endif
+
+
+@php
+    $ordinal = function ($n) {
+        $n = (int) $n;
+        if ($n % 100 >= 11 && $n % 100 <= 13) return $n.'th';
+        $suf = ['th','st','nd','rd','th','th','th','th','th','th'];
+        return $n . $suf[$n % 10];
+    };
+
+    $examTypeId = isset($exam_type) ? (int)$exam_type : (int)($session_info->exam_type_id ?? 0);
+    $examLabel  = $examTypeId === 1 ? 'Regular' : ($examTypeId === 2 ? 'Review' : null);
+
+    $yearTxt     = $ordinal($session_info->year ?? 0) . ' year';
+    $semesterTxt = $ordinal($session_info->semester ?? 0) . ' Semester';
+    $sessionTxt  = $session_info->session ?? '';
+@endphp
+
+    <!-- Wrapper aligns the block to the right -->
+<div style="width:100%; text-align:right; margin-top:80px;">
+    <!-- Inline-table shrinks to content; margin-left:auto pushes to right -->
+    <table style="display:inline-table; border-collapse:collapse; margin-left:auto; text-align:center;">
+        <tbody>
+        <tr>
+            <td>Chairman</td>
+        </tr>
+        <tr>
+            <td>Examination Committee</td>
+        </tr>
+        <tr>
+            <td>
+                B. Arch. {{ $yearTxt }} {{ $semesterTxt }}
+                @if($examLabel) ({{ $examLabel }}) @endif
+                Examination - {{ $sessionTxt }}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+
 @endhasanyrole
 
 </body>
