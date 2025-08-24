@@ -340,6 +340,8 @@ class StatementController extends Controller
             ->groupBy('teacher_id')
             ->get();
 
+        //return $assigns_order_6_c;
+
 
         // order 6.a
         $rateHead_order_6_a = RateHead::where('order_no', '6.a')->first();
@@ -354,6 +356,8 @@ class StatementController extends Controller
             ->when($rateHead_order_6_a, fn($q) => $q->where('rate_head_id', $rateHead_order_6_a->id))
             ->groupBy('teacher_id')
             ->get();
+
+        //return $assigns_order_6_a;
 
 
         // order 6.d

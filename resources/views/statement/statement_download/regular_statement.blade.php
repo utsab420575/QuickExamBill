@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <title>Exam Bill Regular</title>
     <style>
+        @media print {
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            tr, th, td { page-break-inside: avoid; }
+            h3 { page-break-after: avoid; break-after: avoid; }
+        }
+
         /* Page + base */
         @page {
             margin: 5mm 12mm 5mm 12mm;
@@ -1220,7 +1227,7 @@
 {{-- R) (order 6.a) --}}
 @if($assigns_order_6_a->isNotEmpty())
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        Q)   List of Teachers conducted preliminary viva of thesis/projects (@ 2700/- per student)
+        R)   List of Teachers conducted preliminary viva of thesis/projects (@ 2700/- per student)
     </h3>
 
     <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -1255,7 +1262,7 @@
                 $external = (float) $row->external_students;
             @endphp
             <tr>
-                <td style="text-align:center;">{{ $sl++ }}</td>
+                <td style="text-align:center;">{{ $loop->iteration }}</td>
                 <td style="text-align:left;">
                     {{ $name }}@if($des), {{ $des }}@endif
                     @if($dept), {{ $dept }}@endif, DUET, Gazipur
