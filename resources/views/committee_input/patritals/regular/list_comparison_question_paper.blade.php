@@ -1,65 +1,55 @@
 @push('styles')
     <style>
-        .card-list-of-comparison-question-paper {
-            background-color: white;
-            transition: background-color 0.6s ease-in-out;
-        }
-
-        .card-list-of-comparison-question-paper.fade-highlight {
-            background-color: #28a745;
-        }
-
-        .card-list-of-comparison-question-paper.fade-out {
-            background-color: white;
-        }
-
-        select.is-invalid, input.is-invalid {
-            border-color: red;
-        }
+        .card-list-of-comparison-question-paper{background:white;transition:background-color .6s ease-in-out}
+        .card-list-of-comparison-question-paper.fade-highlight{background:#28a745}
+        .card-list-of-comparison-question-paper.fade-out{background:white}
+        select.is-invalid, input.is-invalid{border-color:red}
     </style>
 @endpush
 
 <form id="form-list-of-comparison-question-paper" action="{{ route('committee.input.comparison.committee.store') }}" method="POST">
     @csrf
-    <input type="hidden" value="{{$sid}}" name="sid">
+    <input type="hidden" value="{{ $sid }}" name="sid">
+
     <div class="row mb-5">
         <div class="col-md-12">
             <section class="card card-featured card-featured-primary">
                 <header class="card-header d-flex align-items-center">
                     <h2 class="card-title">
                         <span class="step-badge">11</span>
-                        List of Comparison,Correction,sketching and distribution  of Question paper (@ ****/- per stencil)</h2>
+                        List of Comparison, Correction, Sketching & Distribution of Question Paper (@ ****/- per stencil)
+                    </h2>
                 </header>
 
                 <div class="card-body card-list-of-comparison-question-paper">
                     <div class="row mb-2">
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
-                                <label for="comparison_question_paper_rate">Per Question Rate</label>
-                                <input type="number"  name="comparison_question_paper_rate" id="comparison-question-paper-rate" value="{{$comparison_rate??1350}}" step="any" class="form-control" placeholder="Enter per question rate" required>
+                                <label for="comparison-question-paper-rate">Per Question Rate</label>
+                                <input type="number" name="comparison_question_paper_rate" id="comparison-question-paper-rate"
+                                       value="{{ $comparison_rate ?? 1350 }}" step="any" class="form-control"
+                                       placeholder="Enter per question rate" required>
                             </div>
                         </div>
-                        <div class="col-md-4 mb-4">
-                        </div>
-                        <div class="col-md-4 mb-4">
-                        </div>
+                        <div class="col-md-4 mb-4"></div>
+                        <div class="col-md-4 mb-4"></div>
                     </div>
 
                     <div class="row mb-2 fw-bold mt-2">
-                        <div class="col-md-8 text-start">Select Teacher</div>
-                        <div class="col-md-3 text-start" style="margin-left:-15px;">No of Question</div>
+                        <div class="col-md-8 text-start">Select Teacher(s)</div>
+                        <div class="col-md-3 text-start" style="margin-left:-15px;">No. of Questions</div>
                     </div>
 
-                    {{--here will be add row--}}
+                    {{-- dynamic rows --}}
                     <div id="dynamic-comparison-question-paper-container"></div>
 
                     <div class="mt-3 text-end">
-                        <button type="button" id="add-comparison-question-paper-row" class="btn btn-sm btn-success me-2">+ Add Teacher</button>
+                        <button type="button" id="add-comparison-question-paper-row" class="btn btn-sm btn-success me-2">+ Add Teacher Group</button>
                     </div>
 
                     <div class="text-end mt-3">
                         <button id="submit-list-of-comparison-question-paper" type="submit" class="btn btn-primary">
-                            Submit Comparison,Correction Committee
+                            Submit Comparison, Correction Committee
                         </button>
                     </div>
                 </div>
@@ -70,158 +60,172 @@
 
 @push('scripts')
     <script>
-        let comparisonQuestionRowCount = 0;
-        const comparisonQuestionStaffTeachers = @json($teachers);
-        const savedComparisonCommitteeAssign = @json($savedRateAssignComparisonCommittee);
+        (function(){
+            let compRowCount = 0;
+            const comparisonTeachers = @json($teachers ?? []);
+            const saved = @json($savedRateAssignComparisonCommittee ?? null);
 
-        function createComparisonCommitteeRow(teacherId = '', amount = '') {
-            comparisonQuestionRowCount++;
+            function createRow(selectedTeacherIds = [], questionCount = '') {
+                compRowCount++;
+                const container = document.getElementById('dynamic-comparison-question-paper-container');
 
-            const container = document.getElementById('dynamic-comparison-question-paper-container');
-            const row = document.createElement('div');
-            row.classList.add('row', 'align-items-center', 'mb-2');
-            row.setAttribute('data-row', comparisonQuestionRowCount);
+                const row = document.createElement('div');
+                row.className = 'row align-items-center mb-2';
+                row.setAttribute('data-row-id', compRowCount);
 
-            row.innerHTML = `
-                <div class="row mb-3 align-items-center" data-row="${comparisonQuestionRowCount}">
-                    <div class="col-md-8">
-                        <select name="comparison_question_committee_teacher_ids[]" class="form-control teacher-select populate" data-row="${comparisonQuestionRowCount}" required>
-                            <option value="">-- Select Teacher --</option>
-                            ${comparisonQuestionStaffTeachers.map(t => `<option
-                                value="${t.id}" ${t.id == teacherId ? 'selected' : ''}>
-                                ${t.user.name}, ${t.designation.designation}, ${t.department.shortname}
-                            </option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <input type="number" name="comparison_question_committee_amounts[]" class="form-control amount-input" step="any" placeholder="Provide Amount" value="${amount}" required>
-                    </div>
-                    <div class="col-md-1 text-end">
-                        <button type="button" class="btn btn-sm btn-danger remove-row">🗑️</button>
-                    </div>
-                </div>
-            `;
+                // Only Name – Dept
+                let teacherOptions = '';
+                comparisonTeachers.forEach(t => {
+                    const isSel = selectedTeacherIds.includes(String(t.id)) ? 'selected' : '';
+                    const name  = t?.user?.name ?? 'Unknown';
+                    const dept  = t?.department?.shortname ? ` - ${t.department.shortname}` : '';
+                    teacherOptions += `<option value="${t.id}" ${isSel}>${name}${dept}</option>`;
+                });
 
-            container.appendChild(row);
+                row.innerHTML = `
+            <div class="col-md-8">
+                <select name="comparison_question_committee_teacher_ids[${compRowCount}][]"
+                        class="form-control comp-teacher-select" multiple required>
+                    ${teacherOptions}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="number" name="comparison_question_committee_amounts[${compRowCount}]"
+                       class="form-control comp-question-input" step="any"
+                       placeholder="No. of questions" value="${questionCount}" required min="1">
+            </div>
+            <div class="col-md-1 text-end">
+                <button type="button" class="btn btn-sm btn-danger comp-remove-row">🗑️</button>
+            </div>
+        `;
 
-            // Initialize Select2 for the newly added select input
-            $(row).find('select').select2({
-                theme: 'bootstrap',
-                width: '100%',
-                allowClear: true,
-                placeholder: '-- Select Teacher --'
-            });
+                container.appendChild(row);
 
-            // Delete button logic
-            row.querySelector('.remove-row').addEventListener('click', function () {
-                row.remove();
-            });
-        }
-
-        // Load pre-filled rows from DB
-        if (savedComparisonCommitteeAssign && savedComparisonCommitteeAssign.length > 0) {
-            savedComparisonCommitteeAssign.forEach(assign => {
-                createComparisonCommitteeRow(assign.teacher_id, assign.no_of_items);
-            });
-        }
-
-        // Add blank new row
-        document.getElementById('add-comparison-question-paper-row').addEventListener('click', function () {
-            createComparisonCommitteeRow();
-        });
-
-        // Submit logic
-        document.getElementById('form-list-of-comparison-question-paper').addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const form = this;
-            const selects = form.querySelectorAll('.teacher-select');
-            const inputs = form.querySelectorAll('.amount-input');
-            let valid = true;
-            let teacherIds = [];
-
-            selects.forEach((select, index) => {
-                const teacherId = select.value;
-                const amount = inputs[index].value;
-
-                select.classList.remove('is-invalid');
-                inputs[index].classList.remove('is-invalid');
-
-                if (!teacherId) {
-                    select.classList.add('is-invalid');
-                    valid = false;
+                // Initialize Select2 if available
+                if (window.$ && $.fn.select2) {
+                    $(row).find('.comp-teacher-select').select2({
+                        theme: 'bootstrap',
+                        width: '100%',
+                        placeholder: '-- Select Teacher(s) --',
+                        allowClear: true,
+                        closeOnSelect: false
+                    });
                 }
 
-                if (!amount || amount <= 0) {
-                    inputs[index].classList.add('is-invalid');
-                    valid = false;
-                }
-
-                if (teacherIds.includes(teacherId)) {
-                    select.classList.add('is-invalid');
-                    valid = false;
-                }
-
-                teacherIds.push(teacherId);
-            });
-
-            if (!valid) {
-                Swal.fire('Validation Failed', 'Make sure each selected row is complete and teachers are not duplicated.', 'error');
-                return;
+                // Remove row
+                row.querySelector('.comp-remove-row')?.addEventListener('click', () => row.remove());
             }
 
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "Do you want to save the committee data?",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, save it!',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const formData = new FormData(form);
+            function loadSaved() {
+                let loadedAny = false;
+                if (!saved) return loadedAny;
 
-                    fetch(form.action, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        },
-                        body: formData
-                    })
-                        .then(response => {
-                            if (!response.ok) {
-                                return response.json().then(err => {
-                                    throw new Error(err.message || 'Unknown error occurred.');
-                                });
-                            }
-                            return response.json(); // if response is OK
-                        })
-                        .then(data => {
-                            Swal.fire('Success!', data.message, 'success');
-
-                            const submitBtn = document.getElementById('submit-list-of-comparison-question-paper');
-                            submitBtn.textContent = 'Update Comparison,Correction Committee';
-                            submitBtn.classList.remove('btn-primary');
-                            submitBtn.classList.add('btn-warning');
-
-                            const cards = document.querySelectorAll('.card-list-of-comparison-question-paper');
-                            cards.forEach(card => {
-                                card.classList.add('fade-highlight');
-                                setTimeout(() => card.classList.add('fade-out'), 1000);
-                                setTimeout(() => card.classList.remove('fade-highlight', 'fade-out'), 1900);
-                            });
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            Swal.fire({
-                                title: 'Error!',
-                                text: error.message || 'Something went wrong. Please try again.',
-                                icon: 'error'
-                            });
-                        });
+                // Grouped format
+                if (saved.full_grouped_data && saved.grouped_keys) {
+                    saved.grouped_keys.forEach(g => {
+                        const recs = saved.full_grouped_data[g] || [];
+                        if (!recs.length) return;
+                        const teacherIds = recs.map(r => String(r.teacher_id));
+                        const questions  = recs[0]?.total_students || ''; // store group question total here
+                        createRow(teacherIds, questions);
+                        loadedAny = true;
+                    });
                 }
+                // Flat array fallback
+                else if (Array.isArray(saved)) {
+                    const groups = {};
+                    saved.forEach(r => {
+                        const k = r.group_no ?? '1';
+                        if (!groups[k]) groups[k] = [];
+                        groups[k].push(r);
+                    });
+                    Object.values(groups).forEach(recs => {
+                        const teacherIds = recs.map(r => String(r.teacher_id));
+                        const questions  = recs[0]?.total_students || '';
+                        createRow(teacherIds, questions);
+                        loadedAny = true;
+                    });
+                }
+                return loadedAny;
+            }
+
+            function validateForm() {
+                const selects = document.querySelectorAll('.comp-teacher-select');
+                const inputs  = document.querySelectorAll('.comp-question-input');
+                let ok = true;
+
+                selects.forEach((sel, i) => {
+                    const selectedTeachers = Array.from(sel.selectedOptions).map(o => o.value);
+                    const q = parseFloat(inputs[i]?.value ?? '0');
+
+                    sel.classList.remove('is-invalid');
+                    inputs[i]?.classList.remove('is-invalid');
+
+                    if (!selectedTeachers.length) {
+                        sel.classList.add('is-invalid'); ok = false;
+                    }
+                    if (!(q > 0)) {
+                        inputs[i]?.classList.add('is-invalid'); ok = false;
+                    }
+                });
+
+                return ok;
+            }
+
+            function submitForm(form) {
+                const fd = new FormData(form);
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': csrf },
+                    body: fd
+                })
+                    .then(r => r.ok ? r.json() : r.json().then(e => { throw new Error(e.message || 'Server error') }))
+                    .then(data => {
+                        Swal.fire('Success!', data.message || 'Saved successfully', 'success');
+                        const btn = document.getElementById('submit-list-of-comparison-question-paper');
+                        btn.textContent = 'Update Comparison, Correction Committee';
+                        btn.classList.replace('btn-primary', 'btn-warning');
+
+                        document.querySelectorAll('.card-list-of-comparison-question-paper').forEach(card => {
+                            card.classList.add('fade-highlight');
+                            setTimeout(() => card.classList.add('fade-out'), 1000);
+                            setTimeout(() => card.classList.remove('fade-highlight','fade-out'), 1900);
+                        });
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire('Error!', err.message || 'Something went wrong', 'error');
+                    });
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const hadSaved = loadSaved();
+                // If nothing loaded from DB, start with one blank row
+                if (!hadSaved) createRow();
+
+                document.getElementById('add-comparison-question-paper-row')
+                    ?.addEventListener('click', () => createRow());
+
+                document.getElementById('form-list-of-comparison-question-paper')
+                    ?.addEventListener('submit', function(e){
+                        e.preventDefault();
+                        if (!validateForm()) {
+                            Swal.fire('Validation Error', 'Please select teacher(s) and enter question counts for all rows.', 'error');
+                            return;
+                        }
+                        Swal.fire({
+                            title: 'Confirm Save',
+                            text: 'Do you want to save the committee data?',
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, Save!',
+                            cancelButtonText: 'Cancel'
+                        }).then(res => { if (res.isConfirmed) submitForm(this); });
+                    });
             });
-        });
+        })();
     </script>
 @endpush
 

@@ -404,7 +404,7 @@
                 //For ComparisonCommittee
                 $rateComparisonCommittee = RateHead::where('order_no', '=','11')->first();
                 if($rateComparisonCommittee){
-                    $savedRateAssignComparisonCommittee = RateAssign::getTeachersFromCommittee(
+                    $savedRateAssignComparisonCommittee = RateAssign::getTeacherWithGroup(
                         $session_info->id,
                         $exam_type,
                         $rateComparisonCommittee->id

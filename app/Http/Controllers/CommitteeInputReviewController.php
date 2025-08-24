@@ -1154,6 +1154,8 @@ class CommitteeInputReviewController extends Controller
             ], 500);
         }
     }
+
+
     public function storePrintingQuestion(Request $request)
     {
         Log::info('📥 Printing Question Request', ['data' => $request->all()]);
@@ -1255,131 +1257,98 @@ class CommitteeInputReviewController extends Controller
         }
     }
 
+    //order 11
     public function storeComparisonCommittee(Request $request)
     {
-        // Log all request data with a custom message
-        Log::info('Comparison,Correction Committee', [
-            'request_data' => $request->all()  // Log all input data from the request
-        ]);
-        $teacherIds = $request->input('comparison_question_committee_teacher_ids'); // array
-        $number_of_comparison = $request->input('comparison_question_committee_amounts');        // array (indexed)
+        Log::info('Comparison, Correction Committee (raw request)', ['request_data' => $request->all()]);
+
+        $teacherGroups = (array) $request->input('comparison_question_committee_teacher_ids', []); // [groupNo => [teacherIds...]]
+        $questionCounts = (array) $request->input('comparison_question_committee_amounts', []);    // [groupNo => questions]
         $sessionId = $request->sid;
-        $per_comparsion_rate=$request->comparison_question_paper_rate;
-        $exam_type_record=ExamType::where('type','review')->first();
-        $exam_type = $exam_type_record->id;
+        $rate      = (float) $request->comparison_question_paper_rate;
 
+        $exam_type = ExamType::where('type','Review')->value('id');
 
-
-        Log::info('📥 Received Question Comparison Committee Data', [
-            'teacherId' => $teacherIds,
-            'number_of_stencil' => $number_of_comparison,
-            'rate' => $per_comparsion_rate,
-            'sessionId' => $sessionId,
-        ]);
-
-        // Step 1: Validate teacher inputs
-        if (empty($teacherIds) || !is_array($teacherIds) || count($teacherIds) !== count($number_of_comparison)) {
-            return response()->json([
-                'message' => 'Invalid data submitted. Please select teachers and their respective student count.'
-            ], 422);
+        if (empty($teacherGroups) || empty($questionCounts)) {
+            return response()->json(['message' => 'Please add at least one row with teacher(s) and question count.'], 422);
         }
 
-
-        Log::info('pass out1');
-        // Step 2: Check for duplicates
-        if (count($teacherIds) !== count(array_unique($teacherIds))) {
-            return response()->json([
-                'message' => 'Duplicate teacher selection detected. Please choose unique teachers.'
-            ], 422);
-        }
-
-
-
-
-        Log::info('pass out2');
         DB::beginTransaction();
-
-
-
         try {
-            // Step 3: Ensure RateHead exists
+            // 1) RateHead for Order 11
             $rateHead = $this->getOrCreateRateHead('11', [
-                'head' => 'Question Typing,Sketching & Misc.',
-                'is_course' => 1,
-                'dist_type' => 'Individual',
+                'head'             => 'Question Typing,Sketching & Misc.',
+                'is_course'        => 1,
+                'dist_type'        => 'Individual',
                 'is_student_count' => 1,
-                'marge_with' => null,
-                'status' => 1,
+                'marge_with'       => null,
+                'status'           => 1,
             ]);
 
-            //ensure session exist
-            $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+            // 2) Session
+            $session = LocalData::getOrCreateRegularSession($sessionId, $exam_type);
 
-
-
-
-
-            // Step 4: Ensure  RateAmount exists(Rate Amount Exist for Rate Head=1)
+            // 3) RateAmount
             $rateAmount = $this->getOrCreateRateAmount(
-                $rateHead->id,
-                $session_info->id,
-                $exam_type,
-                [
-                    'default_rate' => $per_comparsion_rate,
-                    'min_rate'     => null,
-                    'max_rate'     => null,
-                ]
+                $rateHead->id, $session->id, $exam_type,
+                ['default_rate' => $rate, 'min_rate' => null, 'max_rate' => null]
             );
 
-            RateAssign::where('session_id', $session_info->id)
+            // Replace existing rows for this block
+            RateAssign::where('session_id', $session->id)
                 ->where('exam_type_id', $exam_type)
                 ->where('rate_head_id', $rateHead->id)
                 ->delete();
 
+            // 4) Save per teacher, splitting each group equally
+            foreach ($teacherGroups as $groupNo => $teacherIds) {
+                $teacherIds = array_values(array_filter((array) $teacherIds));
+                $groupQuestions = (float) ($questionCounts[$groupNo] ?? 0);
+                $teacherCount = max(1, count($teacherIds));
 
-            // Step 5: Loop and store teacher-wise rate_assign
-            foreach ($teacherIds as $index => $teacherId) {
-                $question_comparison_count=$number_of_comparison[$index];
-                $calculatedAmount =  $question_comparison_count * $rateAmount->default_rate;
-
-                if ($calculatedAmount <= 0) {
-                    //  DB::rollBack();
-                    return response()->json([
-                        'message' => "Invalid amount for teacher ID: $teacherId."
-                    ], 422);
+                if ($groupQuestions <= 0 || $teacherCount <= 0) {
+                    Log::warning('Skipping invalid group in Order 11', [
+                        'group_no' => $groupNo, 'teachers' => $teacherIds, 'questions' => $groupQuestions
+                    ]);
+                    continue;
                 }
 
-                Log::info('📘 Question Comparison Store', [
-                    'teacher_id' => $teacherId,
-                    'rate_head_id' => $rateHead->id,
-                    'session_id' => $session_info->id,
-                    'exam_type_id'=>$exam_type,
-                    'no_of_items' => $question_comparison_count,
-                    'total_amount' => $calculatedAmount,
-                ]);
+                $perTeacherItems = $groupQuestions / $teacherCount;
+                foreach ($teacherIds as $teacherId) {
+                    $amount = $perTeacherItems * (float) $rateAmount->default_rate;
 
-                RateAssign::create([
-                    'teacher_id' => $teacherId,
-                    'rate_head_id' => $rateHead->id,
-                    'session_id' => $session_info->id,
-                    'exam_type_id'=>$exam_type,
-                    'no_of_items' => $question_comparison_count,
-                    'total_amount' => $calculatedAmount,
-                ]);
+                    Log::info('Order 11 store', [
+                        'group_no'        => (int)$groupNo,
+                        'teacher_id'      => (int)$teacherId,
+                        'per_items'       => $perTeacherItems,
+                        'group_questions' => $groupQuestions,
+                        'teacher_count'   => $teacherCount,
+                        'rate'            => (float)$rateAmount->default_rate,
+                        'amount'          => $amount,
+                    ]);
+
+                    RateAssign::create([
+                        'teacher_id'     => (int) $teacherId,
+                        'rate_head_id'   => $rateHead->id,
+                        'session_id'     => $session->id,
+                        'exam_type_id'   => $exam_type,
+                        'group_no'       => (int) $groupNo,
+
+                        // audit/math fields (reuse same semantics as 7.e)
+                        'total_students' => $groupQuestions,   // store group total questions here
+                        'total_teachers' => $teacherCount,
+                        'no_of_items'    => $perTeacherItems,  // per-teacher share of questions
+                        'total_amount'   => $amount,
+                    ]);
+                }
             }
 
             DB::commit();
-
-            return response()->json([
-                'message' => 'Question Committee data stored successfully.'
-            ]);
-        } catch (\Exception $e) {
+            return response()->json(['message' => 'Question Committee data stored successfully.']);
+        } catch (\Throwable $e) {
             DB::rollBack();
-            Log::info($e->getMessage());
-            return response()->json([
-                'message' => 'Something went wrong.',
-                'error' => $e->getMessage()
-            ], 500);
+            Log::error('❌ Order 11 save error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Something went wrong.', 'error' => $e->getMessage()], 500);
         }
     }
 

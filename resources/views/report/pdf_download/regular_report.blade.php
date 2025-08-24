@@ -1055,33 +1055,40 @@
 
 
         {{--Order 11--}}
+        {{-- Order 11 --}}
         @php
-            //$assigns_order_11 = $teacher->rateAssigns->where('rateHead.order_no', '11')->first();
             $assigns_order_11 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                  return $assign->session_id == $session_info->id &&
                         $assign->exam_type_id == 1 &&
                         $assign->rateHead &&
                         $assign->rateHead->order_no == '11';
-             })->first();
-            $total_assigns = $assigns_order_11 ? $assigns_order_11->count() : 0;
-            $head_order_11 = $rateHead_order_11->head ?? '';
-            $default_rate = $rateAmount_order_11->default_rate ?? 0;
-            if ($assigns_order_11 && $assigns_order_11->total_amount) {
-                $global_sum += $assigns_order_11->total_amount;
+             });
+
+            $head_order_11   = $rateHead_order_11->head ?? '';
+            $default_rate_11 = $rateAmount_order_11->default_rate ?? 0;
+
+            $sum_questions_11 = $assigns_order_11->sum('no_of_items');   // per-teacher share of questions
+            $sum_amount_11    = $assigns_order_11->sum('total_amount');  // total money
+
+            if ($sum_amount_11 > 0) {
+                $global_sum += $sum_amount_11;
             }
         @endphp
         <tr>
             <td>11</td>
             <td class="textstart" colspan="2">{{ $head_order_11 }}</td>
             <td></td>
-            <td>{{ $assigns_order_11->no_of_items ?? '' }}</td>
+            <td>
+                {{ $sum_questions_11 > 0 ? number_format($sum_questions_11, 2) : '' }}
+            </td>
             <td class="textend">
-                @if($total_assigns > 0 && isset($rateAmount_order_11->default_rate))
-                    {{ $rateAmount_order_11->default_rate }}
+                @if($sum_questions_11 > 0)
+                    {{ number_format($default_rate_11, 0) }}
                 @endif
             </td>
-            <td class="textend">{{ isset($assigns_order_11->total_amount) ? number_format($assigns_order_11->total_amount, 2) : '' }}</td>
+            <td class="textend">{{ $sum_amount_11 > 0 ? number_format($sum_amount_11, 2) : '' }}</td>
         </tr>
+
 
 
         {{-- Order 12.a/12.b --}}
@@ -2250,34 +2257,39 @@
 
 
 
-        {{--Order 11--}}
+
+        {{-- Order 11 --}}
         @php
-            //$assigns_order_11 = $employee->rateAssigns->where('rateHead.order_no', '11')->first();
             $assigns_order_11 = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                  return $assign->session_id == $session_info->id &&
                         $assign->exam_type_id == 1 &&
                         $assign->rateHead &&
                         $assign->rateHead->order_no == '11';
-             })->first();
-            $total_assigns = $assigns_order_11 ? $assigns_order_11->count() : 0;
-            $head_order_11 = $rateHead_order_11->head ?? '';
-            $default_rate = $rateAmount_order_11->default_rate ?? 0;
-            if ($assigns_order_11 && $assigns_order_11->total_amount) {
-                $global_sum += $assigns_order_11->total_amount;
+             });
+
+            $head_order_11   = $rateHead_order_11->head ?? '';
+            $default_rate_11 = $rateAmount_order_11->default_rate ?? 0;
+
+            $sum_questions_11 = $assigns_order_11->sum('no_of_items');   // per-teacher share of questions
+            $sum_amount_11    = $assigns_order_11->sum('total_amount');  // total money
+
+            if ($sum_amount_11 > 0) {
+                $global_sum += $sum_amount_11;
             }
         @endphp
         <tr>
             <td>11</td>
             <td class="textstart" colspan="2">{{ $head_order_11 }}</td>
             <td></td>
-            <td>{{ $assigns_order_11->no_of_items ?? '' }}</td>
+            <td>{{ $sum_questions_11 > 0 ? $sum_questions_11 : '' }}</td>
             <td class="textend">
-                @if($total_assigns > 0 && isset($rateAmount_order_11->default_rate))
-                    {{ $rateAmount_order_11->default_rate }}
+                @if($sum_questions_11 > 0)
+                    {{ number_format($default_rate_11, 0) }}
                 @endif
             </td>
-            <td class="textend">{{ isset($assigns_order_11->total_amount) ? number_format($assigns_order_11->total_amount, 2) : '' }}</td>
+            <td class="textend">{{ $sum_amount_11 > 0 ? number_format($sum_amount_11, 2) : '' }}</td>
         </tr>
+
 
 
         {{-- Order 12.a/12.b --}}
