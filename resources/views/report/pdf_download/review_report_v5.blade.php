@@ -1111,7 +1111,7 @@
 
             <td class="textstart">(a) {{ $sub_head_12_a }}</td>
             <td></td>
-            <td>{{ $sum_stencils_12_a ? number_format((float)$sum_stencils_12_a, 2) : '' }}</td>
+            <td>{{ $sum_stencils_12_a ?: '' }}</td>
 
             <td class="textend">
                 {{ $assigns_12_a->isNotEmpty() ? number_format((float) $default_rate_12_a, 2) : '' }}
@@ -1153,7 +1153,7 @@
         <tr>
             <td class="textstart">(b) {{ $sub_head_12_b }}</td>
             <td></td>
-            <td>{{ $sum_stencils_12_b ? number_format((float)$sum_stencils_12_b, 2) : '' }}</td>
+            <td>{{ $sum_stencils_12_b ?: '' }}</td>
             <td class="textend">
                 {{ $assign_12_b->isNotEmpty() ? number_format((float) $default_rate_12_b, 2) : '' }}
             </td>
@@ -2381,7 +2381,7 @@
 
             <td class="textstart">(a) {{ $sub_head_12_a }}</td>
             <td></td>
-            <td>{{ $sum_stencils_12_a ? number_format((float)$sum_stencils_12_a, 2) : '' }}</td>
+            <td>{{ $sum_stencils_12_a ?: '' }}</td>
 
             <td class="textend">
                 {{ $assigns_12_a->isNotEmpty() ? number_format((float) $default_rate_12_a, 2) : '' }}
@@ -2423,7 +2423,7 @@
         <tr>
             <td class="textstart">(b) {{ $sub_head_12_b }}</td>
             <td></td>
-            <td>{{ $sum_stencils_12_b ? number_format((float)$sum_stencils_12_b, 2) : '' }}</td>
+            <td>{{ $sum_stencils_12_b ?: '' }}</td>
             <td class="textend">
                 {{ $assign_12_b->isNotEmpty() ? number_format((float) $default_rate_12_b, 2) : '' }}
             </td>

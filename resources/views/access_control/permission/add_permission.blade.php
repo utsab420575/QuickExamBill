@@ -54,6 +54,7 @@
                                                 <option value="committee_input_review"> Committee Input Review</option>
                                                 <option value="report_regular"> Report Regular</option>
                                                 <option value="report_review"> Report Review</option>
+                                                <option value="statement"> Statement</option>
                                                 <option value="teacher"> Teacher</option>
                                                 <option value="employee"> Employee</option>
                                                 <option value="permission"> Permission</option>

@@ -368,7 +368,7 @@
                  //For StencilCuttingCommittee
                 $rateStencilCuttingCommittee = RateHead::where('order_no', '=','12.a')->first();
                 if($rateStencilCuttingCommittee){
-                    $savedRateAssignStencilCuttingCommittee = RateAssign::getTeachersFromCommittee(
+                    $savedRateAssignStencilCuttingCommittee = RateAssign::getTeacherWithGroup(
                         $session_info->id,
                         $exam_type,
                         $rateStencilCuttingCommittee->id
@@ -707,6 +707,7 @@
         @if($session_info->year == 5 && $session_info->semester == 2)
             @include('committee_input.patritals.regular.list_supervised_thesis_project')
         @endif
+
 
 
 

@@ -2,10 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Exam Bill Review</title>
+    <title>Exam Bill Regular</title>
     <style>
+        @media print {
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+            tr, th, td { page-break-inside: avoid; }
+            h3 { page-break-after: avoid; break-after: avoid; }
+        }
+
+        /* Page + base */
         @page {
-            /*top right bottom left*/
             margin: 5mm 12mm 5mm 12mm;
         }
 
@@ -14,1803 +21,1498 @@
             font-size: 12px;
         }
 
-        .header_table, .body_table_1, .footer_table_1 {
+        /* Shared table base */
+        .header_table, .body_table_1, .body_table_2 , .body_table_4,.body_table_5,.body_table_9,.body_table_8_a,.body_table_8_a,.body_table_8_b,.body_table_10_a,.body_table_10_b,.body_table_8_d{
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed; /* keeps widths stable in PDF */
         }
 
+        /* Header */
         .header_table td {
             text-align: center;
             font-size: 13px;
         }
 
-        .body_table_1 th, .body_table_1 td {
-            border: 1px solid black;
+        /* Body table 1 */
+        .body_table_1 {
+            font-size: 13px;
+        }
+
+        .body_table_1 th,
+        .body_table_1 td {
+            border: 1px solid #000;
             padding: 4px;
             text-align: center;
+            vertical-align: middle;
+            word-wrap: break-word;
         }
 
-        .footer_table_1 {
-            margin-top: 50px;
-            font-size: 12px;
+        /* Body table 2 */
+        .body_table_2 {
+            font-size: 13px;
         }
 
-        .pt-20 { padding-top: 20px; }
-        .pt-30 { padding-top: 30px; }
-        .pt-40 { padding-top: 40px; }
-
-        td.textstart{
-            text-align: left;
-        }
-        td.textend{
-            text-align: right;
-        }
-        td.textcenter{
+        .body_table_2 th,
+        .body_table_2 td {
+            border: 1px solid #000;
+            padding: 4px;
             text-align: center;
+            vertical-align: middle;
+            word-wrap: break-word;
         }
 
+        .body_table_4 th,
+        .body_table_4 td {
+            border: 1px solid #000;
+            padding: 4px;
+            text-align: center;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+
+        .body_table_5 th,
+        .body_table_5 td {
+            border: 1px solid #000;
+            padding: 4px;
+            text-align: center;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+
+        .body_table_9 th,
+        .body_table_9 td {
+            border: 1px solid #000;
+            padding: 4px;
+            text-align: center;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+
+        .body_table_8_a th,
+        .body_table_8_a td {
+            border: 1px solid #000;
+            padding: 4px;
+            text-align: center;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+
+        .body_table_8_b th,
+        .body_table_8_b td {
+            border: 1px solid #000;
+            padding: 4px;
+            text-align: center;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+
+        .body_table_10_a th,
+        .body_table_10_a td {
+            border: 1px solid #000;
+            padding: 4px;
+            text-align: center;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+
+        .body_table_10_b th,
+        .body_table_10_b td {
+            border: 1px solid #000;
+            padding: 4px;
+            text-align: center;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+
+        .body_table_8_d th,
+        .body_table_8_d td {
+            border: 1px solid #000;
+            padding: 4px;
+            text-align: center;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+
+        /* Utilities */
         .page-break {
             page-break-after: always;
+        }
+
+        td.textstart {
+            text-align: left;
+        }
+
+        td.textend {
+            text-align: right;
+        }
+
+        td.textcenter {
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
 @php
-    $user = auth()->user();
+    // Ordinal helper (1=>1st, 2=>2nd, 3=>3rd, else => th)
+    $ordinals = [1 => '1st', 2 => '2nd', 3 => '3rd', 4 => '4th', 5 => '5th', 6 => '6th', 7 => '7th', 8 => '8th'];
+    $yearText = $ordinals[$session_info->year ?? null] ?? (($session_info->year ?? '') . 'th');
+    $semesterText = $ordinals[$session_info->semester ?? null] ?? (($session_info->semester ?? '') . 'th');
 @endphp
 
-@php
-    if ($user->hasRole('Teacher') || $user->hasRole('Admin') || $user->hasRole('SuperAdmin')) {
-@endphp
-@foreach($teachers as  $teacher)
-    @php
-        // Skip other teachers if the user is a teacher
-        if (auth()->user()->hasRole('Teacher') && auth()->user()->id !== $teacher->user_id) {
-            continue;
-        }
-        $global_sum=0;
-    @endphp
+@hasanyrole('Teacher|Admin|SuperAdmin')
 
-    {{-- Repeatable Header --}}
-    <table class="header_table " style=" table-layout: fixed;">
-        <colgroup>
-            <col style="width: 15%;">
-            <col style="width: 35%;">
-            <col style="width: 20%;">
-            <col style="width: 30%;">
-        </colgroup>
+{{-- Repeatable Header --}}
+<table class="header_table" style="table-layout: fixed;">
+    <colgroup>
+        <col style="width: 15%;">
+        <col style="width: 35%;">
+        <col style="width: 20%;">
+        <col style="width: 30%;">
+    </colgroup>
 
-        <!-- Header with Logo and University Info -->
-        <tr>
-            <td colspan="1" style="text-align: right; padding: 20px 0px 0px 0px;">
-                <img src="{{ public_path('images/logo_duet.png') }}" style="width: 50px;">
-            </td>
-            <td colspan="3" style="text-align: left; padding: 20px 0 0 35px;">
-                <strong>Dhaka University of Engineering & Technology, Gazipur</strong><br>
-                <span style="display: inline-block; margin-left:100px; margin-top: 5px;">
-                Gazipur-1707
-            </span>
-            </td>
-        </tr>
+    <tr>
+        <td colspan="1" style="text-align: right; padding: 20px 0 0 0;">
+            <img src="{{ public_path('images/logo_duet.png') }}" style="width: 50px;">
+        </td>
+        <td colspan="3" style="text-align: left; padding: 20px 0 0 35px;">
+            <strong>Dhaka University of Engineering &amp; Technology, Gazipur</strong><br>
+            <span style="display:inline-block; margin-left:100px; margin-top:5px;">Gazipur-1707</span>
+        </td>
+    </tr>
 
-        <!-- Section Title -->
-        <tr>
-            <td colspan="4" style="padding: 10px 0;">
-                <div style="margin-left: 5px; font-weight: bold;">
-                    (Examination Related Remuneration)
-                </div>
-            </td>
-        </tr>
+    <tr>
+        <td colspan="4" style="padding: 10px 0;">
+            <div style="margin-left:5px; font-weight:bold;">(Department of Architecture)</div>
+        </td>
+    </tr>
 
-        <!-- Session Info -->
-        @php
-            $ordinals = [1 => '1st', 2 => '2nd', 3 => '3rd', 4 => '4th', 5 => '5th'];
-            $yearText = $ordinals[$session_info->year] ?? $session_info->year . 'th';
-            $semesterText = $ordinals[$session_info->semester] ?? $session_info->semester . 'th';
-        @endphp
-        <tr>
-            <td style="text-align: right;padding-right: 10px;">
-                B.Arch.
-            </td>
-            <td>
-                <div style="display: flex; justify-content: space-between;">
-                    <span>{{ $yearText }} year {{ $semesterText }} semester</span>
-                    <span style="font-weight: bold; padding-left: 10px;">Regular</span>
-                </div>
-            </td>
-            <td style="text-align: left;padding-left: 20px;">
-                {{ $session_info->session }}
-            </td>
-            <td style="text-align: left;">
-                (Held on: _____________)
-            </td>
-        </tr>
+    <tr>
+        <td style="text-align:right; padding-right:10px;">Bachelor in Architecture</td>
+        <td>
+            <span>{{ $yearText }} year {{ $semesterText }} semester</span>
+        </td>
+        <td style="text-align:left; padding-left:40px;">
+                <span style="font-weight:bold">
+                    {{ isset($exam_type) && (int)$exam_type === 2 ? 'Review' : 'Regular' }}
+                </span>
+        </td>
+        <td style="text-align:right;">Examination: {{ $session_info->session ?? '' }}</td>
+    </tr>
+</table>
 
-        <!-- Teacher Info -->
-        <tr>
-            <td colspan="2" style="padding-top: 15px; text-align: left;padding-left: 10px;">
-                <strong>Name:</strong> {{ $teacher->user->name }}
-            </td>
-            <td colspan="1" style="padding-top: 15px;">
-                <div style="transform: translateX(-90px);">
-                    <strong>Designation:</strong> {{ $teacher->designation->designation }}
-                </div>
-            </td>
-            <td style="padding-top: 15px;">
-                <strong>Department:</strong> {{ $teacher->department->shortname }}, DUET
-            </td>
-        </tr>
+{{-- A) Moderation Committee --}}
+@if($assigns_order_1->isNotEmpty())
+    {{-- A) order 1 --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '1'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        A) List of Examination Committee/Moderation Committee Members
+        (@ min {{ $rate ? number_format($rate->min_rate, 0) : '' }}/- per member)
+    </h3>
 
-        <!-- Section Header -->
-        <tr>
-            <td colspan="4" style="padding-top: 30px; font-weight: bold;">
-                Details of Examination Related Works
-            </td>
-        </tr>
-
-
-    </table>
-
-    {{-- Body Table --}}
-    <table class="body_table_1" style="margin-top: 10px;">
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
         <thead>
         <tr>
-            <th>Sl. No.</th>
-            <th colspan="2">Description of work</th>
-            <th>Subject/Course</th>
-            <th>Nos. of script/Students</th>
-            <th>Rate</th>
-            <th>Taka</th>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">Position</th>
         </tr>
         </thead>
         <tbody>
-
-
-        {{-- Order=1 --}}
-        @php
-            //$assigns_order_1 = $teacher->rateAssigns->where('rateHead.order_no', '1');
-            $assigns_order_1 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
-                return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
-                       $assign->rateHead &&
-                       $assign->rateHead->order_no == '1';
-            });
-            $total_taka = 0;
-            $no_of_item = 0;
-
-            if ($assigns_order_1->isNotEmpty()) {
-                foreach ($assigns_order_1 as $assign) {
-                    $global_sum += $assign->total_amount ?? 0;
-                    $total_taka += $assign->total_amount ?? 0;
-                    $no_of_item = $assign->no_of_item ?? 0;
-                }
-            }
-
-            // Always show default RateHead and RateAmount
-            $head = $rateHead_order_1->head ?? 'Moderation';
-            $max_rate = $rateAmount_order_1->max_rate ?? ($rateAmount_order_1->default_rate ?? '');
-            $min_rate = $rateAmount_order_1->min_rate ?? ($rateAmount_order_1->default_rate ?? '');
-        @endphp
-
-        <tr>
-            <td rowspan="2">1</td>
-            <td class="textstart" colspan="2" rowspan="2">{{ $head }}</td>
-            <td rowspan="2"></td>
-            <td rowspan="2">{{ $no_of_item == 0 ? '' : $no_of_item }}</td>
-            @if($assigns_order_1->isNotEmpty())
-                <td class="textend">max. {{ number_format($max_rate, 0) }}</td>
-            @else
-                <td></td>
-            @endif
-            <td rowspan="2" class="textend">{{ $total_taka == 0 ? '' : number_format($total_taka, 2) }}</td>
-        </tr>
-        <tr>
-            @if($assigns_order_1->isNotEmpty())
-                <td class="textend">min. {{ number_format($min_rate, 0) }}</td>
-            @else
-                <td></td>
-            @endif
-        </tr>
-
-
-
-        {{-- Order = 2 --}}
-        @php
-            $assigns_order_2 = App\Models\RateAssign::where('teacher_id', $teacher->id)
-                               ->where('session_id', $session_info->id)
-                               ->whereHas('rateHead', function ($q) {
-                                   $q->where('order_no', '2');
-                               })->get();
-            $total_assigns = $assigns_order_2->count();
-            $loopIndex = 0;
-
-            $head = $rateHead_order_2->head ?? 'Paper Setters';
-            $default_rate = $rateAmount_order_2->default_rate ?? 0;
-
-            //dd($assigns_order_2);
-        @endphp
-
-        @if ($total_assigns > 0)
-            @foreach ($assigns_order_2 as $assign)
-                @php
-                    $global_sum += $assign->total_amount ?? 0;
-                @endphp
-                <tr>
-                    @if ($loopIndex == 0)
-                        <td rowspan="{{ $total_assigns }}">2</td>
-                        <td class="textstart" colspan="2" rowspan="{{ $total_assigns }}">{{ $head }}</td>
-                    @endif
-                    <td>{{ $assign->course_code ?? '' }}</td>
-                    <td></td>
-                    <td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>
-                    <td class="textend">{{ isset($assign->total_amount) ? number_format($assign->total_amount, 2) : '' }}</td>
-                </tr>
-                @php $loopIndex++; @endphp
-            @endforeach
-        @else
-            {{-- Show default row if no assign exists --}}
+        @foreach($assigns_order_1 as $i => $assign)
+            @php
+                $person  = $assign->teacher ?? $assign->employee;
+                $email   = data_get($person, 'user.email');
+                $isChair = $email === ($headEmail ?? null);
+            @endphp
             <tr>
-                <td rowspan="1">2</td>
-                <td class="textstart" colspan="2" rowspan="1">{{ $head }}</td>
-                <td></td>
-                <td></td>
-                {{--<td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>--}}
-                <td class="textend"></td>
-                <td class="textend"></td>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align: left;">
+                    {{ $person?->user?->name }},
+                    {{ $person?->designation?->designation }},
+                    {{ $person?->department?->fullname }},
+                    DUET, Gazipur
+                </td>
+                <td style="text-align:center;">{{ $isChair ? 'Chairman' : 'Member' }}</td>
             </tr>
-        @endif
-
-
-
-        {{-- Order = 3 --}}
-        @php
-            //$assigns_order_3 = $teacher->rateAssigns->where('rateHead.order_no', '3');
-             $assigns_order_3 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '3';
-               });
-            $total_assigns = $assigns_order_3->count();
-            $loopIndex = 0;
-
-            $head = $rateHead_order_3->head ?? 'Examiner';
-            $default_rate = $rateAmount_order_3->default_rate ?? 0;
-        @endphp
-
-        @if ($total_assigns > 0)
-            @foreach ($assigns_order_3 as $assign)
-                @php
-                    $global_sum += $assign->total_amount ?? 0;
-                @endphp
-                <tr>
-                    @if ($loopIndex == 0)
-                        <td rowspan="{{ $total_assigns }}">3</td>
-                        <td class="textstart" colspan="2" rowspan="{{ $total_assigns }}">{{ $head }}</td>
-                    @endif
-                    <td>{{ $assign->course_code ?? '' }}</td>
-                    <td>{{$assign->total_students}}/{{ $assign->total_teachers ?? '' }}</td>
-                    <td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>
-                    <td class="textend">{{ isset($assign->total_amount) ? number_format($assign->total_amount, 2) : '' }}</td>
-                </tr>
-                @php $loopIndex++; @endphp
-            @endforeach
-        @else
-            {{-- Show default row if no assign exists --}}
-            <tr>
-                <td rowspan="1">3</td>
-                <td class="textstart" colspan="2" rowspan="1">{{ $head }}</td>
-                <td></td>
-                <td></td>
-                {{--<td class="textend">{{ number_format($default_rate, 2) }}</td>--}}
-                <td class="textend"></td>
-                <td class="textend"></td>
-            </tr>
-        @endif
-
-
-
-        {{-- Order = 4 --}}
-        @php
-            $head = $rateHead_order_4->head ?? 'Class Test';
-        @endphp
-        {{-- Fallback row if no data --}}
-        <tr>
-            <td rowspan="1">4</td>
-            <td class="textstart" colspan="2" rowspan="1">{{ $head }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-            <td class="textend"></td>
-        </tr>
-
-
-
-
-
-
-        {{-- Order = 5 --}}
-        @php
-            $head = $rateHead_order_5->head ?? 'Laboratory/Survey works';
-        @endphp
-        {{-- Fallback row if no data --}}
-        <tr>
-            <td rowspan="1">5</td>
-            <td class="textstart" colspan="2" rowspan="1">{{ $head }}</td>
-            <td></td>
-            <td></td>
-            {{-- <td class="textend">{{ number_format($default_rate, 2) }}</td>--}}
-            <td class="textend"></td>
-            <td class="textend"></td>
-        </tr>
-
-
-
-
-
-        {{-- Order 6.a/b/c/d --}}
-        @php
-            $head = $rateHead_order_6a->head ?? '';
-            $sub_head_6a = $rateHead_order_6a->sub_head ?? '';
-
-        @endphp
-        <tr>
-            <td rowspan="4">6</td>
-            <td class="textstart" rowspan="4">{{ $head }}</td>
-            <td class="textstart">{{$sub_head_6a}}</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-        </tr>
-
-        {{-- Order 6.b --}}
-        @php
-            $sub_head_6b = $rateHead_order_6b->sub_head ?? '6.B';
-        @endphp
-        <tr>
-            <td class="textstart">{{ $sub_head_6b }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend">
-            </td>
-
-            <td class="textend"></td>
-        </tr>
-
-        {{-- Order 6.c --}}
-        @php
-            $sub_head_6c = $rateHead_order_6c->sub_head ?? '';
-        @endphp
-        <tr>
-            <td class="textstart">{{ $sub_head_6c }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend">
-
-            </td>
-            <td class="textend"></td>
-        </tr>
-
-        {{-- Order 6.d --}}
-        @php
-            $sub_head_6d = $rateHead_order_6d->sub_head ?? '';
-        @endphp
-        <tr>
-            <td class="textstart">{{ $sub_head_6d }}</td>
-            <td></td>
-            <td></td>
-            <td>
-
-            </td>
-            <td class="textend"></td>
-        </tr>
-
-
-
-
-        {{-- Order 7.e/7.f --}}
-        @php
-            $head = $rateHead_order_7e->head ?? '';
-            $sub_head_7e = $rateHead_order_7e->sub_head ?? '';
-        @endphp
-        <tr>
-            <td rowspan="2">7</td>
-            <td class="textstart" rowspan="2">{{ $head }}</td>
-            <td class="textstart">{{$sub_head_7e}}</td>
-            <td></td>
-            <td></td>
-            <td class="textend">
-            </td>
-
-            <td class="textend"></td>
-        </tr>
-
-        {{-- Order 7.f --}}
-        @php
-            $sub_head_7f = $rateHead_order_7f->sub_head ?? '';
-        @endphp
-        <tr>
-            <td class="textstart">{{ $sub_head_7f }}</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-
-
-
-
-
-        @php
-            //$assigns_order_8a = $teacher->rateAssigns->where('rateHead.order_no', '8.a');
-            $assigns_order_8a = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '8.a';
-               });
-           /* //$assigns_order_8b = $teacher->rateAssigns->where('rateHead.order_no', '8.b');
-             $assigns_order_8b = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '8.b';
-               });
-
-             $assigns_order_8c = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '8.c';
-               })->first();*/
-
-
-
-
-            $total_assigns_8a = $assigns_order_8a->count();
-
-
-            // Total number of rows for section 8 (8.a + 8.b + 8.c + 8.d)
-            $rowspan_8_block = max(1, $total_assigns_8a) + 1 + 1 + 1;
-
-            $head_8a = $rateHead_order_8a->head ?? 'Gradesheet Preparation--';
-            $sub_head_8a = $rateHead_order_8a->sub_head ?? 'Theoretical*';
-            $rateAmount_8a_default_rate = $rateAmount_order_8a->default_rate ?? '';
-
-            $head_8b = $rateHead_order_8b->head ?? 'Gradesheet Preparation--';
-            $sub_head_8b = $rateHead_order_8b->sub_head ?? 'Sessional*';
-
-
-
-
-            $head_8c = $rateHead_order_8c->head ?? 'Empty';
-
-
-            $head_8d = $rateHead_order_8d->head ?? 'Empty';
-
-        @endphp
-
-        {{-- 8.a rows --}}
-        @if ($total_assigns_8a > 0)
-            @foreach ($assigns_order_8a as $assign)
-                <tr>
-                    @if ($loop->first)
-                        <td rowspan="{{ $rowspan_8_block }}">8</td>
-                        <td class="textstart" rowspan="{{ max(1, $total_assigns_8a) +1 }}">{{ $head_8a }}</td>
-                        <td class="textstart" rowspan="{{ $total_assigns_8a }}">{{ $sub_head_8a }}</td>
-                    @endif
-                    <td>{{ $assign->course_code ?? '' }}</td>
-                    <td>{{$assign->total_students}}/{{$assign->total_teachers}}</td>
-                    <td class="textend">{{ number_format((float)$rateAmount_8a_default_rate, 2) }}</td>
-                    <td class="textend">{{ number_format((float)($assign->total_amount ?? 0), 2) }}</td>
-                    @php $global_sum += $assign->total_amount ?? 0; @endphp
-                </tr>
-            @endforeach
-        @else
-            <tr>
-                <td rowspan="{{ $rowspan_8_block }}">8</td>
-                <td rowspan="{{ max(1, $total_assigns_8a) + 1 }}" class="textstart">{{ $head_8a }}</td>
-                <td class="textstart">{{ $sub_head_8a }}</td>
-                <td></td>
-                <td></td>
-                {{--<td class="textend">{{ number_format((float)$rateAmount_8a_default_rate, 2) }}</td>--}}
-                <td class="textend"></td>
-                <td class="textend"></td>
-            </tr>
-        @endif
-
-
-
-        {{-- 8.b rows --}}
-        <tr>
-            <td class="textstart">{{ $sub_head_8b }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-            <td class="textend"></td>
-        </tr>
-
-
-        {{-- Order = 8.c --}}
-        <tr>
-            <td class="textstart" colspan="2">{{ $head_8c }}</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-        </tr>
-
-
-
-        {{-- Order = 8.d --}}
-        @php
-            $rateHead=\App\Models\RateHead::where('order_no','8.d')->first();
-            $head = $rateHead->head;
-        @endphp
-
-        {{-- Show default row if no assign exists --}}
-        <tr>
-            <td class="textstart" colspan="2">{{ $head }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-            <td class="textend"></td>
-        </tr>
-
-
-
-
-
-
-
-        {{-- Order = 9 --}}
-        @php
-            //$assigns_order_9 = $teacher->rateAssigns->where('rateHead.order_no', '9');
-            $assigns_order_9 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '9';
-               });
-            $total_assigns = $assigns_order_9->count();
-            $loopIndex = 0;
-
-            $head = $rateHead_order_9->head ?? 'Scrutinizing ( Answre Script--)';
-            $default_rate = $rateAmount_order_9->default_rate ?? 0;
-        @endphp
-
-        @if ($total_assigns > 0)
-            @foreach ($assigns_order_9 as $assign)
-                @php
-                    $global_sum += $assign->total_amount ?? 0;
-                @endphp
-                <tr>
-                    @if ($loopIndex == 0)
-                        <td rowspan="{{ $total_assigns }}">9</td>
-                        <td class="textstart" colspan="2" rowspan="{{ $total_assigns }}">{{ $head }}</td>
-                    @endif
-                    <td>{{ $assign->course_code ?? '' }}</td>
-                    <td>{{$assign->total_students}}/{{$assign->total_teachers}}</td>
-                    <td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>
-                    <td class="textend">{{ isset($assign->total_amount) ? number_format($assign->total_amount, 2) : '' }}</td>
-                </tr>
-                @php $loopIndex++; @endphp
-            @endforeach
-        @else
-            {{-- Show default row if no assign exists --}}
-            <tr>
-                <td rowspan="1">9</td>
-                <td class="textstart" colspan="2" rowspan="1">{{ $head }}</td>
-                <td></td>
-                <td></td>
-                {{--<td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>--}}
-                <td class="textend"></td>
-                <td class="textend"></td>
-            </tr>
-        @endif
-
-
-
-
-
-
-        {{-- Order = 10.a --}}
-        @php
-            $assign_10_a = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
-                return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
-                       $assign->rateHead &&
-                       $assign->rateHead->order_no == '10.a';
-            });
-
-            $total_assigns = $assign_10_a->count();
-
-            $rateHead=\App\Models\RateHead::where('order_no','10.a')->first();
-            $head = $rateHead->head;
-            $sub_head_10_a = $rateHead->sub_head;
-            $rateAmount_10_a = $rateAmount_order_10_a ?? null;
-            $default_rate_10_a = $rateAmount_10_a->default_rate ?? 0;
-
-            $total_student_all_course = 0;
-            $total_amount_all_course = 0;
-        @endphp
-
-        @if ($total_assigns > 0)
-            @foreach ($assign_10_a as $assign)
-                @php
-                    $global_sum += $assign->total_amount ?? 0;
-                   /* $total_student_all_course += $assign->total_students ?? 0;*/
-                    $total_student_all_course += $assign->no_of_items ?? 0;
-                    $total_amount_all_course += $assign->total_amount ?? 0;
-                @endphp
-            @endforeach
-            <tr>
-                <td rowspan="2">10</td>
-                <td class="textstart" rowspan="2">{{ $head }}</td>
-                <td class="textstart">(a) {{ $sub_head_10_a }}</td>
-                <td>{{ $total_assigns }} courses</td>
-                {{--<td>{{ $total_student_all_course }}/2</td>--}}
-                <td>{{ $total_student_all_course }}</td>
-                <td class="textend">{{ number_format($default_rate_10_a, 2) }}</td>
-                <td class="textend">{{ number_format($total_amount_all_course, 2) }}</td>
-            </tr>
-        @else
-            {{-- Show default row if no assign exists --}}
-            <tr>
-                <td rowspan="2">10</td>
-                <td class="textstart" rowspan="2">{{ $head }}</td>
-                <td class="textstart">(a) {{ $sub_head_10_a }}</td>
-                <td></td>
-                <td></td>
-                {{--<td class="textend">{{ number_format($default_rate_10_a, 2) }}</td>--}}
-                <td class="textend"></td>
-                <td class="textend"></td>
-            </tr>
-            $assign->exam_type_id == 2 &&
-        @endif
-
-
-
-
-        {{-- Order = 10.b --}}
-        @php
-
-            $rateHead=\App\Models\RateHead::where('order_no','10.b')->first();
-            $head = $rateHead->head;
-            $sub_head_10_b = $rateHead->sub_head;
-        @endphp
-
-        {{-- Show default row if no assign exists --}}
-        <tr>
-            <td class="textstart">(a) {{ $sub_head_10_b }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-            <td class="textend"></td>
-        </tr>
-
-
-
-
-
-
-
-
-        {{--Order 11--}}
-        @php
-            //$assigns_order_11 = $teacher->rateAssigns->where('rateHead.order_no', '11')->first();
-            $assigns_order_11 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
-                 return $assign->session_id == $session_info->id &&
-                        $assign->exam_type_id == 2 &&
-                        $assign->rateHead &&
-                        $assign->rateHead->order_no == '11';
-             })->first();
-            $total_assigns = $assigns_order_11 ? $assigns_order_11->count() : 0;
-            $head_order_11 = $rateHead_order_11->head ?? '';
-            $default_rate = $rateAmount_order_11->default_rate ?? 0;
-            if ($assigns_order_11 && $assigns_order_11->total_amount) {
-                $global_sum += $assigns_order_11->total_amount;
-            }
-        @endphp
-        <tr>
-            <td>11</td>
-            <td class="textstart" colspan="2">{{ $head_order_11 }}</td>
-            <td></td>
-            <td>{{ $assigns_order_11->no_of_items ?? '' }}</td>
-            <td class="textend">
-                @if($total_assigns > 0 && isset($rateAmount_order_11->default_rate))
-                    {{ $rateAmount_order_11->default_rate }}
-                @endif
-            </td>
-            <td class="textend">{{ isset($assigns_order_11->total_amount) ? number_format($assigns_order_11->total_amount, 2) : '' }}</td>
-        </tr>
-
-
-
-
-        {{-- Order 12.a/12.b --}}
-        @php
-            //$assign_12_a = $teacher->rateAssigns->where('rateHead.order_no', '12.a')->first();
-             $assign_12_a = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '12.a';
-               })->first();
-
-            $total_assigns = $assign_12_a ? $assign_12_a->count() : 0;
-
-            $rateAmount_12_a = $rateAmount_order_12_a ?? null;
-            $head = $rateHead_order_12_a->head ?? '';
-            $sub_head_12_a = $rateHead_order_12_a->sub_head ?? 'Error';
-            $default_rate_12_a = $rateAmount_12_a->default_rate ?? 0;
-
-            if ($assign_12_a && $assign_12_a->total_amount) {
-                $global_sum += $assign_12_a->total_amount;
-            }
-        @endphp
-        <tr>
-            <td rowspan="2">12</td>
-            <td class="textstart" rowspan="2">{{ $head }}</td>
-            <td class="textstart">(a) {{ $sub_head_12_a }}</td>
-            {{-- <td>{{ $assign_12_a->course_code ?? '' }}</td>--}}
-            <td></td>
-            <td>{{ $assign_12_a->no_of_items ?? '' }}</td>
-            {{--<td class="textend">{{ number_format($default_rate_12_a, 2) }}</td>--}}
-            <td class="textend">
-                @if($total_assigns > 0 && isset($rateAmount_order_12_a->default_rate))
-                    {{ $rateAmount_order_12_a->default_rate }}
-                @endif
-            </td>
-            <td class="textend">{{ isset($assign_12_a->total_amount) ? number_format($assign_12_a->total_amount, 2) : '' }}</td>
-        </tr>
-
-        {{-- Order 12.b --}}
-        @php
-            //$assign_12_b = $teacher->rateAssigns->where('rateHead.order_no', '12.b')->first();
-             $assign_12_b = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '12.b';
-               })->first();
-
-             $total_assigns = $assign_12_b ? $assign_12_b->count() : 0;
-            $rateAmount_12_b = $rateAmount_order_12_b ?? null;
-            $sub_head_12_b = $rateHead_order_12_b->sub_head ?? '6.B';
-            $default_rate_12_b = $rateAmount_12_b->default_rate ?? 0;
-
-            if ($assign_12_b && $assign_12_b->total_amount) {
-                $global_sum += $assign_12_b->total_amount;
-            }
-        @endphp
-        <tr>
-            <td class="textstart">(b) {{ $sub_head_12_b }}</td>
-            <td></td>
-            <td>{{ $assign_12_b->no_of_items ?? '' }}</td>
-            <td class="textend">
-                @if($total_assigns > 0 && isset($rateAmount_order_12_b->default_rate))
-                    {{ $rateAmount_order_12_b->default_rate }}
-                @endif
-            </td>
-            <td class="textend">{{ isset($assign_12_b->total_amount) ? number_format($assign_12_b->total_amount, 2) : '' }}</td>
-        </tr>
-
-
-
-        {{-- Order 13 --}}
-        @php
-            $head_order_13 = $rateHead_order_13->head ?? 'Error';
-        @endphp
-        <tr>
-            <td>13</td>
-            <td class="textstart" colspan="2">{{ $head_order_13 }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-            <td class="textend"></td>
-        </tr>
-
-
-
-        {{-- Order 14 --}}
-        @php
-            $head_order_14 = $rateHead_order_14->head ?? 'Error';
-        @endphp
-        <tr>
-            <td>14</td>
-            <td class="textstart" colspan="2">{{ $head_order_14 }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-            <td class="textend"></td>
-        </tr>
-
-        {{-- Order 15 --}}
-        @php
-            //$assigns_order_15 = $teacher->rateAssigns->where('rateHead.order_no', '15')->first();
-            $assigns_order_15 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '15';
-               })->first();
-            $head_order_15 = $rateHead_order_15->head ?? 'Error';
-            $default_rate_15 = $rateAmount_order_15->default_rate ?? 0;
-            if ($assigns_order_15 && $assigns_order_15->total_amount) {
-                $global_sum += $assigns_order_15->total_amount;
-            }
-        @endphp
-        <tr>
-            <td>15</td>
-            <td class="textstart" colspan="2">{{ $head_order_15 }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-            <td class="textend">{{ isset($assigns_order_15->total_amount) ? number_format($assigns_order_15->total_amount, 2) : '' }}</td>
-        </tr>
-
-
-
-
-
-
-
-
-        {{-- Order 16 --}}
-        @php
-            $head_order_16 = $rateHead_order_16->head ?? 'Error';
-        @endphp
-        <tr>
-            <td>16</td>
-            <td class="textstart" colspan="2">{{ $head_order_16 }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend">
-            </td>
-            <td class="textend"></td>
-        </tr>
-
-
-
-
-        //Final Calculation
-        <tr>
-            <td colspan="6" class="textend">Total:</td>
-            <td class="textend">{{ isset($global_sum) ? number_format($global_sum, 2) : '' }}</td>
-        </tr>
-
-
-
-
-
-
-
-
-
-
-
+        @endforeach
         </tbody>
     </table>
+@endif
 
-    {{-- Footer --}}
-    <table class="footer_table_1">
-        <tr>
-            <td colspan="2" style="text-align: left;">---------------------------------------------------</td>
-            <td colspan="2" style="text-align: right;">---------------------------------------------------</td>
-        </tr>
-        <tr>
-            <td colspan="2" style="text-align: left;">
-                <span style="padding-left: 40px;">Countersigned<br></span>
-                Chairman, Examination Committee
-            </td>
-            <td colspan="2" style="text-align: right;">
-                <span style="padding-right: 30px;">Signature of Examiner and Date</span>
-            </td>
-        </tr>
-        <tr>
-            <td style="text-align: center" colspan="4" class="pt-20">
-                ---------------------------------------------------------------------------------------------------------------------------------------------
-            </td>
-        </tr>
-        <tr>
-            <td style="text-align: center" colspan="4">(For Comptroller office use only)</td>
-        </tr>
-        <tr>
-            <td style="width: 20%;" class="pt-20">Taka ---<br>Received</td>
-            <td style="width: 20%;" class="pt-20">------------ In words</td>
-            <td style="width: 30%;" class="pt-20">----------------------------------------------------------------------</td>
-            <td style="width: 30%;" class="pt-20" style="text-align: right">-----------approved</td>
-        </tr>
-        <tr>
-            <td class="pt-40">Signature of Examiner</td>
-            <td class="pt-40">Prepared by</td>
-            <td class="pt-40">Assistant Comptroller</td>
-            <td class="pt-40">Comptroller (In Charge)</td>
-        </tr>
-    </table>
-
-
-    <div class="page-break"></div>
-
-
-@endforeach
-@php } @endphp
-
-
-{{--  For Employee, Admin, SuperAdmin --}}
-@php
-    if ($user->hasRole('Employee') || $user->hasRole('Admin') || $user->hasRole('SuperAdmin')) {
-@endphp
-@foreach($employees as  $employee)
+{{-- B) Examiners & Paper Setters --}}
+@if(!empty($assigns_order_2) && count($assigns_order_2) > 0)
+    {{-- B) orders 2 & 3 --}}
     @php
-        // Skip other teachers if the user is a teacher
-        if (auth()->user()->hasRole('Employee') && auth()->user()->id !== $employee->user_id) {
-            continue;
-        }
-        $global_sum=0;
+        $rate_paper_setter = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '2');
+        $rate_examiner     = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '3');
     @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        B) List of Examiners (&#64; {{ $rate_examiner ? number_format($rate_examiner->default_rate, 0) : '' }}/- per script , min 1000/- per examiner)
+        & Paper Setters (&#64; {{ $rate_paper_setter ? number_format($rate_paper_setter->default_rate, 0) : '' }}/- per paper setter)
+    </h3>
 
-    {{-- Repeatable Header --}}
-    <table class="header_table " style=" table-layout: fixed;">
-        <colgroup>
-            <col style="width: 15%;">
-            <col style="width: 35%;">
-            <col style="width: 20%;">
-            <col style="width: 30%;">
-        </colgroup>
-
-        <!-- Header with Logo and University Info -->
-        <tr>
-            <td colspan="1" style="text-align: right; padding: 20px 0px 0px 0px;">
-                <img src="{{ public_path('images/logo_duet.png') }}" style="width: 50px;">
-            </td>
-            <td colspan="3" style="text-align: left; padding: 20px 0 0 35px;">
-                <strong>Dhaka University of Engineering & Technology, Gazipur</strong><br>
-                <span style="display: inline-block; margin-left:100px; margin-top: 5px;">
-                Gazipur-1707
-            </span>
-            </td>
-        </tr>
-
-        <!-- Section Title -->
-        <tr>
-            <td colspan="4" style="padding: 10px 0;">
-                <div style="margin-left: 5px; font-weight: bold;">
-                    (Examination Related Remuneration)
-                </div>
-            </td>
-        </tr>
-
-        <!-- Session Info -->
-        @php
-            $ordinals = [1 => '1st', 2 => '2nd', 3 => '3rd', 4 => '4th', 5 => '5th'];
-            $yearText = $ordinals[$session_info->year] ?? $session_info->year . 'th';
-            $semesterText = $ordinals[$session_info->semester] ?? $session_info->semester . 'th';
-        @endphp
-        <tr>
-            <td style="text-align: right;padding-right: 10px;">
-                B.Arch.
-            </td>
-            <td>
-                <div style="display: flex; justify-content: space-between;">
-                    <span>{{ $yearText }} year {{ $semesterText }} semester</span>
-                    <span style="font-weight: bold; padding-left: 10px;">Regular</span>
-                </div>
-            </td>
-            <td style="text-align: left;padding-left: 20px;">
-                {{ $session_info->session }}
-            </td>
-            <td style="text-align: left;">
-                (Held on: _____________)
-            </td>
-        </tr>
-
-        <!-- Teacher Info -->
-        <tr>
-            <td colspan="1" style="padding-top: 15px; text-align: left;padding-left: 10px;">
-                <strong>Name:</strong> {{ $employee->user->name }}
-            </td>
-            <td colspan="2" style="padding-top: 15px;padding-right:5px;">
-                <strong>Designation:</strong> {{ $employee->designation->designation }}
-            </td>
-            <td style="padding-top: 15px;">
-                <strong>Department:</strong> {{ $employee->department->shortname }}, DUET
-            </td>
-        </tr>
-
-        <!-- Section Header -->
-        <tr>
-            <td colspan="4" style="padding-top: 30px; font-weight: bold;">
-                Details of Examination Related Works
-            </td>
-        </tr>
-
-
-    </table>
-
-    {{-- Body Table --}}
-    <table class="body_table_1" style="margin-top: 10px;">
+    <table class="body_table_2" border="1" cellpadding="6">
         <thead>
         <tr>
-            <th>Sl. No.</th>
-            <th colspan="2">Description of work</th>
-            <th>Subject/Course</th>
-            <th>Nos. of script/Students</th>
-            <th>Rate</th>
-            <th>Taka</th>
+            <th rowspan="2" style="width:5%;">Sl. No.</th>
+            <th rowspan="2" style="width:15%;">Course</th>
+            <th colspan="2" style="width:70%;">Name &amp; Address</th>
+            <th rowspan="2" style="width:10%;">No. of Scripts</th>
+        </tr>
+        <tr>
+            <th style="width:55%;">Paper Setter</th>
+            <th style="width:15%;">Examiner</th>
         </tr>
         </thead>
         <tbody>
+        @php $sl = 1; @endphp
+        @foreach($assigns_order_2 as $courseCode => $rows)
+            @php
+                $rows        = collect($rows);
+                $rowspan     = $rows->count();
+                $first       = $rows->first();
+                $firstPerson = $first->teacher ?? $first->employee;
 
+                $course_code = $first->course_code ?? $courseCode;
+                $course_name = $first->course_name ?? '';
+                $scriptsText = (int)($first->total_students ?? 0) . '/' . (int)($first->total_teachers ?? $rowspan);
+            @endphp
 
-        {{-- Order=1 --}}
-        @php
-            //$assigns_order_1 = $employee->rateAssigns->where('rateHead.order_no', '1');
-            $assigns_order_1 = $employee->rateAssigns->filter(function($assign) use ($session_info) {
-                return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
-                       $assign->rateHead &&
-                       $assign->rateHead->order_no == '1';
-            });
-            $total_taka = 0;
-            $no_of_item = 0;
-
-            if ($assigns_order_1->isNotEmpty()) {
-                foreach ($assigns_order_1 as $assign) {
-                    $global_sum += $assign->total_amount ?? 0;
-                    $total_taka += $assign->total_amount ?? 0;
-                    $no_of_item = $assign->no_of_item ?? 0;
-                }
-            }
-
-            // Always show default RateHead and RateAmount
-            $head = $rateHead_order_1->head ?? 'Moderation';
-            $max_rate = $rateAmount_order_1->max_rate ?? ($rateAmount_order_1->default_rate ?? '');
-            $min_rate = $rateAmount_order_1->min_rate ?? ($rateAmount_order_1->default_rate ?? '');
-        @endphp
-
-        <tr>
-            <td rowspan="2">1</td>
-            <td class="textstart" colspan="2" rowspan="2">{{ $head }}</td>
-            <td rowspan="2"></td>
-            <td rowspan="2">{{ $no_of_item == 0 ? '' : $no_of_item }}</td>
-            <td class="textend">max. {{ $max_rate !== '' ? number_format($max_rate, 0) : '' }}</td>
-            <td rowspan="2" class="textend">{{ $total_taka == 0 ? '' : number_format($total_taka, 2) }}</td>
-        </tr>
-        <tr>
-            <td class="textend">min. {{ $min_rate !== '' ? number_format($min_rate, 0) : '' }}</td>
-        </tr>
-
-
-
-        {{-- Order = 2 --}}
-        @php
-            $assigns_order_2 = App\Models\RateAssign::where('teacher_id', $employee->id)
-                               ->where('session_id', $session_info->id)
-                               ->whereHas('rateHead', function ($q) {
-                                   $q->where('order_no', '2');
-                               })->get();
-            $total_assigns = $assigns_order_2->count();
-            $loopIndex = 0;
-
-            $head = $rateHead_order_2->head ?? 'Paper Setters';
-            $default_rate = $rateAmount_order_2->default_rate ?? 0;
-
-            //dd($assigns_order_2);
-        @endphp
-
-        @if ($total_assigns > 0)
-            @foreach ($assigns_order_2 as $assign)
-                @php
-                    $global_sum += $assign->total_amount ?? 0;
-                @endphp
-                <tr>
-                    @if ($loopIndex == 0)
-                        <td rowspan="{{ $total_assigns }}">2</td>
-                        <td class="textstart" colspan="2" rowspan="{{ $total_assigns }}">{{ $head }}</td>
-                    @endif
-                    <td>{{ $assign->course_code ?? '' }}</td>
-                    <td></td>
-                    <td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>
-                    <td class="textend">{{ isset($assign->total_amount) ? number_format($assign->total_amount, 2) : '' }}</td>
-                </tr>
-                @php $loopIndex++; @endphp
-            @endforeach
-        @else
-            {{-- Show default row if no assign exists --}}
             <tr>
-                <td rowspan="1">2</td>
-                <td class="textstart" colspan="2" rowspan="1">{{ $head }}</td>
-                <td></td>
-                <td></td>
-                {{--<td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>--}}
-                <td class="textend"></td>
-                <td class="textend"></td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $sl }}</td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">
+                    {{ $course_code }}
+                </td>
+                <td style="text-align:left;">
+                    {{ optional(optional($firstPerson)->user)->name }},
+                    {{ optional(optional($firstPerson)->designation)->designation }},
+                    {{ optional(optional($firstPerson)->department)->fullname }},
+                    DUET, Gazipur
+                </td>
+                <td style="text-align:center;">Same as P.S.</td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $scriptsText }}</td>
             </tr>
-        @endif
 
-
-
-        {{-- Order = 3 --}}
-        @php
-            //$assigns_order_3 = $employee->rateAssigns->where('rateHead.order_no', '3');
-             $assigns_order_3 = $employee->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '3';
-               });
-            $total_assigns = $assigns_order_3->count();
-            $loopIndex = 0;
-
-            $head = $rateHead_order_3->head ?? 'Examiner';
-            $default_rate = $rateAmount_order_3->default_rate ?? 0;
-        @endphp
-
-        @if ($total_assigns > 0)
-            @foreach ($assigns_order_3 as $assign)
-                @php
-                    $global_sum += $assign->total_amount ?? 0;
-                @endphp
+            @foreach($rows->skip(1) as $row)
+                @php $person = $row->teacher ?? $row->employee; @endphp
                 <tr>
-                    @if ($loopIndex == 0)
-                        <td rowspan="{{ $total_assigns }}">3</td>
-                        <td class="textstart" colspan="2" rowspan="{{ $total_assigns }}">{{ $head }}</td>
-                    @endif
-                    <td>{{ $assign->course_code ?? '' }}</td>
-                    <td>{{$assign->total_students}}/{{ $assign->total_teachers ?? '' }}</td>
-                    <td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>
-                    <td class="textend">{{ isset($assign->total_amount) ? number_format($assign->total_amount, 2) : '' }}</td>
-                </tr>
-                @php $loopIndex++; @endphp
-            @endforeach
-        @else
-            {{-- Show default row if no assign exists --}}
-            <tr>
-                <td rowspan="1">3</td>
-                <td class="textstart" colspan="2" rowspan="1">{{ $head }}</td>
-                <td></td>
-                <td></td>
-                {{--<td class="textend">{{ number_format($default_rate, 2) }}</td>--}}
-                <td class="textend"></td>
-                <td class="textend"></td>
-            </tr>
-        @endif
-
-
-
-        {{-- Order = 4 --}}
-        @php
-            $head = $rateHead_order_4->head ?? 'Class Test';
-        @endphp
-        {{-- Fallback row if no data --}}
-        <tr>
-            <td rowspan="1">4</td>
-            <td class="textstart" colspan="2" rowspan="1">{{ $head }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-            <td class="textend"></td>
-        </tr>
-
-
-
-
-
-
-        {{-- Order = 5 --}}
-        @php
-            $head = $rateHead_order_5->head ?? 'Laboratory/Survey works';
-        @endphp
-        {{-- Fallback row if no data --}}
-        <tr>
-            <td rowspan="1">5</td>
-            <td class="textstart" colspan="2" rowspan="1">{{ $head }}</td>
-            <td></td>
-            <td></td>
-            {{-- <td class="textend">{{ number_format($default_rate, 2) }}</td>--}}
-            <td class="textend"></td>
-            <td class="textend"></td>
-        </tr>
-
-
-
-
-
-        {{-- Order 6.a/b/c/d --}}
-        @php
-            $head = $rateHead_order_6a->head ?? '';
-            $sub_head_6a = $rateHead_order_6a->sub_head ?? '';
-
-        @endphp
-        <tr>
-            <td rowspan="4">6</td>
-            <td class="textstart" rowspan="4">{{ $head }}</td>
-            <td class="textstart">{{$sub_head_6a}}</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-        </tr>
-
-        {{-- Order 6.b --}}
-        @php
-            $sub_head_6b = $rateHead_order_6b->sub_head ?? '6.B';
-        @endphp
-        <tr>
-            <td class="textstart">{{ $sub_head_6b }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend">
-            </td>
-
-            <td class="textend"></td>
-        </tr>
-
-        {{-- Order 6.c --}}
-        @php
-            $sub_head_6c = $rateHead_order_6c->sub_head ?? '';
-        @endphp
-        <tr>
-            <td class="textstart">{{ $sub_head_6c }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend">
-
-            </td>
-            <td class="textend"></td>
-        </tr>
-
-        {{-- Order 6.d --}}
-        @php
-            $sub_head_6d = $rateHead_order_6d->sub_head ?? '';
-        @endphp
-        <tr>
-            <td class="textstart">{{ $sub_head_6d }}</td>
-            <td></td>
-            <td></td>
-            <td>
-
-            </td>
-            <td class="textend"></td>
-        </tr>
-
-
-
-
-        {{-- Order 7.e/7.f --}}
-        @php
-            $head = $rateHead_order_7e->head ?? '';
-            $sub_head_7e = $rateHead_order_7e->sub_head ?? '';
-        @endphp
-        <tr>
-            <td rowspan="2">7</td>
-            <td class="textstart" rowspan="2">{{ $head }}</td>
-            <td class="textstart">{{$sub_head_7e}}</td>
-            <td></td>
-            <td></td>
-            <td class="textend">
-            </td>
-
-            <td class="textend"></td>
-        </tr>
-
-        {{-- Order 7.f --}}
-        @php
-            $sub_head_7f = $rateHead_order_7f->sub_head ?? '';
-        @endphp
-        <tr>
-            <td class="textstart">{{ $sub_head_7f }}</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-
-
-
-
-
-        @php
-            //$assigns_order_8a = $employee->rateAssigns->where('rateHead.order_no', '8.a');
-            $assigns_order_8a = $employee->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '8.a';
-               });
-           /* //$assigns_order_8b = $employee->rateAssigns->where('rateHead.order_no', '8.b');
-             $assigns_order_8b = $employee->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '8.b';
-               });
-
-             $assigns_order_8c = $employee->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '8.c';
-               })->first();*/
-
-
-
-
-            $total_assigns_8a = $assigns_order_8a->count();
-
-
-            // Total number of rows for section 8 (8.a + 8.b + 8.c + 8.d)
-            $rowspan_8_block = max(1, $total_assigns_8a) + 1 + 1 + 1;
-
-            $head_8a = $rateHead_order_8a->head ?? 'Gradesheet Preparation--';
-            $sub_head_8a = $rateHead_order_8a->sub_head ?? 'Theoretical*';
-            $rateAmount_8a_default_rate = $rateAmount_order_8a->default_rate ?? '';
-
-            $head_8b = $rateHead_order_8b->head ?? 'Gradesheet Preparation--';
-            $sub_head_8b = $rateHead_order_8b->sub_head ?? 'Sessional*';
-
-
-
-
-            $head_8c = $rateHead_order_8c->head ?? 'Empty';
-
-
-            $head_8d = $rateHead_order_8d->head ?? 'Empty';
-
-        @endphp
-
-        {{-- 8.a rows --}}
-        @if ($total_assigns_8a > 0)
-            @foreach ($assigns_order_8a as $assign)
-                <tr>
-                    @if ($loop->first)
-                        <td rowspan="{{ $rowspan_8_block }}">8</td>
-                        <td class="textstart" rowspan="{{ max(1, $total_assigns_8a) +1 }}">{{ $head_8a }}</td>
-                        <td class="textstart" rowspan="{{ $total_assigns_8a }}">{{ $sub_head_8a }}</td>
-                    @endif
-                    <td>{{ $assign->course_code ?? '' }}</td>
-                    <td>{{$assign->total_students}}/{{$assign->total_teachers}}</td>
-                    <td class="textend">{{ number_format((float)$rateAmount_8a_default_rate, 2) }}</td>
-                    <td class="textend">{{ number_format((float)($assign->total_amount ?? 0), 2) }}</td>
-                    @php $global_sum += $assign->total_amount ?? 0; @endphp
+                    <td style="text-align:left;">
+                        {{ optional(optional($person)->user)->name }},
+                        {{ optional(optional($person)->designation)->designation }},
+                        {{ optional(optional($person)->department)->fullname }},
+                        DUET, Gazipur
+                    </td>
+                    <td style="text-align:center;">-Do-</td>
                 </tr>
             @endforeach
-        @else
+            @php $sl++; @endphp
+        @endforeach
+        </tbody>
+    </table>
+@endif
+
+
+{{-- C) Class Test (order 4) --}}
+@if($assigns_order_4->isNotEmpty())
+    {{-- C) order 4 --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '4'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        C) Internal Assessment/Class Test (@ {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per class test per student)
+    </h3>
+
+    <table class="body_table_4" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:20%;">Course</th>
+            <th style="width:60%;">Name &amp; Address</th>
+            <th style="width:10%;">Nos. of Student</th>
+        </tr>
+        </thead>
+        <tbody>
+        @php $sl = 1; @endphp
+
+        @foreach($assigns_order_4 as $courseCode => $rows)
+            @php
+                $rows         = collect($rows);
+                $rowspan      = $rows->count();
+                $first        = $rows->first();
+                $firstPerson  = $first->teacher ?? $first->employee;
+
+                $course_code  = $first->course_code ?? $courseCode;
+                $course_name  = $first->course_name ?? '';
+                // Nos. of Student = total_students * 2 (2 is fixed)
+                $studentCount = (int)($first->total_students ?? 0);
+            @endphp
+
+            {{-- first line for this course (carries the rowspans) --}}
             <tr>
-                <td rowspan="{{ $rowspan_8_block }}">8</td>
-                <td rowspan="{{ max(1, $total_assigns_8a) + 1 }}" class="textstart">{{ $head_8a }}</td>
-                <td class="textstart">{{ $sub_head_8a }}</td>
-                <td></td>
-                <td></td>
-                {{--<td class="textend">{{ number_format((float)$rateAmount_8a_default_rate, 2) }}</td>--}}
-                <td class="textend"></td>
-                <td class="textend"></td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $sl }}</td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">
+                    {{ $course_code }}
+                </td>
+                <td style="text-align:left;">
+                    {{ optional(optional($firstPerson)->user)->name }},
+                    {{ optional(optional($firstPerson)->designation)->designation }},
+                    {{ optional(optional($firstPerson)->department)->fullname }},
+                    DUET, Gazipur
+                </td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $studentCount }}×2</td>
             </tr>
-        @endif
 
-
-
-        {{-- 8.b rows --}}
-        <tr>
-            <td class="textstart">{{ $sub_head_8b }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-            <td class="textend"></td>
-        </tr>
-
-
-        {{-- Order = 8.c --}}
-        <tr>
-            <td class="textstart" colspan="2">{{ $head_8c }}</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-        </tr>
-
-
-
-        {{-- Order = 8.d --}}
-        @php
-            $rateHead=\App\Models\RateHead::where('order_no','8.d')->first();
-            $head = $rateHead->head;
-        @endphp
-
-        {{-- Show default row if no assign exists --}}
-        <tr>
-            <td class="textstart" colspan="2">{{ $head }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-            <td class="textend"></td>
-        </tr>
-
-
-
-
-
-
-
-        {{-- Order = 9 --}}
-        @php
-            //$assigns_order_9 = $employee->rateAssigns->where('rateHead.order_no', '9');
-            $assigns_order_9 = $employee->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '9';
-               });
-            $total_assigns = $assigns_order_9->count();
-            $loopIndex = 0;
-
-            $head = $rateHead_order_9->head ?? 'Scrutinizing ( Answre Script--)';
-            $default_rate = $rateAmount_order_9->default_rate ?? 0;
-        @endphp
-
-        @if ($total_assigns > 0)
-            @foreach ($assigns_order_9 as $assign)
-                @php
-                    $global_sum += $assign->total_amount ?? 0;
-                @endphp
+            {{-- remaining teachers for this same course --}}
+            @foreach($rows->skip(1) as $row)
+                @php $person = $row->teacher ?? $row->employee; @endphp
                 <tr>
-                    @if ($loopIndex == 0)
-                        <td rowspan="{{ $total_assigns }}">9</td>
-                        <td class="textstart" colspan="2" rowspan="{{ $total_assigns }}">{{ $head }}</td>
-                    @endif
-                    <td>{{ $assign->course_code ?? '' }}</td>
-                    <td>{{$assign->total_students}}/{{$assign->total_teachers}}</td>
-                    <td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>
-                    <td class="textend">{{ isset($assign->total_amount) ? number_format($assign->total_amount, 2) : '' }}</td>
+                    <td style="text-align:left;">
+                        {{ optional(optional($person)->user)->name }},
+                        {{ optional(optional($person)->designation)->designation }},
+                        {{ optional(optional($person)->department)->fullname }},
+                        DUET, Gazipur
+                    </td>
                 </tr>
-                @php $loopIndex++; @endphp
             @endforeach
-        @else
-            {{-- Show default row if no assign exists --}}
+
+            @php $sl++; @endphp
+        @endforeach
+        </tbody>
+    </table>
+@endif
+
+
+{{-- D) Class Test (order 5) --}}
+@if($assigns_order_5->isNotEmpty())
+    {{-- D) order 5 --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '5'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        D) Sessional (@ {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per contact hour per week; min 1500/- per examiner)
+    </h3>
+
+    <table class="body_table_5" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:20%;">Course</th>
+            <th style="width:60%;">Name &amp; Address</th>
+            <th style="width:10%;">Contact Hr./Week</th>
+        </tr>
+        </thead>
+        <tbody>
+        @php $sl = 1; @endphp
+
+        @foreach($assigns_order_5 as $courseCode => $rows)
+            @php
+                $rows         = collect($rows);
+                $rowspan      = $rows->count();
+                $first        = $rows->first();
+                $firstPerson  = $first->teacher ?? $first->employee;
+
+                $course_code  = $first->course_code ?? $courseCode;
+                $course_name  = $first->course_name ?? '';
+                // Nos. of Student = total_students * 2 (2 is fixed)
+                $studentCount = (int)($first->no_of_items ?? 0);
+            @endphp
+
+            {{-- first line for this course (carries the rowspans) --}}
             <tr>
-                <td rowspan="1">9</td>
-                <td class="textstart" colspan="2" rowspan="1">{{ $head }}</td>
-                <td></td>
-                <td></td>
-                {{--<td class="textend">{{ isset($default_rate) ? number_format($default_rate, 2) : '' }}</td>--}}
-                <td class="textend"></td>
-                <td class="textend"></td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $sl }}</td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">
+                    {{ $course_code }}
+                </td>
+                <td style="text-align:left;">
+                    {{ optional(optional($firstPerson)->user)->name }},
+                    {{ optional(optional($firstPerson)->designation)->designation }},
+                    {{ optional(optional($firstPerson)->department)->fullname }},
+                    DUET, Gazipur
+                </td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $studentCount }}</td>
             </tr>
-        @endif
 
-
-
-
-
-
-        {{-- Order = 10.a --}}
-        @php
-            $assign_10_a = $employee->rateAssigns->filter(function($assign) use ($session_info) {
-                return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
-                       $assign->rateHead &&
-                       $assign->rateHead->order_no == '10.a';
-            });
-
-            $total_assigns = $assign_10_a->count();
-
-            $rateHead=\App\Models\RateHead::where('order_no','10.a')->first();
-            $head = $rateHead->head;
-            $sub_head_10_a = $rateHead->sub_head;
-            $rateAmount_10_a = $rateAmount_order_10_a ?? null;
-            $default_rate_10_a = $rateAmount_10_a->default_rate ?? 0;
-
-            $total_student_all_course = 0;
-            $total_amount_all_course = 0;
-        @endphp
-
-        @if ($total_assigns > 0)
-            @foreach ($assign_10_a as $assign)
-                @php
-                    $global_sum += $assign->total_amount ?? 0;
-                   /* $total_student_all_course += $assign->total_students ?? 0;*/
-                    $total_student_all_course += $assign->no_of_items ?? 0;
-                    $total_amount_all_course += $assign->total_amount ?? 0;
-                @endphp
+            {{-- remaining teachers for this same course --}}
+            @foreach($rows->skip(1) as $row)
+                @php $person = $row->teacher ?? $row->employee; @endphp
+                <tr>
+                    <td style="text-align:left;">
+                        {{ optional(optional($person)->user)->name }},
+                        {{ optional(optional($person)->designation)->designation }},
+                        {{ optional(optional($person)->department)->fullname }},
+                        DUET, Gazipur
+                    </td>
+                </tr>
             @endforeach
+
+            @php $sl++; @endphp
+        @endforeach
+        </tbody>
+    </table>
+@endif
+
+
+{{-- E) Class Test (order 9) --}}
+@if($assigns_order_9->isNotEmpty())
+    {{-- E) order 9 --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '9'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        E) List of Scrutinizers (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per script,min &#64; {{ $rate ? number_format($rate->min_rate, 0) : '' }}/- per scrutinizers)
+    </h3>
+
+    <table class="body_table_9" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:10%;">Course</th>
+            <th style="width:60%;">Name &amp; Address</th>
+            <th style="width:10%;">No. of half Sripts</th>
+            <th style="width:10%;">Total</th>
+        </tr>
+        </thead>
+        <tbody>
+        @php $sl = 1; @endphp
+
+        @foreach($assigns_order_9 as $courseCode => $rows)
+            @php
+                $rows         = collect($rows);
+                $rowspan      = $rows->count();
+                $first        = $rows->first();
+                $firstPerson  = $first->teacher ?? $first->employee;
+
+                $course_code  = $first->course_code ?? $courseCode;
+                $course_name  = $first->course_name ?? '';
+                // Nos. of Student = total_students * 2 (2 is fixed)
+                $studentCount = (int)($first->total_students ?? 0);
+
+                 $scriptsText = (int)($first->total_students ?? 0) . '/' . (int)($first->total_teachers ?? $rowspan);
+            @endphp
+
+            {{-- first line for this course (carries the rowspans) --}}
             <tr>
-                <td rowspan="2">10</td>
-                <td class="textstart" rowspan="2">{{ $head }}</td>
-                <td class="textstart">(a) {{ $sub_head_10_a }}</td>
-                <td>{{ $total_assigns }} courses</td>
-                {{--<td>{{ $total_student_all_course }}/2</td>--}}
-                <td>{{ $total_student_all_course }}</td>
-                <td class="textend">{{ number_format($default_rate_10_a, 2) }}</td>
-                <td class="textend">{{ number_format($total_amount_all_course, 2) }}</td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $sl }}</td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">
+                    {{ $course_code }}
+                </td>
+                <td style="text-align:left;">
+                    {{ optional(optional($firstPerson)->user)->name }},
+                    {{ optional(optional($firstPerson)->designation)->designation }},
+                    {{ optional(optional($firstPerson)->department)->fullname }},
+                    DUET, Gazipur
+                </td>
+                <td  style="text-align:center;">{{ $scriptsText }}</td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $studentCount }}</td>
             </tr>
-        @else
-            {{-- Show default row if no assign exists --}}
+
+            {{-- remaining teachers for this same course --}}
+            @foreach($rows->skip(1) as $row)
+                @php $person = $row->teacher ?? $row->employee; @endphp
+                <tr>
+                    <td style="text-align:left;">
+                        {{ optional(optional($person)->user)->name }},
+                        {{ optional(optional($person)->designation)->designation }},
+                        {{ optional(optional($person)->department)->fullname }},
+                        DUET, Gazipur
+                    </td>
+                    <td  style="text-align:center;">{{ $scriptsText }}</td>
+
+                </tr>
+            @endforeach
+
+            @php $sl++; @endphp
+        @endforeach
+        </tbody>
+    </table>
+@endif
+
+{{-- F) Class Test (order 8.a) --}}
+@if($assigns_order_8_a->isNotEmpty())
+    {{-- F) order 8.a --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '8.a'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        F) List of Teachers for the Preparation of Grade Sheet(Theoritical) (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student per subject)
+    </h3>
+
+    <table class="body_table_8_a" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:10%;">Course</th>
+            <th style="width:60%;">Name &amp; Address</th>
+            <th style="width:10%;">No. of Students</th>
+            <th style="width:10%;">Total</th>
+        </tr>
+        </thead>
+        <tbody>
+        @php $sl = 1; @endphp
+
+        @foreach($assigns_order_8_a as $courseCode => $rows)
+            @php
+                $rows         = collect($rows);
+                $rowspan      = $rows->count();
+                $first        = $rows->first();
+                $firstPerson  = $first->teacher ?? $first->employee;
+
+                $course_code  = $first->course_code ?? $courseCode;
+                $course_name  = $first->course_name ?? '';
+                // Nos. of Student = total_students * 2 (2 is fixed)
+                $studentCount = (int)($first->total_students ?? 0);
+
+                 $scriptsText = (int)($first->total_students ?? 0) . '/' . (int)($first->total_teachers ?? $rowspan);
+            @endphp
+
+            {{-- first line for this course (carries the rowspans) --}}
             <tr>
-                <td rowspan="2">10</td>
-                <td class="textstart" rowspan="2">{{ $head }}</td>
-                <td class="textstart">(a) {{ $sub_head_10_a }}</td>
-                <td></td>
-                <td></td>
-                {{--<td class="textend">{{ number_format($default_rate_10_a, 2) }}</td>--}}
-                <td class="textend"></td>
-                <td class="textend"></td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $sl }}</td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">
+                    {{ $course_code }}
+                </td>
+                <td style="text-align:left;">
+                    {{ optional(optional($firstPerson)->user)->name }},
+                    {{ optional(optional($firstPerson)->designation)->designation }},
+                    {{ optional(optional($firstPerson)->department)->fullname }},
+                    DUET, Gazipur
+                </td>
+                <td  style="text-align:center;">{{ $scriptsText }}</td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $studentCount }}</td>
             </tr>
-            $assign->exam_type_id == 2 &&
-        @endif
+
+            {{-- remaining teachers for this same course --}}
+            @foreach($rows->skip(1) as $row)
+                @php $person = $row->teacher ?? $row->employee; @endphp
+                <tr>
+                    <td style="text-align:left;">
+                        {{ optional(optional($person)->user)->name }},
+                        {{ optional(optional($person)->designation)->designation }},
+                        {{ optional(optional($person)->department)->fullname }},
+                        DUET, Gazipur
+                    </td>
+                    <td  style="text-align:center;">{{ $scriptsText }}</td>
+
+                </tr>
+            @endforeach
+
+            @php $sl++; @endphp
+        @endforeach
+        </tbody>
+    </table>
+@endif
+
+{{-- G) Class Test (order 8.b) --}}
+@if($assigns_order_8_b->isNotEmpty())
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '8.b'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        G) List of Teachers for the Preparation of Grade Sheet(Sessional) (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student per subject):
+    </h3>
 
 
-
-
-        {{-- Order = 10.b --}}
-        @php
-
-            $rateHead=\App\Models\RateHead::where('order_no','10.b')->first();
-            $head = $rateHead->head;
-            $sub_head_10_b = $rateHead->sub_head;
-        @endphp
-
-        {{-- Show default row if no assign exists --}}
+    <table class="body_table_8_b" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
         <tr>
-            <td class="textstart">(a) {{ $sub_head_10_b }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-            <td class="textend"></td>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:10%;">Course</th>
+            <th style="width:60%;">Name &amp; Address</th>
+            <th style="width:10%;">No. of Students</th>
+            <th style="width:10%;">Total</th>
         </tr>
+        </thead>
+        <tbody>
+        @php $sl = 1; @endphp
 
+        @foreach($assigns_order_8_b as $courseCode => $rows)
+            @php
+                $rows         = collect($rows);
+                $rowspan      = $rows->count();
+                $first        = $rows->first();
+                $firstPerson  = $first->teacher ?? $first->employee;
 
+                $course_code  = $first->course_code ?? $courseCode;
+                $course_name  = $first->course_name ?? '';
+                // Nos. of Student = total_students * 2 (2 is fixed)
+                $studentCount = (int)($first->total_students ?? 0);
 
+                 $scriptsText = (int)($first->total_students ?? 0) . '/' . (int)($first->total_teachers ?? $rowspan);
+            @endphp
 
+            {{-- first line for this course (carries the rowspans) --}}
+            <tr>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $sl }}</td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">
+                    {{ $course_code }}
+                </td>
+                <td style="text-align:left;">
+                    {{ optional(optional($firstPerson)->user)->name }},
+                    {{ optional(optional($firstPerson)->designation)->designation }},
+                    {{ optional(optional($firstPerson)->department)->fullname }},
+                    DUET, Gazipur
+                </td>
+                <td  style="text-align:center;">{{ $scriptsText }}</td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $studentCount }}</td>
+            </tr>
 
+            {{-- remaining teachers for this same course --}}
+            @foreach($rows->skip(1) as $row)
+                @php $person = $row->teacher ?? $row->employee; @endphp
+                <tr>
+                    <td style="text-align:left;">
+                        {{ optional(optional($person)->user)->name }},
+                        {{ optional(optional($person)->designation)->designation }},
+                        {{ optional(optional($person)->department)->fullname }},
+                        DUET, Gazipur
+                    </td>
+                    <td  style="text-align:center;">{{ $scriptsText }}</td>
 
+                </tr>
+            @endforeach
 
+            @php $sl++; @endphp
+        @endforeach
+        </tbody>
+    </table>
+@endif
 
-        {{--Order 11--}}
-        @php
-            //$assigns_order_11 = $employee->rateAssigns->where('rateHead.order_no', '11')->first();
-            $assigns_order_11 = $employee->rateAssigns->filter(function($assign) use ($session_info) {
-                 return $assign->session_id == $session_info->id &&
-                        $assign->exam_type_id == 2 &&
-                        $assign->rateHead &&
-                        $assign->rateHead->order_no == '11';
-             })->first();
-            $total_assigns = $assigns_order_11 ? $assigns_order_11->count() : 0;
-            $head_order_11 = $rateHead_order_11->head ?? '';
-            $default_rate = $rateAmount_order_11->default_rate ?? 0;
-            if ($assigns_order_11 && $assigns_order_11->total_amount) {
-                $global_sum += $assigns_order_11->total_amount;
-            }
-        @endphp
+{{-- H)  (order 10.a) --}}
+@if($assigns_order_10_a->isNotEmpty())
+    {{-- H) order 10.a --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '10.a'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        H) List of Teachers for the Scrutinizing of Grade Sheet (Theoretical) (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student per subject)
+    </h3>
+
+    <table class="body_table_10_a" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
         <tr>
-            <td>11</td>
-            <td class="textstart" colspan="2">{{ $head_order_11 }}</td>
-            <td></td>
-            <td>{{ $assigns_order_11->no_of_items ?? '' }}</td>
-            <td class="textend">
-                @if($total_assigns > 0 && isset($rateAmount_order_11->default_rate))
-                    {{ $rateAmount_order_11->default_rate }}
-                @endif
-            </td>
-            <td class="textend">{{ isset($assigns_order_11->total_amount) ? number_format($assigns_order_11->total_amount, 2) : '' }}</td>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:10%;">Course</th>
+            <th style="width:60%;">Name &amp; Address</th>
+            <th style="width:10%;">No. of half Students</th>
+            <th style="width:10%;">Total</th>
         </tr>
+        </thead>
+        <tbody>
+        @php $sl = 1; @endphp
 
+        @foreach($assigns_order_10_a as $courseCode => $rows)
+            @php
+                $rows         = collect($rows);
+                $rowspan      = $rows->count();
+                $first        = $rows->first();
+                $firstPerson  = $first->teacher ?? $first->employee;
 
+                $course_code  = $first->course_code ?? $courseCode;
+                $course_name  = $first->course_name ?? '';
+                // Nos. of Student = total_students * 2 (2 is fixed)
+                $studentCount = (int)($first->total_students ?? 0);
 
+                 $scriptsText = (int)($first->total_students ?? 0) . '/' . (int)($first->total_teachers ?? $rowspan);
+            @endphp
 
-        {{-- Order 12.a/12.b --}}
-        @php
-            //$assign_12_a = $employee->rateAssigns->where('rateHead.order_no', '12.a')->first();
-             $assign_12_a = $employee->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '12.a';
-               })->first();
+            {{-- first line for this course (carries the rowspans) --}}
+            <tr>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $sl }}</td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">
+                    {{ $course_code }}
+                </td>
+                <td style="text-align:left;">
+                    {{ optional(optional($firstPerson)->user)->name }},
+                    {{ optional(optional($firstPerson)->designation)->designation }},
+                    {{ optional(optional($firstPerson)->department)->fullname }},
+                    DUET, Gazipur
+                </td>
+                <td  style="text-align:center;">{{ $scriptsText }}</td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $studentCount }}</td>
+            </tr>
 
-            $total_assigns = $assign_12_a ? $assign_12_a->count() : 0;
+            {{-- remaining teachers for this same course --}}
+            @foreach($rows->skip(1) as $row)
+                @php $person = $row->teacher ?? $row->employee; @endphp
+                <tr>
+                    <td style="text-align:left;">
+                        {{ optional(optional($person)->user)->name }},
+                        {{ optional(optional($person)->designation)->designation }},
+                        {{ optional(optional($person)->department)->fullname }},
+                        DUET, Gazipur
+                    </td>
+                    <td  style="text-align:center;">{{ $scriptsText }}</td>
 
-            $rateAmount_12_a = $rateAmount_order_12_a ?? null;
-            $head = $rateHead_order_12_a->head ?? '';
-            $sub_head_12_a = $rateHead_order_12_a->sub_head ?? 'Error';
-            $default_rate_12_a = $rateAmount_12_a->default_rate ?? 0;
+                </tr>
+            @endforeach
 
-            if ($assign_12_a && $assign_12_a->total_amount) {
-                $global_sum += $assign_12_a->total_amount;
-            }
-        @endphp
+            @php $sl++; @endphp
+        @endforeach
+        </tbody>
+    </table>
+@endif
+
+{{-- I) (order 10.b) --}}
+@if($assigns_order_10_b->isNotEmpty())
+    {{-- I) order 10.b --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '10.b'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        I) List of Teachers for the Scrutinizing of Grade Sheet(Sessional) (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student per subject):
+    </h3>
+
+    <table class="body_table_10_b" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
         <tr>
-            <td rowspan="2">12</td>
-            <td class="textstart" rowspan="2">{{ $head }}</td>
-            <td class="textstart">(a) {{ $sub_head_12_a }}</td>
-            {{-- <td>{{ $assign_12_a->course_code ?? '' }}</td>--}}
-            <td></td>
-            <td>{{ $assign_12_a->no_of_items ?? '' }}</td>
-            {{--<td class="textend">{{ number_format($default_rate_12_a, 2) }}</td>--}}
-            <td class="textend">
-                @if($total_assigns > 0 && isset($rateAmount_order_12_a->default_rate))
-                    {{ $rateAmount_order_12_a->default_rate }}
-                @endif
-            </td>
-            <td class="textend">{{ isset($assign_12_a->total_amount) ? number_format($assign_12_a->total_amount, 2) : '' }}</td>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:10%;">Course</th>
+            <th style="width:60%;">Name &amp; Address</th>
+            <th style="width:10%;">No. of Students</th>
+            <th style="width:10%;">Total</th>
         </tr>
+        </thead>
+        <tbody>
+        @php $sl = 1; @endphp
 
-        {{-- Order 12.b --}}
-        @php
-            //$assign_12_b = $employee->rateAssigns->where('rateHead.order_no', '12.b')->first();
-             $assign_12_b = $employee->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '12.b';
-               })->first();
+        @foreach($assigns_order_10_b as $courseCode => $rows)
+            @php
+                $rows         = collect($rows);
+                $rowspan      = $rows->count();
+                $first        = $rows->first();
+                $firstPerson  = $first->teacher ?? $first->employee;
 
-             $total_assigns = $assign_12_b ? $assign_12_b->count() : 0;
-            $rateAmount_12_b = $rateAmount_order_12_b ?? null;
-            $sub_head_12_b = $rateHead_order_12_b->sub_head ?? '6.B';
-            $default_rate_12_b = $rateAmount_12_b->default_rate ?? 0;
+                $course_code  = $first->course_code ?? $courseCode;
+                $course_name  = $first->course_name ?? '';
+                // Nos. of Student = total_students * 2 (2 is fixed)
+                $studentCount = (int)($first->total_students ?? 0);
 
-            if ($assign_12_b && $assign_12_b->total_amount) {
-                $global_sum += $assign_12_b->total_amount;
-            }
-        @endphp
+                 $scriptsText = (int)($first->total_students ?? 0) . '/' . (int)($first->total_teachers ?? $rowspan);
+            @endphp
+
+            {{-- first line for this course (carries the rowspans) --}}
+            <tr>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $sl }}</td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">
+                    {{ $course_code }}
+                </td>
+                <td style="text-align:left;">
+                    {{ optional(optional($firstPerson)->user)->name }},
+                    {{ optional(optional($firstPerson)->designation)->designation }},
+                    {{ optional(optional($firstPerson)->department)->fullname }},
+                    DUET, Gazipur
+                </td>
+                <td  style="text-align:center;">{{ $scriptsText }}</td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $studentCount }}</td>
+            </tr>
+
+            {{-- remaining teachers for this same course --}}
+            @foreach($rows->skip(1) as $row)
+                @php $person = $row->teacher ?? $row->employee; @endphp
+                <tr>
+                    <td style="text-align:left;">
+                        {{ optional(optional($person)->user)->name }},
+                        {{ optional(optional($person)->designation)->designation }},
+                        {{ optional(optional($person)->department)->fullname }},
+                        DUET, Gazipur
+                    </td>
+                    <td  style="text-align:center;">{{ $scriptsText }}</td>
+
+                </tr>
+            @endforeach
+
+            @php $sl++; @endphp
+        @endforeach
+        </tbody>
+    </table>
+@endif
+
+
+{{-- J) (order 8.d) --}}
+@if($assigns_order_8_d->isNotEmpty())
+    {{-- J) order 8.d --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '8.d'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        J) List of Teachers Prepared Computerized Result (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student per subject)
+    </h3>
+
+    <table class="body_table_8_d" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
         <tr>
-            <td class="textstart">(b) {{ $sub_head_12_b }}</td>
-            <td></td>
-            <td>{{ $assign_12_b->no_of_items ?? '' }}</td>
-            <td class="textend">
-                @if($total_assigns > 0 && isset($rateAmount_order_12_b->default_rate))
-                    {{ $rateAmount_order_12_b->default_rate }}
-                @endif
-            </td>
-            <td class="textend">{{ isset($assign_12_b->total_amount) ? number_format($assign_12_b->total_amount, 2) : '' }}</td>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:40%;">Name &amp; Address</th>
+            <th style="width:20%;">Course</th>
+            <th style="width:15%;">No. of Students</th>
+            <th style="width:15%;">Total</th>
         </tr>
+        </thead>
+        <tbody>
+        @php $sl = 1; @endphp
 
+        @foreach($assigns_order_8_d as $teacherId => $rows)
+            @php
+                $rows         = collect($rows);
+                $rowspan      = $rows->count();
+                $first        = $rows->first();
+                $firstPerson  = $first->teacher ?? $first->employee;
 
+                // total students (sum of no_of_items for this teacher)
+                $totalStudents = (int) $rows->sum(function($r){ return (float) $r->no_of_items; });
+            @endphp
 
-        {{-- Order 13 --}}
-        @php
-            $head_order_13 = $rateHead_order_13->head ?? 'Error';
-        @endphp
-        <tr>
-            <td>13</td>
-            <td class="textstart" colspan="2">{{ $head_order_13 }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-            <td class="textend"></td>
-        </tr>
+            {{-- First row (teacher info + first course) --}}
+            <tr>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $sl }}</td>
+                <td rowspan="{{ $rowspan }}" style="text-align:left;">
+                    {{ optional(optional($firstPerson)->user)->name }},
+                    {{ optional(optional($firstPerson)->designation)->designation }},
+                    {{ optional(optional($firstPerson)->department)->fullname }},
+                    DUET, Gazipur
+                </td>
+                <td style="text-align:center;">
+                    {{ $first->course_code }}<br>
+                </td>
+                <td style="text-align:center;">
+                    {{ (int)($first->total_students ?? 0) }}/{{ (int)($first->total_teachers ?? $rowspan) }}
+                </td>
+                <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $totalStudents }}</td>
+            </tr>
 
+            {{-- Remaining courses for same teacher --}}
+            @foreach($rows->skip(1) as $row)
+                <tr>
+                    <td style="text-align:center;">
+                        {{ $row->course_code }}<br>
+                    </td>
+                    <td  style="text-align:center;">
+                        {{ (int)($row->total_students ?? 0) }}/{{ (int)($row->total_teachers ?? $rowspan) }}
+                    </td>
+                </tr>
+            @endforeach
 
-
-        {{-- Order 14 --}}
-        @php
-            $head_order_14 = $rateHead_order_14->head ?? 'Error';
-        @endphp
-        <tr>
-            <td>14</td>
-            <td class="textstart" colspan="2">{{ $head_order_14 }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-            <td class="textend"></td>
-        </tr>
-
-        {{-- Order 15 --}}
-        @php
-            //$assigns_order_15 = $employee->rateAssigns->where('rateHead.order_no', '15')->first();
-            $assigns_order_15 = $employee->rateAssigns->filter(function($assign) use ($session_info) {
-                   return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
-                          $assign->rateHead &&
-                          $assign->rateHead->order_no == '15';
-               })->first();
-            $head_order_15 = $rateHead_order_15->head ?? 'Error';
-            $default_rate_15 = $rateAmount_order_15->default_rate ?? 0;
-            if ($assigns_order_15 && $assigns_order_15->total_amount) {
-                $global_sum += $assigns_order_15->total_amount;
-            }
-        @endphp
-        <tr>
-            <td>15</td>
-            <td class="textstart" colspan="2">{{ $head_order_15 }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend"></td>
-            <td class="textend">{{ isset($assigns_order_15->total_amount) ? number_format($assigns_order_15->total_amount, 2) : '' }}</td>
-        </tr>
-
-
-
-
-
-
-
-
-        {{-- Order 16 --}}
-        @php
-            $head_order_16 = $rateHead_order_16->head ?? 'Error';
-        @endphp
-        <tr>
-            <td>16</td>
-            <td class="textstart" colspan="2">{{ $head_order_16 }}</td>
-            <td></td>
-            <td></td>
-            <td class="textend">
-            </td>
-            <td class="textend"></td>
-        </tr>
-
-
-
-
-        //Final Calculation
-        <tr>
-            <td colspan="6" class="textend">Total:</td>
-            <td class="textend">{{ isset($global_sum) ? number_format($global_sum, 2) : '' }}</td>
-        </tr>
-
-
-
-
-
-
-
-
-
-
-
+            @php $sl++; @endphp
+        @endforeach
         </tbody>
     </table>
 
-    {{-- Footer --}}
-    <table class="footer_table_1">
+@endif
+
+
+{{-- K) (order 8.c) --}}
+@if($assigns_order_8_c->isNotEmpty())
+    {{-- K) order 8.c --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '8.c'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        K) List of Teachers Verified Computerized Grade Sheets & GPA List (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
         <tr>
-            <td colspan="2" style="text-align: left;">---------------------------------------------------</td>
-            <td colspan="2" style="text-align: right;">---------------------------------------------------</td>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
         </tr>
-        <tr>
-            <td colspan="2" style="text-align: left;">
-                <span style="padding-left: 40px;">Countersigned<br></span>
-                Chairman, Examination Committee
-            </td>
-            <td colspan="2" style="text-align: right;">
-                <span style="padding-right: 30px;">Signature of Examiner and Date</span>
-            </td>
-        </tr>
-        <tr>
-            <td style="text-align: center" colspan="4" class="pt-20">
-                ---------------------------------------------------------------------------------------------------------------------------------------------
-            </td>
-        </tr>
-        <tr>
-            <td style="text-align: center" colspan="4">(For Comptroller office use only)</td>
-        </tr>
-        <tr>
-            <td style="width: 20%;" class="pt-20">Taka ---<br>Received</td>
-            <td style="width: 20%;" class="pt-20">------------ In words</td>
-            <td style="width: 30%;" class="pt-20">----------------------------------------------------------------------</td>
-            <td style="width: 30%;" class="pt-20" style="text-align: right">-----------approved</td>
-        </tr>
-        <tr>
-            <td class="pt-40">Signature of Examiner</td>
-            <td class="pt-40">Prepared by</td>
-            <td class="pt-40">Assistant Comptroller</td>
-            <td class="pt-40">Comptroller (In Charge)</td>
-        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_8_c as $i => $assign)
+            @php
+                $person     = $assign->teacher ?? $assign->employee;
+                $students   = (int)($assign->total_students ?? 0);
+                $teachers   = (int)($assign->total_teachers ?? 1); // fallback
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $person?->user?->name }},
+                    {{ $person?->designation?->designation }},
+                    {{ $person?->department?->fullname }},
+                    DUET, Gazipur
+                </td>
+                <td style="text-align:center;">
+                    {{ $students }}/{{ $teachers }}
+                </td>
+            </tr>
+        @endforeach
+        </tbody>
     </table>
+@endif
 
-    @if (!$loop->last)
-        <div class="page-break"></div>
-    @endif
 
-@endforeach
-@php } @endphp
+
+{{-- L) (order 12.a) --}}
+@if($assigns_order_12_a->isNotEmpty())
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        L) Work Done Under the Supervision of the Chairman (Exam Committee)
+    </h3>
+
+    {{-- L.i) order 12.a --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '12.a'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        i) List of Stencill Cutting of Question paper (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per stencil)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Stencils</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_12_a as $i => $assign)
+            @php
+                $t = $assign->teacher;
+                $students = (float) ($assign->total_students ?? 0);
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                <td style="text-align:center;">
+                    {{ fmod($students, 1) == 0 ? (int)$students : number_format($students, 2, '.', '') }}
+                </td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+@endif
+
+
+{{-- L) (order 12.b) --}}
+@if($assigns_order_12_b->isNotEmpty())
+
+    {{-- L.ii) order 12.b --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '12.b'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        ii) List of Printing of Question paper (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per stencil)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Stencils</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_12_b as $i => $assign)
+            @php
+                $t = $assign->employee;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                @php
+                    $students = (float) ($assign->total_students ?? 0);  // no (int) here
+                @endphp
+                <td style="text-align:center;">
+                    {{ fmod($students, 1) == 0 ? (int)$students : number_format($students, 2, '.', '') }}
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+{{-- L) (order 11) --}}
+@if($assigns_order_11->isNotEmpty())
+
+    {{-- L.iii) order 11 --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '11'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        iii) List of Comparison, Correction, Sketching & Distribution of Question Paper (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per stencil)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Questions</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_11 as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                @php
+                    $students = (float) ($assign->total_students ?? 0);  // no (int) here
+                @endphp
+                <td style="text-align:center;">
+                    {{ fmod($students, 1) == 0 ? (int)$students : number_format($students, 2, '.', '') }}
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+
+
+{{-- M) (order 13) --}}
+@if($assigns_order_13->isNotEmpty())
+    {{-- M) order 13 --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '13'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        M) Advisory (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student per semester):
+    </h3>
+
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_13 as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                @php
+                    $total_student = (int) $assign->total_students;
+                @endphp
+                <td style="text-align:center;">
+                    {{$total_student}}
+                </td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+@endif
+
+
+{{-- N) (order 16) --}}
+@if($assigns_order_16->isNotEmpty())
+    {{-- N) order 16 --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '16'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        N) List of Teachers verified the final graduation results (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student)):
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_16 as $i => $assign)
+            @php
+                $person     = $assign->teacher ?? $assign->employee;
+                $students   = (int)($assign->total_students ?? 0);
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $person?->user?->name }},
+                    {{ $person?->designation?->designation }},
+                    {{ $person?->department?->fullname }},
+                    DUET, Gazipur
+                </td>
+                <td style="text-align:center;">
+                    {{ $students }}
+                </td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+@endif
+
+
+{{-- O) (order 7.e) --}}
+@if($assigns_order_7_e->isNotEmpty())
+    {{-- O) order 7.e --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '7.e'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        O) List of Teachers conducted central oral examination/Jury of thesis/projects (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- thesis/projects)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_7_e as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                @php
+                    $students = (float) ($assign->total_students ?? 0);  // no (int) here
+                @endphp
+                <td style="text-align:center;">
+                    {{ fmod($students, 1) == 0 ? (int)$students : number_format($students, 2, '.', '') }}
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+
+{{-- P) (order 7.f) --}}
+@if($assigns_order_7_f->isNotEmpty())
+    {{-- P) order 7.f --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '7.f'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        P) List of teachers involved survey (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_7_f as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                @php
+                    $students = (float) ($assign->total_students ?? 0);  // no (int) here
+                @endphp
+                <td style="text-align:center;">
+                    {{ fmod($students, 1) == 0 ? (int)$students : number_format($students, 2, '.', '') }}
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+
+{{-- Q) (order 6.c) --}}
+@if($assigns_order_6_c->isNotEmpty())
+    {{-- Q) order 6.c --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '6.c'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        Q) List of Teachers conducted preliminary viva of thesis/projects (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_6_c as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                @php
+                    $students = (float) ($assign->total_students ?? 0);  // no (int) here
+                @endphp
+                <td style="text-align:center;">
+                    {{ fmod($students, 1) == 0 ? (int)$students : number_format($students, 2, '.', '') }}
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+
+{{-- R) (order 6.a) --}}
+@if($assigns_order_6_a->isNotEmpty())
+    {{-- R) order 6.a --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '6.a'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        R) List of Teachers examined thesis/projects (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- thesis/projects)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th rowspan="2" style="width:10%;">Sl. No.</th>
+            <th rowspan="2" style="width:65%;">Name and Address</th>
+            <th colspan="2" style="width:25%;">No. of Students</th>
+        </tr>
+        <tr>
+            <th>Internal</th>
+            <th>External</th>
+        </tr>
+        </thead>
+        <tbody>
+        @php
+            // int if whole; 2 decimals otherwise; empty if zero
+            $fmt = function ($num) {
+                $v = (float) $num;
+                if (abs($v) < 1e-9) return ''; // hide 0
+                return fmod($v, 1) == 0 ? (string)(int)$v : number_format($v, 2, '.', '');
+            };
+        @endphp
+
+        @foreach($assigns_order_6_a as $row)
+            @php
+                $t = $row->teacher;
+                $name = $t->user->name ?? 'N/A';
+                $des  = $t->designation->designation ?? '';
+                $dept = $t->department->fullname ?? '';
+                $internal = (float) $row->internal_students;
+                $external = (float) $row->external_students;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $loop->iteration }}</td>
+                <td style="text-align:left;">
+                    {{ $name }}@if($des), {{ $des }}@endif
+                    @if($dept), {{ $dept }}@endif, DUET, Gazipur
+                </td>
+                <td style="text-align:center;">{{ $fmt($internal) }}</td>
+                <td style="text-align:center;">{{ $fmt($external) }}</td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+@endif
+
+
+{{-- S) (order 6.d) --}}
+@if($assigns_order_6_d->isNotEmpty())
+    {{-- S) order 6.d --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '6.d'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        S) List of Teachers conducted oral examination/Jury of thesis/projects (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- thesis/projects)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_6_d as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                @php
+                    $students = (float) ($assign->total_students ?? 0);  // no (int) here
+                @endphp
+                <td style="text-align:center;">
+                    {{ fmod($students, 1) == 0 ? (int)$students : number_format($students, 2, '.', '') }}
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+
+{{-- T) (order 6.b) --}}
+@if($assigns_order_6_b->isNotEmpty())
+    {{-- T) order 6.b --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '6.b'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        T) List of Teachers supervised the thesis/projects (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- thesis/projects)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+            <th style="width:25%;">No. of Students</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_6_b as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+                @php
+                    $students = (float) ($assign->total_students ?? 0);  // no (int) here
+                @endphp
+                <td style="text-align:center;">
+                    {{ fmod($students, 1) == 0 ? (int)$students : number_format($students, 2, '.', '') }}
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+
+{{-- U) (order 14) --}}
+@if($assigns_order_14->isNotEmpty())
+    {{-- U) order 14 --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '14'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        U) Honorarium for course co-ordinator (UG) (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/-)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_14 as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+
+{{-- V) (order 15) --}}
+@if($assigns_order_15->isNotEmpty())
+    {{-- V) order 15 --}}
+    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '15'); @endphp
+    <h3 style="margin-top:15px;margin-bottom: 4px">
+        V) Honorarium for Chairman (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/-)
+    </h3>
+
+    <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
+        <thead>
+        <tr>
+            <th style="width:10%;">Sl. No.</th>
+            <th style="width:65%;">Name and Address</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach($assigns_order_15 as $i => $assign)
+            @php
+                $t = $assign->teacher;
+            @endphp
+            <tr>
+                <td style="text-align:center;">{{ $i + 1 }}</td>
+                <td style="text-align:left;">
+                    {{ $t->user->name ?? 'N/A' }},
+                    {{ $t->designation->designation ?? '' }},
+                    {{ $t->department->fullname ?? '' }}, DUET, Gazipur
+                </td>
+            </tr>
+        @endforeach
+
+        </tbody>
+    </table>
+@endif
+
+
+@php
+    $ordinal = function ($n) {
+        $n = (int) $n;
+        if ($n % 100 >= 11 && $n % 100 <= 13) return $n.'th';
+        $suf = ['th','st','nd','rd','th','th','th','th','th','th'];
+        return $n . $suf[$n % 10];
+    };
+
+    $examTypeId = isset($exam_type) ? (int)$exam_type : (int)($session_info->exam_type_id ?? 0);
+    $examLabel  = $examTypeId === 1 ? 'Regular' : ($examTypeId === 2 ? 'Review' : null);
+
+    $yearTxt     = $ordinal($session_info->year ?? 0) . ' year';
+    $semesterTxt = $ordinal($session_info->semester ?? 0) . ' Semester';
+    $sessionTxt  = $session_info->session ?? '';
+@endphp
+
+    <!-- Wrapper aligns the block to the right -->
+<div style="width:100%; text-align:right; margin-top:80px;">
+    <!-- Inline-table shrinks to content; margin-left:auto pushes to right -->
+    <table style="display:inline-table; border-collapse:collapse; margin-left:auto; text-align:center;">
+        <tbody>
+        <tr>
+            <td>Chairman</td>
+        </tr>
+        <tr>
+            <td>Examination Committee</td>
+        </tr>
+        <tr>
+            <td>
+                B. Arch. {{ $yearTxt }} {{ $semesterTxt }}
+                @if($examLabel) ({{ $examLabel }}) @endif
+                Examination - {{ $sessionTxt }}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+
+@endhasanyrole
 
 </body>
 </html>

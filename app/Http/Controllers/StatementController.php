@@ -239,28 +239,29 @@ class StatementController extends Controller
         // order 12.a
         $rateHead_order_12_a = RateHead::where('order_no', '12.a')->first();
 
-        $assigns_order_12_a = RateAssign::with(['employee.user','employee.designation','employee.department'])
-            ->select('employee_id')
+        $assigns_order_12_a = RateAssign::with(['teacher.user','teacher.designation','teacher.department'])
+            ->select('teacher_id')
             ->selectRaw('COALESCE(SUM(no_of_items), 0)   as total_students')  // sum of no_of_items
             ->where('session_id', $session_info->id)
             ->where('exam_type_id', $exam_type)
             ->when($rateHead_order_12_a, fn($q) => $q->where('rate_head_id', $rateHead_order_12_a->id))
+            ->groupBy('teacher_id')
+            ->get();
+
+        // order 12.a
+        $rateHead_order_12_b = RateHead::where('order_no', '12.b')->first();
+
+        $assigns_order_12_b = RateAssign::with(['employee.user','employee.designation','employee.department'])
+            ->select('employee_id')
+            ->selectRaw('COALESCE(SUM(no_of_items), 0)   as total_students')  // sum of no_of_items
+            ->where('session_id', $session_info->id)
+            ->where('exam_type_id', $exam_type)
+            ->when($rateHead_order_12_b, fn($q) => $q->where('rate_head_id', $rateHead_order_12_b->id))
             ->groupBy('employee_id')
             ->get();
 
         //return $assigns_order_12_a;
 
-        // order 12.b
-        $rateHead_order_12_b = RateHead::where('order_no', '12.b')->first();
-
-        $assigns_order_12_b = RateAssign::with(['teacher.user','teacher.designation','teacher.department'])
-            ->select('teacher_id')
-            ->selectRaw('COALESCE(SUM(no_of_items), 0)   as total_students')  // sum of no_of_items
-            ->where('session_id', $session_info->id)
-            ->where('exam_type_id', $exam_type)
-            ->when($rateHead_order_12_b, fn($q) => $q->where('rate_head_id', $rateHead_order_12_b->id))
-            ->groupBy('teacher_id')
-            ->get();
 
         // order 11
         $rateHead_order_11 = RateHead::where('order_no', '11')->first();

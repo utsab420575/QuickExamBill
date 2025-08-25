@@ -27,7 +27,7 @@
                     <div class="row mb-2">
                         <div class="col-md-4 mb-4">
                             <div class="form-group">
-                                <label for="printing_question_paper_rate">Per Stencil Rate</label>
+                                <label for="printing-question-paper-rate">Per Stencil Rate</label>
                                 <input
                                     type="number"
                                     name="printing_question_paper_rate"
@@ -53,7 +53,7 @@
                     <div id="dynamic-printing-question-paper-container"></div>
 
                     <div class="mt-3 text-end">
-                        <button type="button" id="add-printing-question-paper-row" class="btn btn-sm btn-success me-2">+ Add Row</button>
+                        <button type="button" id="add-printing-question-paper-row" class="btn btn-sm btn-success me-2">+ Add Employee</button>
                     </div>
 
                     <div class="text-end mt-3">
@@ -69,48 +69,45 @@
 
 @push('scripts')
     <script>
-        // Global variables
-        let rowCount = 0;
-        const allTeachers = @json($teachers ?? []);
-        const savedData   = @json($savedRateAssignPrintingQuestion ?? null);
+        (function () {
+            // ===== Local scope (no globals) =====
+            let rowCount = 0;
+            const staff = @json($employees ?? []);
+            const saved = @json($savedRateAssignPrintingQuestion ?? null);
 
-        // Debug: Show data in console
-        console.log('Teachers:', allTeachers);
-        console.log('Saved Data (Printing Question):', savedData);
-
-        /**
-         * Helper: build label "Name-Dept"
-         */
-        function optionLabel(t) {
-            const name = t?.user?.name || 'Unknown';
-            const dept = t?.department?.shortname ? `-${t.department.shortname}` : '';
-            return `${name}${dept}`;
-        }
-
-        /**
-         * Create a new row: multi-teacher select + stencil count
-         */
-        function createRow(selectedTeacherIds = [], stencilAmount = '') {
-            rowCount++;
             const container = document.getElementById('dynamic-printing-question-paper-container');
 
-            // Build teacher options HTML
-            let teacherOptions = '';
-            allTeachers.forEach(teacher => {
-                const isSelected = selectedTeacherIds.includes(String(teacher.id)) ? 'selected' : '';
-                teacherOptions += `<option value="${teacher.id}" ${isSelected}>${optionLabel(teacher)}</option>`;
-            });
+            // Helper: "Name-Dept"
+            const optionLabel = (t) => {
+                const n = t?.user?.name || 'Unknown';
+                const d = t?.department?.shortname ? `-${t.department.shortname}` : '';
+                return `${n}${d}`;
+            };
 
-            // Row HTML
-            const row = document.createElement('div');
-            row.className = 'row align-items-center mb-2';
-            row.setAttribute('data-row-id', rowCount);
-            row.innerHTML = `
+            /**
+             * Create row: multi-teacher select + stencil amount
+             * Names mirror your pattern:
+             *   - print_question_committee_teacher_ids[ROW][]
+             *   - printing_question_committee_amounts[ROW]
+             */
+            function createRow(selectedTeacherIds = [], stencilAmount = '') {
+                rowCount++;
+
+                const opts = staff.map(t => {
+                    const id = String(t.id);
+                    const sel = selectedTeacherIds.includes(id) ? 'selected' : '';
+                    return `<option value="${id}" ${sel}>${optionLabel(t)}</option>`;
+                }).join('');
+
+                const row = document.createElement('div');
+                row.className = 'row align-items-center mb-2 printing-row';
+                row.setAttribute('data-row-id', rowCount);
+                row.innerHTML = `
             <div class="col-md-8">
                 <select name="print_question_committee_teacher_ids[${rowCount}][]"
                         class="form-control teacher-select-printing-question"
                         multiple required>
-                    ${teacherOptions}
+                    ${opts}
                 </select>
             </div>
             <div class="col-md-3">
@@ -126,187 +123,151 @@
             </div>
         `;
 
-            // Add to DOM
-            container.appendChild(row);
+                container.appendChild(row);
 
-            // Init Select2 (if available)
-            if (window.$ && $.fn.select2) {
-                $(row).find('.teacher-select-printing-question').select2({
-                    theme: 'bootstrap',
-                    width: '100%',
-                    placeholder: '-- Select Teacher(s) --',
-                    allowClear: true,
-                    closeOnSelect: false
-                });
-            }
-
-            // Remove handler
-            row.querySelector('.remove-btn').addEventListener('click', function () {
-                row.remove();
-            });
-
-            console.log(`Created row ${rowCount} (Printing):`, selectedTeacherIds, 'stencils:', stencilAmount);
-        }
-
-        /**
-         * Load saved data (supports grouped-object format from getTeacherWithGroup)
-         */
-        function loadSavedData() {
-            if (!savedData) {
-                console.log('No saved data found (Printing)');
-                return;
-            }
-
-            console.log('Loading saved data (Printing)...');
-
-            // Grouped-object format: { grouped_keys: [...], full_grouped_data: {key: [records]} }
-            if (savedData.full_grouped_data && savedData.grouped_keys) {
-                console.log('Using grouped data format (Printing)');
-
-                savedData.grouped_keys.forEach(groupKey => {
-                    const groupRecords = savedData.full_grouped_data[groupKey] || [];
-                    if (groupRecords.length === 0) return;
-
-                    // Accept teacher_id OR employee_id (depending on how you saved)
-                    const teacherIds = groupRecords.map(r => String(r.teacher_id ?? r.employee_id)).filter(Boolean);
-
-                    // Prefer original row amount if available (total_students); fallback to no_of_items
-                    const stencilAmount = groupRecords[0].total_students ?? groupRecords[0].no_of_items ?? '';
-
-                    createRow(teacherIds, stencilAmount);
-
-                    console.log(`Loaded group ${groupKey} (Printing):`, teacherIds, 'stencils:', stencilAmount);
-                });
-            }
-            // Flat array fallback
-            else if (Array.isArray(savedData)) {
-                console.log('Using flat array format (Printing)');
-
-                const groups = {};
-                savedData.forEach(record => {
-                    const key = (record.group_no !== undefined && record.group_no !== null)
-                        ? `G_${record.group_no}`
-                        : `A_${record.total_students ?? record.no_of_items ?? 'default'}`;
-                    if (!groups[key]) groups[key] = [];
-                    groups[key].push(record);
-                });
-
-                Object.values(groups).forEach(groupRecords => {
-                    const teacherIds = groupRecords.map(r => String(r.teacher_id ?? r.employee_id)).filter(Boolean);
-                    const stencilAmount = groupRecords[0].total_students ?? groupRecords[0].no_of_items ?? '';
-                    createRow(teacherIds, stencilAmount);
-                });
-            }
-        }
-
-        /**
-         * Validate before submit
-         */
-        function validateForm() {
-            const teacherSelects = document.querySelectorAll('.teacher-select-printing-question');
-            const stencilInputs  = document.querySelectorAll('input[name^="printing_question_committee_amounts"]');
-            let isValid = true;
-
-            console.log("🔍 Printing validation start. Rows:", teacherSelects.length);
-
-            teacherSelects.forEach((select, i) => {
-                const selectedTeachers = Array.from(select.selectedOptions).map(o => o.value);
-                const stencilAmount    = stencilInputs[i]?.value || '';
-
-                // Reset errors
-                select.classList.remove('is-invalid');
-                stencilInputs[i]?.classList.remove('is-invalid');
-
-                // Require teachers
-                if (selectedTeachers.length === 0) {
-                    select.classList.add('is-invalid');
-                    isValid = false;
-                }
-
-                // Require positive stencil count
-                if (!stencilAmount || Number(stencilAmount) <= 0) {
-                    stencilInputs[i]?.classList.add('is-invalid');
-                    isValid = false;
-                }
-
-                console.log(`Row ${i + 1} validation (Printing):`, { selectedTeachers, stencilAmount });
-            });
-
-            console.log("✅ Printing validation result:", isValid);
-            return isValid;
-        }
-
-        /**
-         * Submit via AJAX
-         */
-        function submitForm(form) {
-            const formData = new FormData(form);
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-            // (Optional) Debug: log outgoing FormData
-            console.log("🚀 Submitting (Printing) FormData:");
-            for (const [k, v] of formData.entries()) console.log(`  ${k} =`, v);
-
-            fetch(form.action, {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': csrfToken },
-                body: formData
-            })
-                .then(response => {
-                    if (response.ok) return response.json();
-                    return response.json().then(err => { throw new Error(err.message || 'Server error'); });
-                })
-                .then(data => {
-                    Swal.fire('Success!', data.message || 'Data saved successfully', 'success');
-
-                    const submitBtn = document.getElementById('submit-list-of-printing-question-paper');
-                    submitBtn.textContent = 'Update Printing Question Committee';
-                    submitBtn.classList.remove('btn-primary');
-                    submitBtn.classList.add('btn-warning');
-
-                    document.querySelectorAll('.card-list-of-printing-question-paper').forEach(card => {
-                        card.classList.add('fade-highlight');
-                        setTimeout(() => card.classList.add('fade-out'), 1000);
-                        setTimeout(() => card.classList.remove('fade-highlight', 'fade-out'), 1900);
+                // Select2 (optional)
+                if (window.$ && $.fn.select2) {
+                    $(row).find('.teacher-select-printing-question').select2({
+                        theme: 'bootstrap',
+                        width: '100%',
+                        placeholder: '-- Select Teacher(s) --',
+                        allowClear: true,
+                        closeOnSelect: false
                     });
-                })
-                .catch(error => {
-                    console.error('Error (Printing):', error);
-                    Swal.fire('Error!', error.message || 'Something went wrong', 'error');
-                });
-        }
-
-        // Initialize on DOM ready
-        document.addEventListener('DOMContentLoaded', function () {
-            // Prefill from DB
-            loadSavedData();
-
-            // Add row button
-            document.getElementById('add-printing-question-paper-row').addEventListener('click', function () {
-                createRow(); // empty row
-            });
-
-            // Submit handler
-            document.getElementById('form-list-of-printing-question-paper').addEventListener('submit', function (e) {
-                e.preventDefault();
-
-                if (!validateForm()) {
-                    Swal.fire('Validation Error', 'Please select teacher(s) and enter stencil numbers for all rows', 'error');
-                    return;
                 }
 
-                Swal.fire({
-                    title: 'Confirm Save',
-                    text: 'Do you want to save the committee data?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, Save!',
-                    cancelButtonText: 'Cancel'
-                }).then((result) => {
-                    if (result.isConfirmed) submitForm(this);
+                row.querySelector('.remove-btn').addEventListener('click', () => row.remove());
+            }
+
+            /**
+             * Load saved data (grouped-object or flat array)
+             */
+            function loadSavedData() {
+                if (!saved) return;
+
+                // grouped shape: { grouped_keys: [...], full_grouped_data: { key: [records...] } }
+                if (saved.full_grouped_data && saved.grouped_keys) {
+                    saved.grouped_keys.forEach(key => {
+                        const recs = saved.full_grouped_data[key] || [];
+                        if (!recs.length) return;
+
+                        const ids = recs.map(r => String(r.teacher_id ?? r.employee_id)).filter(Boolean);
+                        const amt = recs[0].total_students ?? recs[0].no_of_items ?? '';
+                        createRow(ids, amt);
+                    });
+                }
+                // flat shape
+                else if (Array.isArray(saved)) {
+                    const groups = {};
+                    saved.forEach(r => {
+                        const k = (r.group_no !== undefined && r.group_no !== null)
+                            ? `G_${r.group_no}`
+                            : `A_${r.total_students ?? r.no_of_items ?? 'default'}`;
+                        (groups[k] ??= []).push(r);
+                    });
+
+                    Object.values(groups).forEach(recs => {
+                        const ids = recs.map(r => String(r.teacher_id ?? r.employee_id)).filter(Boolean);
+                        const amt = recs[0].total_students ?? recs[0].no_of_items ?? '';
+                        createRow(ids, amt);
+                    });
+                }
+            }
+
+            /**
+             * Index-based validation (like your oral blade)
+             */
+            function validateForm() {
+                const teacherSelects = document.querySelectorAll('.teacher-select-printing-question');
+                const amountInputs   = document.querySelectorAll('input[name^="printing_question_committee_amounts"]');
+                let ok = true;
+
+                teacherSelects.forEach((select, i) => {
+                    const selected = Array.from(select.selectedOptions).map(o => o.value);
+                    const amount   = amountInputs[i]?.value || '';
+
+                    select.classList.remove('is-invalid');
+                    amountInputs[i]?.classList.remove('is-invalid');
+
+                    if (!selected.length) {
+                        select.classList.add('is-invalid');
+                        ok = false;
+                    }
+                    if (!amount || Number(amount) <= 0) {
+                        amountInputs[i]?.classList.add('is-invalid');
+                        ok = false;
+                    }
                 });
+
+                return ok;
+            }
+
+            /**
+             * Submit via AJAX
+             */
+            function submitForm(form) {
+                const fd   = new FormData(form);
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': csrf },
+                    body: fd
+                })
+                    .then(async (r) => {
+                        let payload = null;
+                        try { payload = await r.clone().json(); } catch (_) {}
+                        if (!r.ok) throw new Error(payload?.message || `Server error (${r.status})`);
+                        return payload;
+                    })
+                    .then(data => {
+                        Swal.fire('Success!', data.message || 'Data saved successfully', 'success');
+
+                        const submitBtn = document.getElementById('submit-list-of-printing-question-paper');
+                        submitBtn.textContent = 'Update Printing Question Committee';
+                        submitBtn.classList.remove('btn-primary');
+                        submitBtn.classList.add('btn-warning');
+
+                        document.querySelectorAll('.card-list-of-printing-question-paper').forEach(card => {
+                            card.classList.add('fade-highlight');
+                            setTimeout(() => card.classList.add('fade-out'), 1000);
+                            setTimeout(() => card.classList.remove('fade-highlight', 'fade-out'), 1900);
+                        });
+                    })
+                    .catch(err => {
+                        console.error('[Printing] error:', err);
+                        Swal.fire('Error!', err.message || 'Something went wrong', 'error');
+                    });
+            }
+
+            // ===== Init =====
+            document.addEventListener('DOMContentLoaded', () => {
+                loadSavedData();
+
+                document.getElementById('add-printing-question-paper-row')
+                    .addEventListener('click', () => createRow());
+
+                document.getElementById('form-list-of-printing-question-paper')
+                    .addEventListener('submit', function (e) {
+                        e.preventDefault();
+
+                        if (!validateForm()) {
+                            Swal.fire('Validation Error', 'Please select teacher(s) and enter stencil numbers for all rows', 'error');
+                            return;
+                        }
+
+                        Swal.fire({
+                            title: 'Confirm Save',
+                            text: 'Do you want to save the committee data?',
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, Save!',
+                            cancelButtonText: 'Cancel'
+                        }).then((res) => {
+                            if (res.isConfirmed) submitForm(this);
+                        });
+                    });
             });
-        });
+        })();
     </script>
 @endpush
-

@@ -26,6 +26,19 @@ class RateAmount extends Model
     }
 
 
+    // App\Models\RateAmount.php
+    public static function getFor(int $sessionId, int $examTypeId, string $orderNo): ?self
+    {
+        $head = RateHead::where('order_no', $orderNo)->first();
+        if (! $head) return null;
+
+        return self::where('session_id',   $sessionId)
+            ->where('exam_type_id',        $examTypeId)
+            ->where('rate_head_id',        $head->id)
+            ->where('saved',               1)
+            ->first();
+    }
+
     public static function isRateAmountSaved($ugr_id, $exam_type_id, $order_no)
     {
         Log::info("Checking RateAmount saved status", [

@@ -1988,134 +1988,104 @@ class CommitteeInputController extends Controller
     //order=12.a
     public function storeStencilCuttingCommittee(Request $request)
     {
-        // Log all request data with a custom message
-        Log::info('Stencill Committee', [
-            'request_data' => $request->all()  // Log all input data from the request
-        ]);
-        $teacherIds = $request->input('stencil_cutting_committee_teacher_ids'); // array
-        $number_of_stencil = $request->input('stencil_cutting_committee_amounts');        // array (indexed)
-        $sessionId = $request->sid;
-        $per_stencil_cutting_rate=$request->stencil_cutting_question_paper_rate;
-        $exam_type_record=ExamType::where('type','regular')->first();
-        $exam_type = $exam_type_record->id;
+        Log::info('📥 Stencil Cutting Request', ['data' => $request->all()]);
 
+        $teacherGroups   = (array) $request->input('stencil_cutting_committee_teacher_ids', []);
+        $stencilCounts   = (array) $request->input('stencil_cutting_committee_amounts', []);
+        $sessionId       = (int) $request->sid;
+        $ratePerStencil  = (float) $request->stencil_cutting_question_paper_rate;
 
-        Log::info('📥 Received Stencill Committee Data', [
-            'teacherId' => $teacherIds,
-            'number_of_stencil' => $number_of_stencil,
-            'rate' => $per_stencil_cutting_rate,
-            'sessionId' => $sessionId,
-        ]);
+        $examType = ExamType::where('type', 'regular')->value('id');
 
-        // Step 1: Validate teacher inputs
-        if (empty($teacherIds) || !is_array($teacherIds) || count($teacherIds) !== count($number_of_stencil)) {
-            return response()->json([
-                'message' => 'Invalid data submitted. Please select teachers and their respective student count.'
-            ], 422);
-        }
+        // ---- Validation ----
+      /*  $request->validate([
+            'sid' => ['required', 'integer'],
+            'stencil_cutting_question_paper_rate' => ['required', 'numeric', 'gt:0'],
+            'stencil_cutting_committee_teacher_ids'   => ['required', 'array', 'min:1'],
+            'stencil_cutting_committee_teacher_ids.*' => ['array', 'min:1'],
+            'stencil_cutting_committee_amounts'       => ['required', 'array', 'min:1'],
+            'stencil_cutting_committee_amounts.*'     => ['required', 'numeric', 'gt:0'],
+        ]);*/
 
-
-        Log::info('pass out1');
-        // Step 2: Check for duplicates
-        if (count($teacherIds) !== count(array_unique($teacherIds))) {
-            return response()->json([
-                'message' => 'Duplicate teacher selection detected. Please choose unique teachers.'
-            ], 422);
-        }
-
-
-
-
-        Log::info('pass out2');
         DB::beginTransaction();
-
-
-
         try {
-            // Step 3: Ensure RateHead exists
             $rateHead = $this->getOrCreateRateHead('12.a', [
-                'head' => 'Question',
-                'sub_head' => 'Stencil Cutting',
-                'dist_type' => 'Individual',
-                'is_course' => 1,
+                'head'             => 'Question',
+                'sub_head'         => 'Stencil Cutting',
+                'is_course'        => 1,
+                'dist_type'        => 'Share',
                 'is_student_count' => 1,
-                'marge_with' => null,
-                'status' => 1,
+                'marge_with'       => null,
+                'status'           => 1,
             ]);
 
-            //ensure session exist
-            $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+            $session = LocalData::getOrCreateRegularSession($sessionId, $examType);
 
-
-
-
-
-            // Step 4: Ensure  RateAmount exists(Rate Amount Exist for Rate Head=1)
             $rateAmount = $this->getOrCreateRateAmount(
                 $rateHead->id,
-                $session_info->id,
-                $exam_type,
+                $session->id,
+                $examType,
                 [
-                    'default_rate' => $per_stencil_cutting_rate,
+                    'default_rate' => $ratePerStencil,
                     'min_rate'     => null,
                     'max_rate'     => null,
                 ]
             );
 
-
-            RateAssign::where('session_id', $session_info->id)
-                ->where('exam_type_id', $exam_type)
+            RateAssign::where('session_id', $session->id)
+                ->where('exam_type_id', $examType)
                 ->where('rate_head_id', $rateHead->id)
                 ->delete();
 
+            foreach ($teacherGroups as $groupNo => $teacherIds) {
+                $teacherIds   = array_values(array_unique(array_filter((array)$teacherIds)));
+                $stencils     = (float) ($stencilCounts[$groupNo] ?? 0);
+                $teacherCount = count($teacherIds);
 
-            // Step 5: Loop and store teacher-wise rate_assign
-            foreach ($teacherIds as $index => $teacherId) {
-                $stencil_count=$number_of_stencil[$index];
-                $calculatedAmount =  $stencil_count * $rateAmount->default_rate;
-
-                if ($calculatedAmount <= 0) {
-                    //  DB::rollBack();
-                    return response()->json([
-                        'message' => "Invalid amount for teacher ID: $teacherId."
-                    ], 422);
+                if ($stencils <= 0 || $teacherCount <= 0) {
+                    continue;
                 }
 
-                Log::info('📘 Stencill Cutting Store', [
-                    'teacher_id' => $teacherId,
-                    'rate_head_id' => $rateHead->id,
-                    'session_id' => $session_info->id,
-                    'exam_type_id'=>$exam_type,
-                    'no_of_items' => $stencil_count,
-                    'total_amount' => $calculatedAmount,
-                ]);
+                $perTeacherItems  = $stencils / $teacherCount;
+                $perTeacherAmount = $perTeacherItems * (float) $rateAmount->default_rate;
 
-                RateAssign::create([
-                    /*'teacher_id' => $teacherId,*/
-                   /* $teacherId worked as  employeeId here*/
-                    'employee_id' => $teacherId,
-                    'rate_head_id' => $rateHead->id,
-                    'session_id' => $session_info->id,
-                    'exam_type_id'=>$exam_type,
-                    'no_of_items' => $stencil_count,
-                    'total_amount' => $calculatedAmount,
-                ]);
+                foreach ($teacherIds as $teacherId) {
+                    Log::info('📘 Stencil Cutting Store', [
+                        'teacher_id'      => (int) $teacherId,
+                        'rate_head_id'    => $rateHead->id,
+                        'session_id'      => $session->id,
+                        'exam_type_id'    => $examType,
+                        'group_no'        => (int) $groupNo,
+                        'total_students'  => $stencils,
+                        'total_teachers'  => $teacherCount,
+                        'no_of_items'     => $perTeacherItems,
+                        'total_amount'    => $perTeacherAmount,
+                    ]);
+
+                    RateAssign::create([
+                        'teacher_id'      => (int) $teacherId,
+                        'rate_head_id'    => $rateHead->id,
+                        'session_id'      => $session->id,
+                        'exam_type_id'    => $examType,
+                        'group_no'        => (int) $groupNo,
+                        'total_students'  => $stencils,
+                        'total_teachers'  => $teacherCount,
+                        'no_of_items'     => $perTeacherItems,
+                        'total_amount'    => $perTeacherAmount,
+                    ]);
+                }
             }
 
             DB::commit();
-
-            return response()->json([
-                'message' => 'Stencill cutting data stored successfully.'
-            ]);
-        } catch (\Exception $e) {
+            return response()->json(['message' => 'Stencil cutting committee saved successfully.']);
+        } catch (\Throwable $e) {
             DB::rollBack();
-            Log::info($e->getMessage());
-            return response()->json([
-                'message' => 'Something went wrong.',
-                'error' => $e->getMessage()
-            ], 500);
+            Log::error('❌ Stencil cutting save error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Something went wrong.', 'error' => $e->getMessage()], 500);
         }
     }
+
+
 
     //order 12.b
 
@@ -2194,7 +2164,7 @@ class CommitteeInputController extends Controller
 
                     RateAssign::create([
                         // using employee-based payout here (as in your previous implementation)
-                        'teacher_id'    => (int)$teacherId,
+                        'employee_id'    => (int)$teacherId,
                         'rate_head_id'   => $rateHead->id,
                         'session_id'     => $session->id,
                         'exam_type_id'   => $examType,

@@ -48,6 +48,7 @@
                                                 <option value="committee_input_review" {{ $permission->group_name == 'committee_input_review' ? 'selected' : '' }}> Committee Input Review</option>
                                                 <option value="report_regular" {{ $permission->group_name == 'report_regular' ? 'selected' : '' }}> Report Regular</option>
                                                 <option value="report_review" {{ $permission->group_name == 'report_review' ? 'selected' : '' }}> Report Review</option>
+                                                <option value="statement" {{ $permission->group_name == 'statement' ? 'selected' : '' }}> Statement</option>
                                                 <option value="teacher" {{ $permission->group_name == 'teacher' ? 'selected' : '' }}> Teacher</option>
                                                 <option value="employee" {{ $permission->group_name == 'employee' ? 'selected' : '' }}> Employee</option>
                                                 <option value="permission" {{ $permission->group_name == 'permission' ? 'selected' : '' }}> Permission</option>

@@ -11,7 +11,7 @@ class RateHead extends Model
     protected $guarded=[];
     public function examType()
     {
-        return $this->belongsTo(ExamType::class, 'exam_type');
+        return $this->belongsTo(ExamType::class);
     }
 
     public function mergedWith()

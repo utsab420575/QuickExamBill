@@ -204,11 +204,11 @@
 
 {{-- A) Moderation Committee --}}
 @if($assigns_order_1->isNotEmpty())
-    {{-- A) order 1 --}}
-    @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '1'); @endphp
+    @php
+        $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '1');
+    @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        A) List of Examination Committee/Moderation Committee Members
-        (@ min {{ $rate ? number_format($rate->min_rate, 0) : '' }}/- per member)
+        A) List of Examination Committee/Moderation Committee Members (@ min {{ $rate ? number_format($rate->default_rate, 2) : '' }}/- per member)
     </h3>
 
     <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -243,14 +243,11 @@
 
 {{-- B) Examiners & Paper Setters --}}
 @if(!empty($assigns_order_2) && count($assigns_order_2) > 0)
-    {{-- B) orders 2 & 3 --}}
-    @php
-        $rate_paper_setter = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '2');
-        $rate_examiner     = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '3');
-    @endphp
+
+    @php $rate_paper_setter = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '2'); @endphp
+    @php $rate_examiner = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '3'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        B) List of Examiners (&#64; {{ $rate_examiner ? number_format($rate_examiner->default_rate, 0) : '' }}/- per script , min 1000/- per examiner)
-        & Paper Setters (&#64; {{ $rate_paper_setter ? number_format($rate_paper_setter->default_rate, 0) : '' }}/- per paper setter)
+        B) List of Examiners (@{{ $rate_examiner ? number_format($rate->default_rate, 2) : '' }}/- per script , min 1000/- per examiner) & Paper Settters (@{{ $rate_paper_setter ? number_format($rate->default_rate, 2) : '' }}/- per paper setter)
     </h3>
 
     <table class="body_table_2" border="1" cellpadding="6">
@@ -316,10 +313,9 @@
 
 {{-- C) Class Test (order 4) --}}
 @if($assigns_order_4->isNotEmpty())
-    {{-- C) order 4 --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '4'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        C) Internal Assessment/Class Test (@ {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per class test per student)
+        C) Internal Assessment/Class Test (@ {{ $rate ? number_format($rate->default_rate, 2) : '' }}/- per class test per student)
     </h3>
 
     <table class="body_table_4" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -384,10 +380,9 @@
 
 {{-- D) Class Test (order 5) --}}
 @if($assigns_order_5->isNotEmpty())
-    {{-- D) order 5 --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '5'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        D) Sessional (@ {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per contact hour per week; min 1500/- per examiner)
+        D) Sessional (@ {{ $rate ? number_format($rate->default_rate, 2) : '' }}/- per contact hour per week; min 1500/- per examiner)
     </h3>
 
     <table class="body_table_5" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -452,10 +447,9 @@
 
 {{-- E) Class Test (order 9) --}}
 @if($assigns_order_9->isNotEmpty())
-    {{-- E) order 9 --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '9'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        E) List of Scrutinizers (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per script,min &#64; {{ $rate ? number_format($rate->min_rate, 0) : '' }}/- per scrutinizers)
+        E) List of Scrutinizers (@ {{ $rate ? number_format($rate->default_rate, 2) : '' }}/- per script,min 1000/- per scrutinizers)
     </h3>
 
     <table class="body_table_9" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -525,10 +519,9 @@
 
 {{-- F) Class Test (order 8.a) --}}
 @if($assigns_order_8_a->isNotEmpty())
-    {{-- F) order 8.a --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '8.a'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        F) List of Teachers for the Preparation of Grade Sheet(Theoritical) (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student per subject)
+        F)  List of Teachers for the Preparation of Grade Sheet(Theoritical (@{{ $rate ? number_format($rate->default_rate, 2) : '' }}/- per student per subject))
     </h3>
 
     <table class="body_table_8_a" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -600,9 +593,8 @@
 @if($assigns_order_8_b->isNotEmpty())
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '8.b'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        G) List of Teachers for the Preparation of Grade Sheet(Sessional) (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student per subject):
+        G) List of Teachers for the Preparation of Grade Sheet(Sessional) (@{{ $rate ? number_format($rate->default_rate, 2) : '' }}/- per student per subject):
     </h3>
-
 
     <table class="body_table_8_b" style="margin-top: 0px;" border="1" cellpadding="6">
         <thead>
@@ -671,10 +663,10 @@
 
 {{-- H)  (order 10.a) --}}
 @if($assigns_order_10_a->isNotEmpty())
-    {{-- H) order 10.a --}}
+
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '10.a'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        H) List of Teachers for the Scrutinizing of Grade Sheet (Theoretical) (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student per subject)
+        H) List of Teachers for the Scrutinizing of Grade Sheet (Theoretical) (@{{ $rate ? number_format($rate->default_rate, 2) : '' }}/- per student per subject)
     </h3>
 
     <table class="body_table_10_a" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -744,10 +736,9 @@
 
 {{-- I) (order 10.b) --}}
 @if($assigns_order_10_b->isNotEmpty())
-    {{-- I) order 10.b --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '10.b'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        I) List of Teachers for the Scrutinizing of Grade Sheet(Sessional) (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student per subject):
+        I) List of Teachers for the Scrutinizing of Grade Sheet(Sessional) (@ {{ $rate ? number_format($rate->default_rate, 2) : '' }}/- per student per subject):
     </h3>
 
     <table class="body_table_10_b" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -818,10 +809,9 @@
 
 {{-- J) (order 8.d) --}}
 @if($assigns_order_8_d->isNotEmpty())
-    {{-- J) order 8.d --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '8.d'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        J) List of Teachers Prepared Computerized Result (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student per subject)
+        J) List of Teachers Prepared Computerized Result (@ {{ $rate ? number_format($rate->default_rate, 2) : '' }}/- per student per subject)
     </h3>
 
     <table class="body_table_8_d" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -888,10 +878,9 @@
 
 {{-- K) (order 8.c) --}}
 @if($assigns_order_8_c->isNotEmpty())
-    {{-- K) order 8.c --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '8.c'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        K) List of Teachers Verified Computerized Grade Sheets & GPA List (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student)
+        K) List of Teachers Verified Computerized Grade Sheets & GPA List (@{{ $rate ? number_format($rate->default_rate, 2) : '' }}/- per student)
     </h3>
 
     <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -934,10 +923,9 @@
         L) Work Done Under the Supervision of the Chairman (Exam Committee)
     </h3>
 
-    {{-- L.i) order 12.a --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '12.a'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        i) List of Stencill Cutting of Question paper (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per stencil)
+        i) List of Stencill Cutting of Question paper (@ {{ $rate ? number_format($rate->default_rate, 2) : '' }}/- per stencil)
     </h3>
 
     <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -974,10 +962,9 @@
 {{-- L) (order 12.b) --}}
 @if($assigns_order_12_b->isNotEmpty())
 
-    {{-- L.ii) order 12.b --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '12.b'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        ii) List of Printing of Question paper (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per stencil)
+        ii) List of Printing of Question paper (@ {{ $rate ? number_format($rate->default_rate, 2) : '' }}/- per stencil)
     </h3>
 
     <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -1016,11 +1003,11 @@
 {{-- L) (order 11) --}}
 @if($assigns_order_11->isNotEmpty())
 
-    {{-- L.iii) order 11 --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '11'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        iii) List of Comparison, Correction, Sketching & Distribution of Question Paper (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per stencil)
+        iii) List of Comparison, Correction, Sketching & Distribution of Question Paper (@ {{ $rate ? number_format($rate->default_rate, 2) : '' }}/- per stencil)
     </h3>
+
 
     <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
         <thead>
@@ -1059,12 +1046,10 @@
 
 {{-- M) (order 13) --}}
 @if($assigns_order_13->isNotEmpty())
-    {{-- M) order 13 --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '13'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        M) Advisory (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student per semester):
+        M) Advisory (@ {{ $rate ? number_format($rate->default_rate, 2) : '' }}/- per student per semester):
     </h3>
-
 
     <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
         <thead>
@@ -1101,10 +1086,9 @@
 
 {{-- N) (order 16) --}}
 @if($assigns_order_16->isNotEmpty())
-    {{-- N) order 16 --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '16'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        N) List of Teachers verified the final graduation results (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student)):
+        N)  List of Teachers verified the final graduation results (@ {{ $rate ? number_format($rate->default_rate, 2) : '' }}/- per student)):
     </h3>
 
     <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -1141,10 +1125,9 @@
 
 {{-- O) (order 7.e) --}}
 @if($assigns_order_7_e->isNotEmpty())
-    {{-- O) order 7.e --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '7.e'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        O) List of Teachers conducted central oral examination/Jury of thesis/projects (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- thesis/projects)
+        O)  List of Teachers conducted central oral examination/Jury of thesis/projects (@{{ $rate ? number_format($rate->default_rate, 2) : '' }}/- thesis/projects)
     </h3>
 
     <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -1183,10 +1166,9 @@
 
 {{-- P) (order 7.f) --}}
 @if($assigns_order_7_f->isNotEmpty())
-    {{-- P) order 7.f --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '7.f'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        P) List of teachers involved survey (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student)
+        P)   List of teachers involved survey (@ {{ $rate ? number_format($rate->default_rate, 2) : '' }}/- per student)
     </h3>
 
     <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -1225,10 +1207,9 @@
 
 {{-- Q) (order 6.c) --}}
 @if($assigns_order_6_c->isNotEmpty())
-    {{-- Q) order 6.c --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '6.c'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        Q) List of Teachers conducted preliminary viva of thesis/projects (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- per student)
+        Q)   List of Teachers conducted preliminary viva of thesis/projects (@ {{ $rate ? number_format($rate->default_rate, 2) : '' }}/- per student)
     </h3>
 
     <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -1267,10 +1248,9 @@
 
 {{-- R) (order 6.a) --}}
 @if($assigns_order_6_a->isNotEmpty())
-    {{-- R) order 6.a --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '6.a'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        R) List of Teachers examined thesis/projects (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- thesis/projects)
+        R)   List of Teachers examined thesis/projects (@ {{ $rate ? number_format($rate->default_rate, 2) : '' }}/- thesis/projects)
     </h3>
 
     <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -1321,10 +1301,9 @@
 
 {{-- S) (order 6.d) --}}
 @if($assigns_order_6_d->isNotEmpty())
-    {{-- S) order 6.d --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '6.d'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        S) List of Teachers conducted oral examination/Jury of thesis/projects (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- thesis/projects)
+        S)    List of Teachers conducted oral examination/Jury of thesis/projects (@{{ $rate ? number_format($rate->default_rate, 2) : '' }}/- thesis/projects)
     </h3>
 
     <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -1363,10 +1342,9 @@
 
 {{-- T) (order 6.b) --}}
 @if($assigns_order_6_b->isNotEmpty())
-    {{-- T) order 6.b --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '6.b'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        T) List of Teachers supervised the thesis/projects (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/- thesis/projects)
+        T)   List of Teachers supervised the thesis/projects (@ {{ $rate ? number_format($rate->default_rate, 2) : '' }}/- thesis/projects)
     </h3>
 
     <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -1405,10 +1383,9 @@
 
 {{-- U) (order 14) --}}
 @if($assigns_order_14->isNotEmpty())
-    {{-- U) order 14 --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '14'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        U) Honorarium for course co-ordinator (UG) (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/-)
+        U)   Honorarium for course co-ordinator (UG) (@{{ $rate ? number_format($rate->default_rate, 2) : '' }}/-)
     </h3>
 
     <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
@@ -1440,10 +1417,9 @@
 
 {{-- V) (order 15) --}}
 @if($assigns_order_15->isNotEmpty())
-    {{-- V) order 15 --}}
     @php $rate = \App\Models\RateAmount::getFor($session_info->id, $exam_type, '15'); @endphp
     <h3 style="margin-top:15px;margin-bottom: 4px">
-        V) Honorarium for Chairman (&#64; {{ $rate ? number_format($rate->default_rate, 0) : '' }}/-)
+        V)    Honorarium for Chairman (@{{ $rate ? number_format($rate->default_rate, 2) : '' }}/-)
     </h3>
 
     <table class="body_table_1" style="margin-top: 0px;" border="1" cellpadding="6">
