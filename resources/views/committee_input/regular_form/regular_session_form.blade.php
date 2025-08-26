@@ -640,6 +640,7 @@
         @endif
 
 
+        @include('committee_input.patritals.regular.list_default_input')
 
          @include('committee_input.patritals.regular.list_scrutinizing_theory_grade_sheet')
 
@@ -674,19 +675,21 @@
         @include('committee_input.patritals.regular.list_advisor_student')
 
         {{--order 16--}}
-        @include('committee_input.patritals.regular.list_verified_final_graduation_result')
+        @if($session_info->year == 5 && $session_info->semester == 2)
+            @include('committee_input.patritals.regular.list_verified_final_graduation_result')
+        @endif
 
 
 
         {{-- order-7.e--}}
-        @if($session_info->year == 5 && $session_info->semester == 2)
+
             @include('committee_input.patritals.regular.list_conducted_central_oral_examination')
-        @endif
+
 
         {{-- order-7.f--}}
-        @if($session_info->year == 5 && $session_info->semester == 2)
+
             @include('committee_input.patritals.regular.list_involved_survey')
-        @endif
+
 
         {{-- order-6.c--}}
         @if($session_info->year == 5 && $session_info->semester == 2)

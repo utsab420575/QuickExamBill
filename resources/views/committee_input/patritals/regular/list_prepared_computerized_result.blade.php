@@ -102,22 +102,6 @@
                         <span class="step-badge">8.d </span>
                         List of Teachers Prepared Computerized Result (@ **/- per student per subject)
                     </h2>
-
-                    <div class="ms-auto d-flex align-items-center gap-3 flex-wrap">
-                        {{-- Copy from Preparation (Theory) --}}
-                        <label class="copy-toggle" title="Copy teachers from Preparation (Theory) form">
-                            <input type="checkbox" id="copy-in-computerized-result-theory">
-                            <span class="track"><span class="knob"></span></span>
-                            <span class="label-text">Same as “Preparation (Theory)”</span>
-                        </label>
-
-                        {{-- Copy from Preparation (Sessional) --}}
-                        <label class="copy-toggle" title="Copy teachers from Preparation (Sessional) form">
-                            <input type="checkbox" id="copy-in-computerized-result-sessional">
-                            <span class="track"><span class="knob"></span></span>
-                            <span class="label-text">Same as “Preparation (Sessional)”</span>
-                        </label>
-                    </div>
                 </header>
 
 
@@ -222,40 +206,9 @@
 
 
 @push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // From Preparation (Theory) -> Prepared Computerized Result
-            wireCopyAcrossForms({
-                srcTeacherPrefix: 'prepares_theory_grade_sheet_teacher_ids',
-                srcCountPrefix:   'prepares_theory_grade_sheet_no_of_students',
-                dstTeacherPrefix: 'prepared_computerized_result_teacher_ids',
-                dstCountPrefix:   'prepared_computerized_result_no_of_students',
-                checkboxId:       'copy-in-computerized-result-theory'
-            });
 
-            // From Preparation (Sessional) -> Prepared Computerized Result
-            wireCopyAcrossForms({
-                srcTeacherPrefix: 'prepare_sessional_grade_sheet_teacher_ids',
-                srcCountPrefix:   'prepare_sessional_grade_sheet_no_of_students',
-                dstTeacherPrefix: 'prepared_computerized_result_teacher_ids',
-                dstCountPrefix:   'prepared_computerized_result_no_of_students',
-                checkboxId:       'copy-in-computerized-result-sessional'
-            });
 
-            // Make the toggles mutually exclusive (last one checked wins)
-            const cbTheory    = document.getElementById('copy-in-computerized-result-theory');
-            const cbSessional = document.getElementById('copy-in-computerized-result-sessional');
 
-            if (cbTheory && cbSessional) {
-                cbTheory.addEventListener('change', () => {
-                    if (cbTheory.checked) cbSessional.checked = false;
-                });
-                cbSessional.addEventListener('change', () => {
-                    if (cbSessional.checked) cbTheory.checked = false;
-                });
-            }
-        });
-    </script>
 
 
     <script>

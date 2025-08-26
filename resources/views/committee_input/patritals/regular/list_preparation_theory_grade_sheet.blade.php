@@ -66,7 +66,7 @@
                                         <div class="card-body card-list-of-prepares-theory-grade-sheet">
                                             <div class="row mb-3">
                                                 <div class="col-md-9">
-                                                    <label for="prepares_theory_grade_sheet_teacher_{{ $single_course->id }}_{{ $loop->index }}">Select Scrutinizers</label>
+                                                    <label for="prepares_theory_grade_sheet_teacher_{{ $single_course->id }}_{{ $loop->index }}">Select Teachers</label>
                                                     <select name="prepares_theory_grade_sheet_teacher_ids[{{ $single_course->id }}][]"
                                                             multiple data-plugin-selectTwo
                                                             id="prepares_theory_grade_sheet_teacher_{{ $single_course->id }}_{{ $loop->index }}"

@@ -102,11 +102,7 @@
                         List of Teachers for the Scrutinizing of Grade Sheet (Theoretical) (@**/- per student per subject)
                     </h2>
 
-                    <label class="copy-toggle ms-auto" title="Copy teachers from Preparation (Theory) form">
-                        <input type="checkbox" id="copy-in-scrutinizing-theory-grade-sheet">
-                        <span class="track"><span class="knob"></span></span>
-                        <span class="label-text">Same as “Preparation (Theory) Form”</span>
-                    </label>
+
                 </header>
 
                 <div class="card-body">
@@ -211,17 +207,9 @@
 
 @push('scripts')
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            wireCopyAcrossForms({
-                srcTeacherPrefix: 'prepares_theory_grade_sheet_teacher_ids',
-                srcCountPrefix:   'prepares_theory_grade_sheet_no_of_students',
-                dstTeacherPrefix: 'scrutinizing_theory_grade_sheet_teacher_ids',
-                dstCountPrefix:   'scrutinizing_theory_grade_sheet_no_of_students',
-                checkboxId:       'copy-in-scrutinizing-theory-grade-sheet'
-            });
-        });
-    </script>
+
+
+
 
 
     <script>

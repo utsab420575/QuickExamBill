@@ -103,12 +103,7 @@
                         List of Teachers for the Scrutinizing of Grade Sheet(Sessional) (@ **- per student per subject):
                     </h2>
 
-                    {{--2nd add this--}}
-                    <label class="copy-toggle ms-auto" title="Copy teachers from Preparation (Theory) form">
-                        <input type="checkbox" id="copy-in-scrutinizing-sessional-grade">
-                        <span class="track"><span class="knob"></span></span>
-                        <span class="label-text">Same as “Preparation of Grade Sheet(Sessional)”</span>
-                    </label>
+
                 </header>
 
                 <div class="card-body">
@@ -207,17 +202,9 @@
 
 
 @push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            wireCopyAcrossForms({
-                srcTeacherPrefix: 'prepare_sessional_grade_sheet_teacher_ids',
-                srcCountPrefix:   'prepare_sessional_grade_sheet_no_of_students',
-                dstTeacherPrefix: 'scrutinizing_sessional_grade_sheet_teacher_ids',
-                dstCountPrefix:   'scrutinizing_sessional_grade_sheet_no_of_students',
-                checkboxId:       'copy-in-scrutinizing-sessional-grade'
-            });
-        });
-    </script>
+
+
+
 
 
     <script>

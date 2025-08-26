@@ -242,94 +242,64 @@
 
 {{--this is for copying data from one blade to another--}}
 <script>
-    /**
-     * Copy selected teacher IDs from a single base <select multiple>
-     * to all course-level destination selects that match the given prefixes.
-     *
-     * @param {Object} opts
-     * @param {string}   opts.sourceSelectId     - ID of the base select (e.g. 'selected_teacher_ids_8c_8d_10a_10b')
-     * @param {string[]} opts.destPrefixes       - List of name prefixes to target (e.g. ['scrutinizing_theory_grade_sheet_teacher_ids'])
-     * @param {string}   opts.triggerId          - Checkbox/toggle/button ID that triggers the copy
-     * @param {'replace'|'append'} [opts.mode]   - Replace existing selection (default) or append to it
-     */
-    function wireCopySelectedTeachers({ sourceSelectId, destPrefixes, triggerId, mode = 'replace' }) {
-        const trigger = document.getElementById(triggerId);
-        const srcSel  = document.getElementById(sourceSelectId);
-        if (!trigger || !srcSel) return;
-
-        // Build a map of value -> label from the base select so we can inject missing options nicely
-        const baseLabelByValue = {};
-        Array.from(srcSel.options).forEach(opt => {
-            baseLabelByValue[String(opt.value)] = opt.text || String(opt.value);
-        });
+    function wireCopyAcrossForms({
+                                     srcTeacherPrefix,  // e.g. 'prepares_theory_grade_sheet_teacher_ids'
+                                     srcCountPrefix,    // e.g. 'prepares_theory_grade_sheet_no_of_students'
+                                     dstTeacherPrefix,  // e.g. 'scrutinizing_theory_grade_sheet_teacher_ids'
+                                     dstCountPrefix,    // e.g. 'scrutinizing_theory_grade_sheet_no_of_students'
+                                     checkboxId         // e.g. 'copy-from-form1-all-theory'
+                                 }) {
+        const master = document.getElementById(checkboxId);
+        if (!master) return;
 
         const getCourseId = (name) => (name.match(/\[(\d+)\]/) || [])[1];
 
-        const readSelectedValues = () =>
-            Array.from(srcSel.selectedOptions).map(o => String(o.value)).filter(Boolean);
-
-        const collectDestSelects = () => {
-            const sels = [];
-            destPrefixes.forEach(prefix => {
-                document.querySelectorAll(`select[name^="${prefix}["]`).forEach(sel => sels.push(sel));
+        const readSrcMap = () => {
+            const map = {};
+            document.querySelectorAll(`select[name^="${srcTeacherPrefix}["]`).forEach(sel => {
+                const cid = getCourseId(sel.name);
+                if (!cid) return;
+                map[cid] = {
+                    values: Array.from(sel.selectedOptions).map(o => o.value),
+                    students: (document.querySelector(`input[name="${srcCountPrefix}[${cid}]"]`) || {}).value || ''
+                };
             });
-            return sels;
+            return map;
         };
 
-        const ensureOptionsExist = (sel, values) => {
-            values.forEach(v => {
-                if (!sel.querySelector(`option[value="${CSS.escape(v)}"]`)) {
-                    const label = baseLabelByValue[v] || v;
-                    sel.add(new Option(label, v, false, false));
-                }
-            });
-        };
+        const applyToDest = (srcMap) => {
+            document.querySelectorAll(`select[name^="${dstTeacherPrefix}["]`).forEach(dstSel => {
+                const cid = getCourseId(dstSel.name);
+                if (!cid || !srcMap[cid]) return;
+                const { values, students } = srcMap[cid];
 
-        const selectValues = (sel, values) => {
-            if (window.$ && $(sel).data('select2')) {
-                if (mode === 'append') {
-                    const current = $(sel).val() || [];
-                    const merged = Array.from(new Set([ ...current.map(String), ...values ]));
-                    $(sel).val(merged).trigger('change');
-                } else {
-                    $(sel).val(values).trigger('change');
-                }
-            } else {
-                const want = new Set(values.map(String));
-                if (mode === 'append') {
-                    // keep existing selected, add new
-                    Array.from(sel.options).forEach(o => {
-                        if (o.selected) want.add(String(o.value));
-                    });
-                }
-                Array.from(sel.options).forEach(o => {
-                    o.selected = want.has(String(o.value));
+                // ensure options exist (edge case)
+                values.forEach(v => {
+                    if (!dstSel.querySelector(`option[value="${v}"]`)) {
+                        dstSel.add(new Option(v, v, false, false));
+                    }
                 });
-            }
-        };
 
-        const copyNow = () => {
-            const values = readSelectedValues();
-            if (values.length === 0) return; // nothing to copy
-            const dests = collectDestSelects();
-            dests.forEach(sel => {
-                // If you ever need per-course filtering, you can use getCourseId(sel.name) here
-                ensureOptionsExist(sel, values);
-                selectValues(sel, values);
+                if (window.$ && $(dstSel).data('select2')) {
+                    $(dstSel).val(values).trigger('change');
+                } else {
+                    Array.from(dstSel.options).forEach(o => o.selected = values.includes(o.value));
+                }
+
+                const dstCount = document.querySelector(`input[name="${dstCountPrefix}[${cid}]"]`);
+                if (dstCount && !dstCount.value && (students ?? '') !== '') {
+                    dstCount.value = students; // only fill if empty
+                }
             });
         };
 
-        // Trigger on check (for toggles) or click (if you later switch to a button)
-        trigger.addEventListener('change', () => {
-            if (trigger.type === 'checkbox' && !trigger.checked) return;
-            copyNow();
-        });
-        trigger.addEventListener('click', (e) => {
-            if (trigger.type !== 'checkbox') copyNow();
+        master.addEventListener('change', () => {
+            if (!master.checked) return;
+            const srcMap = readSrcMap();
+            applyToDest(srcMap);
         });
     }
 </script>
-
 
 @stack('scripts')
 </body>
