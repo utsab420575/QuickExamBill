@@ -31,7 +31,7 @@
                         <h2 class="card-title">Select Regular Session</h2>
                     </header>
                     <div class="card-body">
-                        <form class="form-horizontal form-bordered" method="post" action="{{route('statement.regular.generate')}}">
+                        <form class="form-horizontal form-bordered" method="post" action="{{route('statement.regular.generate')}}" target="_blank">
                             @csrf
                             <div class="form-group row pb-1">
                                 <label class="col-lg-3 control-label text-lg-end pt-2">Select Session</label>

@@ -2,43 +2,67 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Exam Bill Regular</title>
+    @php
+        $examTypeId   = isset($exam_type) ? (int)$exam_type : (int)($session_info->exam_type_id ?? 0);
+        $examTypeName = $examTypeId === 1 ? 'Regular' : ($examTypeId === 2 ? 'Review' : 'Unknown');
+
+        $sessionName  = $session_info->session ?? '';
+        $yearText     = $session_info->year ?? '';
+        $semesterText = $session_info->semester ?? '';
+    @endphp
+
+    <title>{{ $sessionName }}_{{ $yearText }}_{{ $semesterText }}_{{ $examTypeName }}</title>
     <style>
+        /* Page + base */
+        @page {
+            size: Legal portrait;              /* Explicitly use Legal paper in portrait */
+            margin: 5mm 12mm 5mm 12mm;
+        }
+
+        html, body {
+            /* Helps some browsers avoid auto-scaling surprises when printing */
+            width: 216mm;                      /* Legal width */
+            min-height: 356mm;                 /* Legal height (not fixed so pages can flow) */
+            font-family: "Times New Roman", serif;
+            font-size: 12px;
+        }
+
         @media print {
             thead { display: table-header-group; }
             tfoot { display: table-footer-group; }
             tr, th, td { page-break-inside: avoid; }
             h3 { page-break-after: avoid; break-after: avoid; }
-        }
 
-        /* Page + base */
-        @page {
-            margin: 5mm 12mm 5mm 12mm;
-        }
-
-        body {
-            font-family: "Times New Roman", serif;
-            font-size: 12px;
+            /* Keep colors (if any) accurate when printing */
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
 
         /* Shared table base */
-        .header_table, .body_table_1, .body_table_2 , .body_table_4,.body_table_5,.body_table_9,.body_table_8_a,.body_table_8_a,.body_table_8_b,.body_table_10_a,.body_table_10_b,.body_table_8_d{
+        .header_table,
+        .body_table_1,
+        .body_table_2,
+        .body_table_4,
+        .body_table_5,
+        .body_table_9,
+        .body_table_8_a,
+        .body_table_8_b,
+        .body_table_10_a,
+        .body_table_10_b,
+        .body_table_8_d {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed; /* keeps widths stable in PDF */
+            table-layout: fixed; /* keeps widths stable when printing */
         }
 
         /* Header */
         .header_table td {
             text-align: center;
             font-size: 13px;
+            vertical-align: middle;
         }
 
         /* Body table 1 */
-        .body_table_1 {
-            font-size: 13px;
-        }
-
+        .body_table_1 { font-size: 13px; }
         .body_table_1 th,
         .body_table_1 td {
             border: 1px solid #000;
@@ -49,10 +73,7 @@
         }
 
         /* Body table 2 */
-        .body_table_2 {
-            font-size: 13px;
-        }
-
+        .body_table_2 { font-size: 13px; }
         .body_table_2 th,
         .body_table_2 td {
             border: 1px solid #000;
@@ -62,6 +83,7 @@
             word-wrap: break-word;
         }
 
+        /* Body table 4 */
         .body_table_4 th,
         .body_table_4 td {
             border: 1px solid #000;
@@ -71,6 +93,7 @@
             word-wrap: break-word;
         }
 
+        /* Body table 5 */
         .body_table_5 th,
         .body_table_5 td {
             border: 1px solid #000;
@@ -80,6 +103,7 @@
             word-wrap: break-word;
         }
 
+        /* Body table 9 */
         .body_table_9 th,
         .body_table_9 td {
             border: 1px solid #000;
@@ -89,6 +113,7 @@
             word-wrap: break-word;
         }
 
+        /* Body table 8.a */
         .body_table_8_a th,
         .body_table_8_a td {
             border: 1px solid #000;
@@ -98,6 +123,7 @@
             word-wrap: break-word;
         }
 
+        /* Body table 8.b */
         .body_table_8_b th,
         .body_table_8_b td {
             border: 1px solid #000;
@@ -107,6 +133,7 @@
             word-wrap: break-word;
         }
 
+        /* Body table 10.a */
         .body_table_10_a th,
         .body_table_10_a td {
             border: 1px solid #000;
@@ -116,6 +143,7 @@
             word-wrap: break-word;
         }
 
+        /* Body table 10.b */
         .body_table_10_b th,
         .body_table_10_b td {
             border: 1px solid #000;
@@ -125,6 +153,7 @@
             word-wrap: break-word;
         }
 
+        /* Body table 8.d */
         .body_table_8_d th,
         .body_table_8_d td {
             border: 1px solid #000;
@@ -135,22 +164,13 @@
         }
 
         /* Utilities */
-        .page-break {
-            page-break-after: always;
-        }
+        .page-break { page-break-after: always; }
 
-        td.textstart {
-            text-align: left;
-        }
-
-        td.textend {
-            text-align: right;
-        }
-
-        td.textcenter {
-            text-align: center;
-        }
+        td.textstart { text-align: left; }
+        td.textend   { text-align: right; }
+        td.textcenter{ text-align: center; }
     </style>
+
 </head>
 <body>
 
@@ -164,43 +184,57 @@
 @hasanyrole('Teacher|Admin|SuperAdmin')
 
 {{-- Repeatable Header --}}
-<table class="header_table" style="table-layout: fixed;">
+<table class="header_table" style="table-layout: fixed; width:100%;">
     <colgroup>
-        <col style="width: 15%;">
-        <col style="width: 35%;">
-        <col style="width: 20%;">
-        <col style="width: 30%;">
+        <col style="width: 25%;">
+        <col style="width: 25%;">
+        <col style="width: 25%;">
+        <col style="width: 25%;">
     </colgroup>
 
+    <!-- Logo Row -->
     <tr>
-        <td colspan="1" style="text-align: right; padding: 20px 0 0 0;">
-            <img src="{{ public_path('images/logo_duet.png') }}" style="width: 50px;">
-        </td>
-        <td colspan="3" style="text-align: left; padding: 20px 0 0 35px;">
-            <strong>Dhaka University of Engineering &amp; Technology, Gazipur</strong><br>
-            <span style="display:inline-block; margin-left:100px; margin-top:5px;">Gazipur-1707</span>
+        <td colspan="4" style="text-align: center; padding: 10px 0;">
+            <img src="{{ asset('images/logo_duet.png') }}" style="width: 60px;">
         </td>
     </tr>
 
+    <!-- University Name -->
     <tr>
-        <td colspan="4" style="padding: 10px 0;">
-            <div style="margin-left:5px; font-weight:bold;">(Department of Architecture)</div>
+        <td colspan="4" style="text-align: center; font-weight: bold; font-size: 15px; padding-top: 5px;">
+            Dhaka University of Engineering &amp; Technology, Gazipur
         </td>
     </tr>
 
+    <!-- Address -->
     <tr>
-        <td style="text-align:right; padding-right:10px;">Bachelor in Architecture</td>
-        <td>
-            <span>{{ $yearText }} year {{ $semesterText }} semester</span>
+        <td colspan="4" style="text-align: center; font-size: 13px;">
+            Gazipur-1707
         </td>
-        <td style="text-align:left; padding-left:40px;">
-                <span style="font-weight:bold">
-                    {{ isset($exam_type) && (int)$exam_type === 2 ? 'Review' : 'Regular' }}
-                </span>
+    </tr>
+
+    <!-- Department -->
+    <tr>
+        <td colspan="4" style="text-align: center; font-weight: bold; padding: 5px 0;">
+            (Department of Architecture)
         </td>
-        <td style="text-align:right;">Examination: {{ $session_info->session ?? '' }}</td>
+    </tr>
+
+    <!-- Exam Info -->
+    <tr>
+        <td style="text-align:left; padding-left:10px;">Bachelor in Architecture</td>
+        <td style="text-align:center;">
+            {{ $yearText }} year {{ $semesterText }} semester
+        </td>
+        <td style="text-align:center; font-weight:bold;">
+            {{ isset($exam_type) && (int)$exam_type === 2 ? 'Review' : 'Regular' }}
+        </td>
+        <td style="text-align:right; padding-right:10px;">
+            Examination: {{ $session_info->session ?? '' }}
+        </td>
     </tr>
 </table>
+
 
 {{-- A) Moderation Committee --}}
 @if($assigns_order_1->isNotEmpty())
@@ -741,6 +775,7 @@
         </tbody>
     </table>
 @endif
+
 
 {{-- I) (order 10.b) --}}
 @if($assigns_order_10_b->isNotEmpty())

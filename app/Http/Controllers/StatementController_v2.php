@@ -2,31 +2,37 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee;
 use App\Models\ExamType;
+use App\Models\RateAmount;
 use App\Models\RateAssign;
 use App\Models\RateHead;
 use App\Models\Session;
+use App\Models\Teacher;
 use App\Services\ApiData;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
-class StatementReviewController extends Controller
+class StatementController_v2 extends Controller
 {
-    public function reviewSessionShow(){
-        $sessions=ApiData::getReviewSessions();
+    public function regularSessionShow(){
+        $sessions=ApiData::getRegularSessions();
         if($sessions === null) {
             return redirect()->back()->with([
                 'message' => 'Session Import Failed',
                 'alert-type' => 'error',
             ]);
         }
-        return view('statement.session_view.review_session_list',compact('sessions'));
+        return view('statement.session_view.regular_session_list',compact('sessions'));
     }
 
-    public function reviewStatementGenerate(Request $request){
+
+
+    public function regularStatementGenerate(Request $request){
         $sid = $request->sid;
 
-        $exam_type = ExamType::where('type','Review')->value('id');
+        $exam_type = ExamType::where('type','Regular')->value('id');
 
         $session_info = Session::where('ugr_id', $sid)
             ->where('exam_type_id', $exam_type)
@@ -408,38 +414,59 @@ class StatementReviewController extends Controller
         //return $assigns_order_7_e;
 
 
-        //return $assigns_order_1;
-        return view('statement.statement_download.regular_statement', [
-            'session_info'      => $session_info,
-            'exam_type'         => $exam_type,
-            'assigns_order_1'   => $assigns_order_1,
-            'headEmail'         => $headEmail,
 
-            'assigns_order_2'   => $assigns_order_2,
-            'assigns_order_4'   => $assigns_order_4,
-            'assigns_order_5'   => $assigns_order_5,
-            'assigns_order_9'   => $assigns_order_9,
-            'assigns_order_8_a' => $assigns_order_8_a,
-            'assigns_order_8_b' => $assigns_order_8_b,
-            'assigns_order_10_a'=> $assigns_order_10_a,
-            'assigns_order_10_b'=> $assigns_order_10_b,
-            'assigns_order_8_d' => $assigns_order_8_d,
+
+
+
+        //return $assigns_order_1;
+        $pdf = Pdf::loadView('statement.statement_download.regular_statement', [
+            'session_info'     => $session_info,
+            'exam_type'        => $exam_type,
+            'assigns_order_1'  => $assigns_order_1,
+            'headEmail'        => $headEmail,   // pass to Blade
+
+            'assigns_order_2'  => $assigns_order_2,
+
+            'assigns_order_4'  => $assigns_order_4,
+            'assigns_order_5'  => $assigns_order_5,
+            'assigns_order_9'  => $assigns_order_9,
+            'assigns_order_8_a'  => $assigns_order_8_a,
+            'assigns_order_8_b'  => $assigns_order_8_b,
+            'assigns_order_10_a'  => $assigns_order_10_a,
+            'assigns_order_10_b'  => $assigns_order_10_b,
+            'assigns_order_8_d'  => $assigns_order_8_d,
             'assigns_order_8_c' => $assigns_order_8_c,
 
-            'assigns_order_12_a'=> $assigns_order_12_a,
-            'assigns_order_12_b'=> $assigns_order_12_b,
-            'assigns_order_11'  => $assigns_order_11,
+            'assigns_order_12_a' => $assigns_order_12_a,
+            'assigns_order_12_b' => $assigns_order_12_b,
+            'assigns_order_11' => $assigns_order_11,
 
-            'assigns_order_13'  => $assigns_order_13,
-            'assigns_order_16'  => $assigns_order_16,
+            'assigns_order_13' => $assigns_order_13,
+            'assigns_order_16' => $assigns_order_16,
             'assigns_order_7_e' => $assigns_order_7_e,
             'assigns_order_7_f' => $assigns_order_7_f,
             'assigns_order_6_c' => $assigns_order_6_c,
             'assigns_order_6_a' => $assigns_order_6_a,
             'assigns_order_6_d' => $assigns_order_6_d,
             'assigns_order_6_b' => $assigns_order_6_b,
-            'assigns_order_14'  => $assigns_order_14,
-            'assigns_order_15'  => $assigns_order_15,
-        ]);
+            'assigns_order_14' => $assigns_order_14,
+            'assigns_order_15' => $assigns_order_15,
+        ])->setPaper('legal', 'portrait');
+
+        $yearText     = $session_info->year ?? '';
+        $semesterText = $session_info->semester ?? '';
+        $sessionName  = $session_info->session ?? '';
+        $examTypeName =  ExamType::where('type','Regular')->value('type');
+
+        // Build a safe filename
+        $fileName = "{$sessionName}_{$yearText}_{$semesterText}_{$examTypeName}.pdf";
+
+        // Stream PDF
+        return $pdf->stream($fileName);
     }
+
+
+
+
+
 }
