@@ -115,10 +115,10 @@
                                                                             : ($single_course->credithour ? $single_course->credithour * 2 : '');
                                                             @endphp
                                                             <input name="no_of_contact_hour[{{ $single_course->id }}]"
-                                                                   type="number" min="1" step="any" class="form-control"
+                                                                   type="number" min="0" step="any" class="form-control"
                                                                   {{-- value="{{ $single_course->credithour ? $single_course->credithour * 2 : '' }}"--}}
                                                                       value="{{old('no_of_contact_hour.'.$single_course->id, $noOfItems)}}"
-                                                                   required>
+                                                                   >
                                                         </td>
                                                     </tr>
                                                 @else
@@ -164,11 +164,11 @@
                                                                 @endphp
                                                                 <input
                                                                     name="no_of_contact_hour[{{ $single_course->id }}][]"
-                                                                    type="number" min="1" step="any"
+                                                                    type="number" min="0" step="any"
                                                                     class="form-control"
                                                                    {{-- value="{{ $savedNoOfItems??$single_course->credithour ? $single_course->credithour * 2:''}}"--}}
                                                                     value="{{ old('no_of_contact_hour.'.$single_course->id, $noOfItems) }}"
-                                                                    required>
+                                                                    >
                                                             </td>
                                                         </tr>
                                                     @endforeach
