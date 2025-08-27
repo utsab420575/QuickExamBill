@@ -99,11 +99,11 @@
                                                     @endphp
                                                     <label for="scrutinizers_no_of_students">Per Script Rate</label>
                                                     <input name="scrutinizers_no_of_students[{{ $single_course->id }}]"
-                                                           type="number" min="1" step="any"
+                                                           type="number" min="0" step="any"
                                                            class="form-control"
                                                           {{-- value="{{ $courseData->registered_students_count }}"--}}
                                                            value="{{ old('scrutinizers_no_of_students.' . $single_course->id, $noOfItems) }}"
-                                                           required>
+                                                           >
                                                 </div>
                                             </div>
                                         </div>

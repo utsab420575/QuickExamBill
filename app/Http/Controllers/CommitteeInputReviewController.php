@@ -20,12 +20,16 @@ class CommitteeInputReviewController extends Controller
     //showing session list
     public function reviewSessionShow(){
         $sessions=ApiData::getReviewSessions();
+        //dd(ApiData::getReviewSessions());
+        //return $sessions;
         if($sessions === null) {
             return redirect()->back()->with([
                 'message' => 'Session Import Failed',
                 'alert-type' => 'error',
             ]);
         }
+
+        //return $sessions;
         return view('committee_input.session_view.review_session_list',compact('sessions'));
     }
 
