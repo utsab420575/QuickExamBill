@@ -35,7 +35,7 @@ class StatementReviewController extends Controller
         $rateHead_order_1 = RateHead::where('order_no', '1')->first();
 
         $assigns_order_1 = RateAssign::with([
-            'teacher.user','teacher.designation','teacher.department',
+            'teacher.user','teacher.designation','teacher.department','teacher.university', // <-- add university
             'employee.user','employee.designation','employee.department','rateHead'
         ])
             ->where('session_id', $session_info->id)
@@ -44,18 +44,36 @@ class StatementReviewController extends Controller
             ->get();
 
         // Get department head email
-        $head        = ApiData::getHead();
-        $headEmail   = data_get($head, 'teacher.user.email')
-            ?? data_get($head, 'head.teacher.user.email');
+        $head      = ApiData::getHead();
+        $headEmail = data_get($head, 'teacher.user.email') ?? data_get($head, 'head.teacher.user.email');
 
-        //return $headEmail;
+        // Sort: KUET(6) teachers → chairman in bucket → designation_id asc → (optional) name
+        $assigns_order_1 = $assigns_order_1->sortBy([
+            // 1) KUET (university id == 6) teachers first; everyone else after
+            fn($a, $b) =>
+                ((int)! (data_get($a, 'teacher.university.id') === 6))
+                <=>
+                ((int)! (data_get($b, 'teacher.university.id') === 6)),
 
-        // Sort so Chairman appears first
-        $assigns_order_1 = $assigns_order_1->sortByDesc(function($assign) use ($headEmail){
-            $email = data_get($assign, 'teacher.user.email')
-                ?? data_get($assign, 'employee.user.email');
-            return $email === $headEmail ? 1 : 0;
-        })->values();
+            // 2) Chairman first within each group
+            function ($a, $b) use ($headEmail) {
+                $ea = data_get($a, 'teacher.user.email') ?? data_get($a, 'employee.user.email');
+                $eb = data_get($b, 'teacher.user.email') ?? data_get($b, 'employee.user.email');
+                return (int)($eb === $headEmail) <=> (int)($ea === $headEmail);
+            },
+
+            // 3) Then by designation id (ascending)
+            fn($a, $b) =>
+                (int)(data_get($a, 'teacher.designation.id') ?? data_get($a, 'employee.designation.id') ?? 9999)
+                <=>
+                (int)(data_get($b, 'teacher.designation.id') ?? data_get($b, 'employee.designation.id') ?? 9999),
+
+            // 4) (Optional) by name to keep stable order within same designation
+            fn($a, $b) => strcasecmp(
+                data_get($a, 'teacher.user.name') ?? data_get($a, 'employee.user.name') ?? '',
+                data_get($b, 'teacher.user.name') ?? data_get($b, 'employee.user.name') ?? ''
+            ),
+        ])->values();
 
 
 

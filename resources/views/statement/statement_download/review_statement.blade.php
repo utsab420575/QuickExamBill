@@ -323,7 +323,7 @@
                     {{ optional(optional($firstPerson)->user)->name }},
                     {{ optional(optional($firstPerson)->designation)->designation }},
                     {{ optional(optional($firstPerson)->department)->fullname }},
-                    {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                    {{ $firstPerson?->university?->short_name ?? 'DUET' }}, {{ $firstPerson?->university?->city ?? 'Gazipur' }}
                 </td>
                 <td style="text-align:center;">Same as P.S.</td>
                 <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $scriptsText }}</td>
@@ -336,7 +336,7 @@
                         {{ optional(optional($person)->user)->name }},
                         {{ optional(optional($person)->designation)->designation }},
                         {{ optional(optional($person)->department)->fullname }},
-                        {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                        {{ $person?->university?->short_name ?? 'DUET' }}, {{ $person?->university?->city ?? 'Gazipur' }}
                     </td>
                     <td style="text-align:center;">-Do-</td>
                 </tr>
@@ -391,7 +391,7 @@
                     {{ optional(optional($firstPerson)->user)->name }},
                     {{ optional(optional($firstPerson)->designation)->designation }},
                     {{ optional(optional($firstPerson)->department)->fullname }},
-                    {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                    {{ $firstPerson?->university?->short_name ?? 'DUET' }}, {{ $firstPerson?->university?->city ?? 'Gazipur' }}
                 </td>
                 <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $studentCount }}×2</td>
             </tr>
@@ -404,7 +404,7 @@
                         {{ optional(optional($person)->user)->name }},
                         {{ optional(optional($person)->designation)->designation }},
                         {{ optional(optional($person)->department)->fullname }},
-                        {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                        {{ $person?->university?->short_name ?? 'DUET' }}, {{ $person?->university?->city ?? 'Gazipur' }}
                     </td>
                 </tr>
             @endforeach
@@ -459,7 +459,7 @@
                     {{ optional(optional($firstPerson)->user)->name }},
                     {{ optional(optional($firstPerson)->designation)->designation }},
                     {{ optional(optional($firstPerson)->department)->fullname }},
-                    {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                    {{ $firstPerson?->university?->short_name ?? 'DUET' }}, {{ $firstPerson?->university?->city ?? 'Gazipur' }}
                 </td>
                 <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $studentCount }}</td>
             </tr>
@@ -472,7 +472,7 @@
                         {{ optional(optional($person)->user)->name }},
                         {{ optional(optional($person)->designation)->designation }},
                         {{ optional(optional($person)->department)->fullname }},
-                        {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                        {{ $person?->university?->short_name ?? 'DUET' }}, {{ $person?->university?->city ?? 'Gazipur' }}
                     </td>
                 </tr>
             @endforeach
@@ -530,7 +530,7 @@
                     {{ optional(optional($firstPerson)->user)->name }},
                     {{ optional(optional($firstPerson)->designation)->designation }},
                     {{ optional(optional($firstPerson)->department)->fullname }},
-                    {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                    {{ $firstPerson?->university?->short_name ?? 'DUET' }}, {{ $firstPerson?->university?->city ?? 'Gazipur' }}
                 </td>
                 <td  style="text-align:center;">{{ $scriptsText }}</td>
                 <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $studentCount }}</td>
@@ -544,7 +544,7 @@
                         {{ optional(optional($person)->user)->name }},
                         {{ optional(optional($person)->designation)->designation }},
                         {{ optional(optional($person)->department)->fullname }},
-                        {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                        {{ $person?->university?->short_name ?? 'DUET' }}, {{ $person?->university?->city ?? 'Gazipur' }}
                     </td>
                     <td  style="text-align:center;">{{ $scriptsText }}</td>
 
@@ -603,7 +603,7 @@
                     {{ optional(optional($firstPerson)->user)->name }},
                     {{ optional(optional($firstPerson)->designation)->designation }},
                     {{ optional(optional($firstPerson)->department)->fullname }},
-                    {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                    {{ $firstPerson?->university?->short_name ?? 'DUET' }}, {{ $firstPerson?->university?->city ?? 'Gazipur' }}
                 </td>
                 <td  style="text-align:center;">{{ $scriptsText }}</td>
                 <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $studentCount }}</td>
@@ -617,7 +617,7 @@
                         {{ optional(optional($person)->user)->name }},
                         {{ optional(optional($person)->designation)->designation }},
                         {{ optional(optional($person)->department)->fullname }},
-                        {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                        {{ $person?->university?->short_name ?? 'DUET' }}, {{ $person?->university?->city ?? 'Gazipur' }}
                     </td>
                     <td  style="text-align:center;">{{ $scriptsText }}</td>
 
@@ -676,7 +676,7 @@
                     {{ optional(optional($firstPerson)->user)->name }},
                     {{ optional(optional($firstPerson)->designation)->designation }},
                     {{ optional(optional($firstPerson)->department)->fullname }},
-                    {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                    {{ $firstPerson?->university?->short_name ?? 'DUET' }}, {{ $firstPerson?->university?->city ?? 'Gazipur' }}
                 </td>
                 <td  style="text-align:center;">{{ $scriptsText }}</td>
                 <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $studentCount }}</td>
@@ -690,7 +690,7 @@
                         {{ optional(optional($person)->user)->name }},
                         {{ optional(optional($person)->designation)->designation }},
                         {{ optional(optional($person)->department)->fullname }},
-                        {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                        {{ $person?->university?->short_name ?? 'DUET' }}, {{ $person?->university?->city ?? 'Gazipur' }}
                     </td>
                     <td  style="text-align:center;">{{ $scriptsText }}</td>
 
@@ -749,7 +749,7 @@
                     {{ optional(optional($firstPerson)->user)->name }},
                     {{ optional(optional($firstPerson)->designation)->designation }},
                     {{ optional(optional($firstPerson)->department)->fullname }},
-                    {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                    {{ $firstPerson?->university?->short_name ?? 'DUET' }}, {{ $firstPerson?->university?->city ?? 'Gazipur' }}
                 </td>
                 <td  style="text-align:center;">{{ $scriptsText }}</td>
                 <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $studentCount }}</td>
@@ -763,7 +763,7 @@
                         {{ optional(optional($person)->user)->name }},
                         {{ optional(optional($person)->designation)->designation }},
                         {{ optional(optional($person)->department)->fullname }},
-                        {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                        {{ $person?->university?->short_name ?? 'DUET' }}, {{ $person?->university?->city ?? 'Gazipur' }}
                     </td>
                     <td  style="text-align:center;">{{ $scriptsText }}</td>
 
@@ -823,7 +823,7 @@
                     {{ optional(optional($firstPerson)->user)->name }},
                     {{ optional(optional($firstPerson)->designation)->designation }},
                     {{ optional(optional($firstPerson)->department)->fullname }},
-                    {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                    {{ $firstPerson?->university?->short_name ?? 'DUET' }}, {{ $firstPerson?->university?->city ?? 'Gazipur' }}
                 </td>
                 <td  style="text-align:center;">{{ $scriptsText }}</td>
                 <td rowspan="{{ $rowspan }}" style="text-align:center;">{{ $studentCount }}</td>
@@ -837,7 +837,7 @@
                         {{ optional(optional($person)->user)->name }},
                         {{ optional(optional($person)->designation)->designation }},
                         {{ optional(optional($person)->department)->fullname }},
-                        {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                        {{ $person?->university?->short_name ?? 'DUET' }}, {{ $person?->university?->city ?? 'Gazipur' }}
                     </td>
                     <td  style="text-align:center;">{{ $scriptsText }}</td>
 
@@ -890,7 +890,7 @@
                     {{ optional(optional($firstPerson)->user)->name }},
                     {{ optional(optional($firstPerson)->designation)->designation }},
                     {{ optional(optional($firstPerson)->department)->fullname }},
-                    {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                    {{ $firstPerson?->university?->short_name ?? 'DUET' }}, {{ $firstPerson?->university?->city ?? 'Gazipur' }}
                 </td>
                 <td style="text-align:center;">
                     {{ $first->course_code }}<br>
@@ -1343,7 +1343,7 @@
                 <td style="text-align:center;">{{ $loop->iteration }}</td>
                 <td style="text-align:left;">
                     {{ $name }}@if($des), {{ $des }}@endif
-                    @if($dept), {{ $dept }}@endif, {{ $assign->teacher?->university?->short_name ?? 'DUET' }}, {{ $assign->teacher?->university?->city ?? 'Gazipur' }}
+                    @if($dept), {{ $dept }}@endif, {{ $row->teacher?->university?->short_name ?? 'DUET' }}, {{ $row->teacher?->university?->city ?? 'Gazipur' }}
                 </td>
                 <td style="text-align:center;">{{ $fmt($internal) }}</td>
                 <td style="text-align:center;">{{ $fmt($external) }}</td>
