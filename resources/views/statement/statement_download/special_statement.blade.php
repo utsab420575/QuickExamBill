@@ -1523,7 +1523,13 @@
     };
 
     $examTypeId = isset($exam_type) ? (int)$exam_type : (int)($session_info->exam_type_id ?? 0);
-    $examLabel  = $examTypeId === 1 ? 'Regular' : ($examTypeId === 2 ? 'Review' : null);
+    $examLabel = $examTypeId === 1
+    ? 'Regular'
+    : ($examTypeId === 2
+        ? 'Review'
+        : ($examTypeId === 3
+            ? 'Special'
+            : null));
 
     $yearTxt     = $ordinal($session_info->year ?? 0) . ' year';
     $semesterTxt = $ordinal($session_info->semester ?? 0) . ' Semester';
