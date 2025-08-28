@@ -219,6 +219,14 @@
                                         </a>
                                     </li>
                                 @endcan
+                                @can('report.review.extra.session')
+                                    <li>
+                                        <a class="nav-link {{ request()->routeIs('report.review.extra.session') ? 'text-primary' : '' }}"
+                                           href="{{ route('report.review.extra.session') }}">
+                                            All Review Session Extra
+                                        </a>
+                                    </li>
+                                @endcan
                             </ul>
                         </li>
                     @endif

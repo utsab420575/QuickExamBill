@@ -25,21 +25,67 @@ class ReportReviewController extends Controller
         }
         return view('report.session_view.review_session_list',compact('sessions'));
     }
-    public function reviewReportGenerate(Request $request){
-        $sid=$request->sid;
-        Log::info('📥 Received request to generate Regular Report PDF', ['ugr_session_id' => $sid]);
-        $exam_type_record=ExamType::where('type','Review')->first();
-        $exam_type=$exam_type_record->id;
 
-        $session_info = Session::where('ugr_id', $sid)
-            ->where('exam_type_id',$exam_type)
-            ->first();
-        if (!$session_info) {
-            Log::error('❌ No matching session found', ['ugr_id' => $sid]);
-            abort(404, 'Session not found.');
+
+    public function reviewSessionExtraShow()
+    {
+        $sessionData = ApiData::getReviewSessionExtra(); // should contain ->session
+
+        //return $sessionData;
+
+        // Validate the API data
+        if (!$sessionData || empty($sessionData->session)) {
+            return redirect()->back()->with([
+                'message' => 'Session Import Failed (missing session value).',
+                'alert-type' => 'error',
+            ]);
         }
 
-        Log::info('✅ Session Info Retrieved', $session_info->toArray());
+        // Query: session match, exam_type_id = 2 (review), ugr_id is NULL
+        $sessions = Session::query()
+            ->where('session', $sessionData->session)
+            ->where('exam_type_id', 2)
+            ->whereNull('ugr_id')
+            ->orderBy('id')
+            ->get();
+
+        if ($sessions->isEmpty()) {
+            return redirect()->back()->with([
+                'message' => 'No matching review sessions found.',
+                'alert-type' => 'error',
+            ])->withInput();
+        }
+
+
+        //return $sessions;
+
+        return view('report.session_view.review_session_extra_list', compact('sessions'));
+
+    }
+
+    public function reviewReportGenerate(Request $request){
+        $sid = $request->sid;
+
+        $exam_type = ExamType::where('type','Review')->value('id');
+
+        // try to find session where id = sid and ugr_id is null
+        $session_info = Session::whereNull('ugr_id')
+            ->where('exam_type_id', $exam_type)
+            ->where('id', $sid)
+            ->first();
+
+        // if not found, try where ugr_id = sid
+        if (!$session_info) {
+            $session_info = Session::where('ugr_id', $sid)
+                ->where('exam_type_id', $exam_type)
+                ->first();
+        }
+        //return $session_info;
+        Log::info('📥 Received request to generate Regular Report PDF', ['ugr_session_id' => $sid]);
+        $exam_type_record=ExamType::where('type','Review')->first();
+        //return $exam_type_record;
+        $exam_type=$exam_type_record->id;
+
 
         $teachers = Teacher::with([
             'user',

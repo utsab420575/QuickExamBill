@@ -168,9 +168,13 @@ Route::middleware('auth')->group(function () {
         Route::post('/regular/generate', 'regularReportGenerate')->name('report.regular.generate');
     });
 
-    //For Regular Session
+    //For Review Session
     Route::prefix('report')->controller(ReportReviewController::class)->group(function () {
+        //review session show
         Route::get('/review/session', 'reviewSessionShow')->name('report.review.session');
+        //review extra session show
+        Route::get('/review/extra/session', 'reviewSessionExtraShow')->name('report.review.extra.session');
+        //generate for both review,review extra
         Route::post('/review/generate', 'reviewReportGenerate')->name('report.review.generate');
     });
 
