@@ -227,8 +227,13 @@
             {{ $yearText }} year {{ $semesterText }} semester
         </td>
         <td style="text-align:center; font-weight:bold;">
-            {{ isset($exam_type) && (int)$exam_type === 2 ? 'Review' : 'Regular' }}
+            @if(($session_info->year ?? null) == 6 && ($session_info->semester ?? null) == 3)
+                Special
+            @else
+                {{ isset($exam_type) && (int)$exam_type === 2 ? 'Review' : 'Regular' }}
+            @endif
         </td>
+
         <td style="text-align:right; padding-right:10px;">
             Examination: {{ $session_info->session ?? '' }}
         </td>

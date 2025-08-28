@@ -23,14 +23,55 @@ class StatementReviewController extends Controller
         return view('statement.session_view.review_session_list',compact('sessions'));
     }
 
+    public function reviewSessionExtraShow(){
+        $sessionData = ApiData::getReviewSessionExtra(); // should contain ->session
+
+        //return $sessionData;
+
+        // Validate the API data
+        if (!$sessionData || empty($sessionData->session)) {
+            return redirect()->back()->with([
+                'message' => 'Session Import Failed (missing session value).',
+                'alert-type' => 'error',
+            ]);
+        }
+
+        // Query: session match, exam_type_id = 2 (review), ugr_id is NULL
+        $sessions = Session::query()
+            ->where('session', $sessionData->session)
+            ->where('exam_type_id', 2)
+            ->whereNull('ugr_id')
+            ->orderBy('id')
+            ->get();
+
+        if ($sessions->isEmpty()) {
+            return redirect()->back()->with([
+                'message' => 'No matching review sessions found.',
+                'alert-type' => 'error',
+            ])->withInput();
+        }
+        return view('statement.session_view.review_session_list_extra',compact('sessions'));
+    }
+
     public function reviewStatementGenerate(Request $request){
         $sid = $request->sid;
 
         $exam_type = ExamType::where('type','Review')->value('id');
 
-        $session_info = Session::where('ugr_id', $sid)
+        // try to find session where id = sid and ugr_id is null
+        $session_info = Session::whereNull('ugr_id')
             ->where('exam_type_id', $exam_type)
+            ->where('id', $sid)
             ->first();
+
+        // if not found, try where ugr_id = sid
+        if (!$session_info) {
+            $session_info = Session::where('ugr_id', $sid)
+                ->where('exam_type_id', $exam_type)
+                ->first();
+        }
+
+
 
         $rateHead_order_1 = RateHead::where('order_no', '1')->first();
 

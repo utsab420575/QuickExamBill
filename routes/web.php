@@ -2,11 +2,13 @@
 
 use App\Http\Controllers\CommitteeInputController;
 use App\Http\Controllers\CommitteeInputReviewController;
+use App\Http\Controllers\CommitteeInputSpecialController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ImportExportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReportReviewController;
+use App\Http\Controllers\ReviewSpecialSessionController;
 use App\Http\Controllers\RoleAssignmentController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StatementController;
@@ -105,8 +107,13 @@ Route::middleware('auth')->group(function () {
     Route::prefix('committee/input')->controller(CommitteeInputReviewController::class)->group(function () {
         //show review session list form
         Route::get('review/session', 'reviewSessionShow')->name('committee.input.review.session');
+        Route::get('review/session/extra', 'reviewSessionShowExtra')->name('committee.input.review.session.extra');
+
         //show full form
         Route::post('review/session/form', 'reviewSessionForm')->name('committee.input.review.session.form');
+       /* Route::post('review/session/extra/form', 'reviewSessionExtraForm')->name('committee.input.review.session.extra.form');*/
+
+
         //now store committee wise data to database ;
         Route::post('/review/examination/moderation/committee/store', 'storeExaminationModerationCommittee')->name('committee.input.review.examination.moderation.committee.store');
         Route::post('/review/examiner/paper/setter/store','storeExaminerPaperSetter')->name('committee.input.review.examiner.paper.setter.store');
@@ -119,6 +126,36 @@ Route::middleware('auth')->group(function () {
         Route::post('/review/comparison/committee/store', 'storeComparisonCommittee')->name('committee.input.review.comparison.committee.store');
         Route::post('/review/chairman/coordinator/store', 'storeHonorariumChairman')->name('committee.input.review.chairman.coordinator.store');
     });
+
+
+    //For Review Session
+    Route::prefix('committee/input')->controller(CommitteeInputSpecialController::class)->group(function () {
+        //show review session list form
+        Route::get('special/session', 'specialSessionShow')->name('committee.input.special.session');
+
+
+        //show full form
+        Route::post('special/session/form', 'specialSessionForm')->name('committee.input.special.session.form');
+
+
+
+        //now store committee wise data to database ;
+        Route::post('/special/examination/moderation/committee/store', 'storeExaminationModerationCommittee')->name('committee.input.special.examination.moderation.committee.store');
+        Route::post('/special/examiner/paper/setter/store','storeExaminerPaperSetter')->name('committee.input.special.examiner.paper.setter.store');
+        Route::post('/special/list/scrutinizers/store', 'storeScrutinizers')->name('committee.input.special.scrutinizers.store');
+        Route::post('/special/theory/grade/sheet/store', 'storeReviewTheoryGradeSheet')->name('committee.input.special.theory.grade.sheet.store');
+        Route::post('/special/scrutinizers/theory/grade/sheet/store',  'storeReviewScrutinizersTheoryGradeSheet')->name('committee.input.special.scrutinizers.theory.grade.sheet.store');
+
+        Route::post('/special/stencil/cutting/committee/store', 'storeStencilCuttingCommittee')->name('committee.input.special.stencil.cutting.committee.store');
+        Route::post('/special/printing/question/committee/store', 'storePrintingQuestion')->name('committee.input.special.printing.question.committee.store');
+        Route::post('/special/comparison/committee/store', 'storeComparisonCommittee')->name('committee.input.special.comparison.committee.store');
+        Route::post('/special/chairman/coordinator/store', 'storeHonorariumChairman')->name('committee.input.special.chairman.coordinator.store');
+    });
+
+
+
+
+
 
 
     //For Report
@@ -213,10 +250,18 @@ Route::middleware('auth')->group(function () {
     //For Review Session
     Route::prefix('statement')->controller(StatementReviewController::class)->group(function () {
         Route::get('/review/session', 'reviewSessionShow')->name('statement.review.session');
+        Route::get('/review/extra/session', 'reviewSessionExtraShow')->name('statement.review.extra.session');
         Route::post('/review/generate', 'reviewStatementGenerate')->name('statement.review.generate');
+
     });
 
 
+
+    //review special  route create
+    Route::prefix('session')->controller(ReviewSpecialSessionController::class)->group(function () {
+        Route::get('/add', 'create')->name('session.add');
+        Route::post('/store', 'store')->name('session.store');
+    });
 
 
 

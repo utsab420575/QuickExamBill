@@ -7,7 +7,6 @@ use App\Models\ExamType;
 use App\Models\RateAmount;
 use App\Models\RateAssign;
 use App\Models\RateHead;
-use App\Models\Session;
 use App\Models\Teacher;
 use App\Services\ApiData;
 use App\Services\LocalData;
@@ -16,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
-class CommitteeInputReviewController extends Controller
+class CommitteeInputReviewController_v5 extends Controller
 {
     //showing session list
     public function reviewSessionShow(){
@@ -33,44 +32,6 @@ class CommitteeInputReviewController extends Controller
         //return $sessions;
         return view('committee_input.session_view.review_session_list',compact('sessions'));
     }
-
-
-    public function reviewSessionShowExtra()
-    {
-        $sessionData = ApiData::getReviewSessionExtra(); // should contain ->session
-
-        //return $sessionData;
-
-        // Validate the API data
-        if (!$sessionData || empty($sessionData->session)) {
-            return redirect()->back()->with([
-                'message' => 'Session Import Failed (missing session value).',
-                'alert-type' => 'error',
-            ]);
-        }
-
-        // Query: session match, exam_type_id = 2 (review), ugr_id is NULL
-        $sessions = Session::query()
-            ->where('session', $sessionData->session)
-            ->where('exam_type_id', 2)
-            ->whereNull('ugr_id')
-            ->orderBy('id')
-            ->get();
-
-        if ($sessions->isEmpty()) {
-            return redirect()->back()->with([
-                'message' => 'No matching review sessions found.',
-                'alert-type' => 'error',
-            ])->withInput();
-        }
-
-
-        //return $sessions;
-
-        return view('committee_input.session_view.review_session_list_extra', compact('sessions'));
-
-    }
-
 
     private function getOrCreateRateAmount($rateHeadId, $sessionId, $examTypeId, array $allData)
     {
@@ -151,260 +112,18 @@ class CommitteeInputReviewController extends Controller
             ->orderBy('id') // or any ordering you prefer
             ->get();
 
-        // all theory course with teacher (multi-session payload)
+
+        //all theory course with teacher
+        //all theory course with teacher
         $all_course_with_teacher = ApiData::getSessionWiseTheoryCoursesReview($sid);
+       //return $all_course_with_teacher;
 
-        // 1) Target year/semester from $session_info
-        $targetYear     = (int) ($session_info->year ?? 0);
-        $targetSemester = (int) ($session_info->semester ?? 0);
-
-        // 2) Helper: extract (year, semester) from courseno (first & third digits)
-        $pickYearSemesterFromCourseNo = function (?string $courseno): array {
-            $digits = preg_replace('/\D/', '', (string) $courseno); // keep only digits
-            if (strlen($digits) < 3) return [null, null];           // skip malformed codes
-            return [(int)$digits[0], (int)$digits[2]];              // 1st=year, 3rd=semester
-        };
-
-        // 3) Flatten ALL sessions -> rows
-        $sessions = $all_course_with_teacher->sessions ?? [];
-        $flattenedRows = [];
-        foreach ($sessions as $sess) {
-            foreach (($sess->courses ?? []) as $row) {
-                // each $row has ->courseObject and ->registered_students_count
-                $flattenedRows[] = $row;
-            }
-        }
-
-        // 4) Filter by year/semester pattern, and DEDUPE by course id WHILE KEEPING THE WRAPPER ROW
-        $byCourseId = [];
-        foreach ($flattenedRows as $row) {
-            $course = $row->courseObject ?? null;
-            if (!$course) continue;
-
-            [$yr, $sem] = $pickYearSemesterFromCourseNo($course->courseno ?? '');
-            if ($yr === $targetYear && $sem === $targetSemester) {
-                // Keep the full row so Blade still has courseObject + registered_students_count
-                $byCourseId[$course->id] = $row;
-            }
-        }
-
-        $filteredRows = array_values($byCourseId);
-
-
-        // === 4.5) Merge duplicates that only differ by hyphen/space in courseno ===
-        // Key by a normalized courseno (remove non-alphanumerics, uppercase)
-        // Keep the latest courseObject by id; sum the registered_students_count
-        $bucket = [];
-
-        $normalize = function (?string $code) {
-            // CE 2111, CE-2111, ce-2111 -> CE2111
-            return preg_replace('/[^A-Z0-9]/', '', strtoupper((string) $code));
-        };
-
-        foreach ($filteredRows as $row) {
-            if (!isset($row->courseObject)) continue;
-
-            $course    = $row->courseObject;
-            $origCode  = $course->courseno ?? '';
-            $normCode  = $normalize($origCode);
-            $count     = (int) ($row->registered_students_count ?? 0);
-            $courseId  = (int) ($course->id ?? 0);
-
-            if (!isset($bucket[$normCode])) {
-                // seed
-                $bucket[$normCode] = [
-                    'row'        => $row,              // keep full wrapper (courseObject + registered_students_count)
-                    'latest_id'  => $courseId,         // track latest by id
-                    'coursenos'  => [$origCode],       // collect original courseno variants
-                    'sum_count'  => $count,            // sum of registered_students_count
-                ];
-                continue;
-            }
-
-            // aggregate
-            $bucket[$normCode]['sum_count'] += $count;
-
-            // collect this courseno variant
-            if (!in_array($origCode, $bucket[$normCode]['coursenos'], true)) {
-                $bucket[$normCode]['coursenos'][] = $origCode;
-            }
-
-            // if this is the newer course by id, replace the base row (but keep the running sum & list)
-            if ($courseId > $bucket[$normCode]['latest_id']) {
-                $bucket[$normCode]['row']       = $row;
-                $bucket[$normCode]['latest_id'] = $courseId;
-            }
-        }
-
-        // Build merged rows: latest courseObject stays, code becomes "latest/others", count becomes sum
-        $mergedRows = [];
-        foreach ($bucket as $normCode => $data) {
-            /** @var stdClass $row */
-            $row = $data['row'];
-
-            // Set summed count
-            $row->registered_students_count = $data['sum_count'];
-
-            // courseno display: put latest first, then the other variants
-            $latestCode = $row->courseObject->courseno ?? '';
-            $others     = array_values(array_diff($data['coursenos'], [$latestCode]));
-            if (!empty($others)) {
-                // e.g. "CE 2111/CE-2111/CE2111"
-                $row->courseObject->courseno = $latestCode . '/' . implode('/', $others);
-            }
-
-            $mergedRows[] = $row;
-        }
-
-
-
-        // 5) Overwrite the payload to match what your Blade expects
-        $all_course_with_teacher->courses = $mergedRows;
-        //return $all_course_with_teacher->courses;
-
-// (Optional) If you don't need the original sessions block anymore, you can slim it:
-// unset($all_course_with_teacher->sessions);
-
-// 6) Count for your Blade
-        $number_of_theory_courses = count($mergedRows);
-
-        //return $number_of_theory_courses;
-
-       /* // Count number of theory courses
+        // Count number of theory courses
         $number_of_theory_courses = isset($all_course_with_teacher->courses)
             ? count($all_course_with_teacher->courses)
-            : 0;*/
+            : 0;
 
        // return $number_of_theory_courses;
-
-        //no need to call again for class test(class test for theory course)
-        // $all_course_with_class_test_teacher=ApiData::getSessionWiseTheoryCourses(sid);
-        //all sessional course with teacher
-        $all_sessional_course_with_teacher = ApiData::getSessionWiseSessionalCourses($sid);
-        //all theory sessional courses
-        $all_theory_sessional_courses_with_student_count = ApiData::getSessionWiseTheorySessionalCourses($sid);
-        //all student advisor in specific student
-        $all_advisor_with_student_count = ApiData::getSessionWiseStudentAdvisor($sid);
-        //active head
-        $teacher_head = ApiData::getHead();
-
-        // return response()->json(['$all_course_with_teacher'=>$all_course_with_teacher]);
-        /*return response()->json(['head'=>$all_course_with_class_test_teacher]);*/
-        return view('committee_input.review_form.review_session_form')
-            ->with('sid',$sid)
-            /*->with('teacher_head', $teacher_head)*/
-            /*  ->with('teacher_coordinator', $teacher_coordinator)*/
-            ->with('session_info', $session_info)
-            ->with('exam_type',$exam_type->id)
-            ->with('teachers', $teachers)
-            ->with('employees', $employees)
-            ->with('teacher_head', $teacher_head)
-            ->with('groupedTeachers', $groupedTeachers)
-            ->with('all_course_with_teacher', $all_course_with_teacher)
-            ->with('number_of_theory_courses', $number_of_theory_courses)
-            ->with('all_course_with_class_test_teacher', $all_course_with_teacher)
-            ->with('all_sessional_course_with_teacher', $all_sessional_course_with_teacher)
-            ->with('all_theory_sessional_courses_with_student_count', $all_theory_sessional_courses_with_student_count)
-            ->with('all_advisor_with_student_count', $all_advisor_with_student_count);
-    }
-
-    //no need this ; we can delete this method;
-    public function reviewSessionExtraForm(Request $request)
-    {
-
-        $sid=$request->sid;
-        //return $sid;
-        $exam_type = ExamType::where('type', 'review')->first();
-        $session_info = Session::find($sid);
-        //return $session_info;
-
-        $order = ['Arch', 'CE', 'ChE', 'Chem','CSE','EEE','FE','HSS','IPE','Math','ME','MME','Phy','TE']; // Custom order of departments
-
-        $teachers = Teacher::with('user', 'designation', 'department')
-            ->whereHas('department', function ($query) use ($order) {
-                $query->whereIn('shortname', $order);
-            })
-            ->join('departments', 'teachers.department_id', '=', 'departments.id')
-            ->orderByRaw("FIELD(departments.shortname, '" . implode("','", $order) . "')")
-            ->select('teachers.*') // Select only teacher fields to avoid conflict
-            ->get();
-        //return $teachers;
-
-        // Group by department short name
-        $groupedTeachers = $teachers->groupBy(function ($teacher) {
-            return $teacher->department->fullname ?? 'Unknown';
-        });
-
-        // Move 'Arch' to the beginning
-        $groupedTeachers = $groupedTeachers->sortBy(function ($group, $key) {
-            return $key === 'Architecture' ? 0 : 1;
-        });
-        //return $groupedTeachers;
-
-        $employees = Employee::with('user', 'designation', 'department')
-            ->where('department_id', 2)
-            ->orderBy('id') // or any ordering you prefer
-            ->get();
-
-        // all theory course with teacher (multi-session payload)
-        $all_course_with_teacher = ApiData::getSessionWiseTheoryCoursesReview($sid);
-        //return $all_course_with_teacher;
-
-        // 1) Target year/semester from $session_info
-        $targetYear     = (int) ($session_info->year ?? 0);
-        $targetSemester = (int) ($session_info->semester ?? 0);
-        //return $targetSemester;
-
-
-        // 2) Helper: extract (year, semester) from courseno (first & third digits)
-        $pickYearSemesterFromCourseNo = function (?string $courseno): array {
-            $digits = preg_replace('/\D/', '', (string) $courseno); // keep only digits
-            if (strlen($digits) < 3) return [null, null];           // skip malformed codes
-            return [(int)$digits[0], (int)$digits[2]];              // 1st=year, 3rd=semester
-        };
-
-        // 3) Flatten ALL sessions -> rows
-        $sessions = $all_course_with_teacher->sessions ?? [];
-        $flattenedRows = [];
-        foreach ($sessions as $sess) {
-            foreach (($sess->courses ?? []) as $row) {
-                // each $row has ->courseObject and ->registered_students_count
-                $flattenedRows[] = $row;
-            }
-        }
-
-        // 4) Filter by year/semester pattern, and DEDUPE by course id WHILE KEEPING THE WRAPPER ROW
-        $byCourseId = [];
-        foreach ($flattenedRows as $row) {
-            $course = $row->courseObject ?? null;
-            if (!$course) continue;
-
-            [$yr, $sem] = $pickYearSemesterFromCourseNo($course->courseno ?? '');
-            if ($yr === $targetYear && $sem === $targetSemester) {
-                // Keep the full row so Blade still has courseObject + registered_students_count
-                $byCourseId[$course->id] = $row;
-            }
-        }
-
-        $filteredRows = array_values($byCourseId);
-
-        // 5) Overwrite the payload to match what your Blade expects
-        $all_course_with_teacher->courses = $filteredRows;
-        //return $all_course_with_teacher->courses;
-
-// (Optional) If you don't need the original sessions block anymore, you can slim it:
-// unset($all_course_with_teacher->sessions);
-
-// 6) Count for your Blade
-        $number_of_theory_courses = count($filteredRows);
-
-
-        /* // Count number of theory courses
-         $number_of_theory_courses = isset($all_course_with_teacher->courses)
-             ? count($all_course_with_teacher->courses)
-             : 0;*/
-
-        // return $number_of_theory_courses;
 
         //no need to call again for class test(class test for theory course)
         // $all_course_with_class_test_teacher=ApiData::getSessionWiseTheoryCourses(sid);
@@ -511,7 +230,6 @@ class CommitteeInputReviewController extends Controller
 
             //ensure session exist
             $session_info = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
-
 
 
             // Step 4: Ensure  RateAmount exists(Rate Amount Exist for Rate Head=1)

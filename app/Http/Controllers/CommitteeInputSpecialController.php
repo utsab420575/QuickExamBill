@@ -16,28 +16,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
-class CommitteeInputReviewController extends Controller
+class CommitteeInputSpecialController extends Controller
 {
     //showing session list
-    public function reviewSessionShow(){
-        $sessions=ApiData::getReviewSessions();
-        //dd(ApiData::getReviewSessions());
-        //return $sessions;
-        if($sessions === null) {
-            return redirect()->back()->with([
-                'message' => 'Session Import Failed',
-                'alert-type' => 'error',
-            ]);
-        }
-
-        //return $sessions;
-        return view('committee_input.session_view.review_session_list',compact('sessions'));
-    }
-
-
-    public function reviewSessionShowExtra()
-    {
-        $sessionData = ApiData::getReviewSessionExtra(); // should contain ->session
+    public function specialSessionShow(){
+        $sessionData = ApiData::getSpecialSession(); // should contain ->session
 
         //return $sessionData;
 
@@ -52,14 +35,14 @@ class CommitteeInputReviewController extends Controller
         // Query: session match, exam_type_id = 2 (review), ugr_id is NULL
         $sessions = Session::query()
             ->where('session', $sessionData->session)
-            ->where('exam_type_id', 2)
+            ->where('exam_type_id', 3)
             ->whereNull('ugr_id')
             ->orderBy('id')
             ->get();
 
         if ($sessions->isEmpty()) {
             return redirect()->back()->with([
-                'message' => 'No matching review sessions found.',
+                'message' => 'No matching Specail sessions found.',
                 'alert-type' => 'error',
             ])->withInput();
         }
@@ -67,9 +50,10 @@ class CommitteeInputReviewController extends Controller
 
         //return $sessions;
 
-        return view('committee_input.session_view.review_session_list_extra', compact('sessions'));
-
+        return view('committee_input.session_view.special_session_list', compact('sessions'));
     }
+
+
 
 
     private function getOrCreateRateAmount($rateHeadId, $sessionId, $examTypeId, array $allData)
@@ -115,11 +99,16 @@ class CommitteeInputReviewController extends Controller
 
         return $rateHead;
     }
-    public function reviewSessionForm(Request $request)
+    public function specialSessionForm(Request $request)
     {
 
+        //this is for get special session id from ugr
+        $sessionData = ApiData::getSpecialSession(); //full row
+        $sid_specical=$sessionData->id;//this is id from ugr of 6/3 session; this will help me for get finding courses
+
+        //this id for local session table id ; for special session 2021-2022 1/2,2/2 etc.
         $sid=$request->sid;
-        $exam_type = ExamType::where('type', 'review')->first();
+        $exam_type = ExamType::where('type', 'special')->first();
         $session_info = LocalData::getOrCreateRegularSession($sid,$exam_type->id);
         //return $session_info;
 
@@ -152,7 +141,7 @@ class CommitteeInputReviewController extends Controller
             ->get();
 
         // all theory course with teacher (multi-session payload)
-        $all_course_with_teacher = ApiData::getSessionWiseTheoryCoursesReview($sid);
+        $all_course_with_teacher = ApiData::getSessionWiseTheoryCoursesSpecial();
 
         // 1) Target year/semester from $session_info
         $targetYear     = (int) ($session_info->year ?? 0);
@@ -260,7 +249,7 @@ class CommitteeInputReviewController extends Controller
 
         // 5) Overwrite the payload to match what your Blade expects
         $all_course_with_teacher->courses = $mergedRows;
-        //return $all_course_with_teacher->courses;
+        return $all_course_with_teacher->courses;
 
 // (Optional) If you don't need the original sessions block anymore, you can slim it:
 // unset($all_course_with_teacher->sessions);
@@ -270,27 +259,27 @@ class CommitteeInputReviewController extends Controller
 
         //return $number_of_theory_courses;
 
-       /* // Count number of theory courses
-        $number_of_theory_courses = isset($all_course_with_teacher->courses)
-            ? count($all_course_with_teacher->courses)
-            : 0;*/
+        /* // Count number of theory courses
+         $number_of_theory_courses = isset($all_course_with_teacher->courses)
+             ? count($all_course_with_teacher->courses)
+             : 0;*/
 
-       // return $number_of_theory_courses;
+        // return $number_of_theory_courses;
 
         //no need to call again for class test(class test for theory course)
         // $all_course_with_class_test_teacher=ApiData::getSessionWiseTheoryCourses(sid);
         //all sessional course with teacher
-        $all_sessional_course_with_teacher = ApiData::getSessionWiseSessionalCourses($sid);
+        $all_sessional_course_with_teacher = ApiData::getSessionWiseSessionalCourses($sid_specical);
         //all theory sessional courses
-        $all_theory_sessional_courses_with_student_count = ApiData::getSessionWiseTheorySessionalCourses($sid);
+        $all_theory_sessional_courses_with_student_count = ApiData::getSessionWiseTheorySessionalCourses($sid_specical);
         //all student advisor in specific student
-        $all_advisor_with_student_count = ApiData::getSessionWiseStudentAdvisor($sid);
+        $all_advisor_with_student_count = ApiData::getSessionWiseStudentAdvisor($sid_specical);
         //active head
         $teacher_head = ApiData::getHead();
 
         // return response()->json(['$all_course_with_teacher'=>$all_course_with_teacher]);
         /*return response()->json(['head'=>$all_course_with_class_test_teacher]);*/
-        return view('committee_input.review_form.review_session_form')
+        return view('committee_input.special_form.special_session_form')
             ->with('sid',$sid)
             /*->with('teacher_head', $teacher_head)*/
             /*  ->with('teacher_coordinator', $teacher_coordinator)*/
@@ -745,7 +734,7 @@ class CommitteeInputReviewController extends Controller
                 $courseno = $request->input("courseno.$courseId");
                 $coursetitle = $request->input("coursetitle.$courseId");
                 //$registered_students_count = $request->input("registered_students_count.$courseId");
-               // $teacher_count = $request->input("teacher_count.$courseId");
+                // $teacher_count = $request->input("teacher_count.$courseId");
 
 
                 Log::info('📘 Examiner Course-wise Input Data', [
@@ -1604,6 +1593,91 @@ class CommitteeInputReviewController extends Controller
             return response()->json(['message' => 'Something went wrong.', 'error' => $e->getMessage()], 500);
         }
     }
+
+
+    //order=14
+    public function storeHonorariumCoordinator(Request $request)
+    {
+        // If validation passes, extract values
+        $teacherId = $request->input('coordinator_id');
+        $coordinator_rate = $request->input('coordinator_amount');
+        $sessionId=$request->input('sid');
+        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type = $exam_type_record->id;
+
+        Log::info('📥 Received Coordinator Data', [
+            'session_id' => $sessionId,
+            'teacher_data' => $teacherId,
+            'rate' => $coordinator_rate
+        ]);
+
+        try {
+            // Step 1: Get or create session
+            $session = LocalData::getOrCreateRegularSession($sessionId,$exam_type);
+            Log::info('📘 Session Info:', $session->toArray());
+
+            DB::beginTransaction();
+
+            // Step 2: Get or create RateHead
+            $rateHead = $this->getOrCreateRateHead('14', [
+                'head' => 'Course Co-ordinator Fee',
+                'dist_type' => 'Individual',
+                'is_course' => 0,
+                'is_student_count' => 0,
+                'marge_with' => null,
+                'status' => 1,
+            ]);
+
+            Log::info('✅ RateHead confirmed', $rateHead->toArray());
+
+            // Step 3: Get or create RateAmount
+            $rateAmount = $this->getOrCreateRateAmount(
+                $rateHead->id,
+                $session->id,
+                $exam_type,
+                [
+                    'default_rate' => $coordinator_rate,
+                    'min_rate'     => null,
+                    'max_rate'     => null,
+                ]
+            );
+
+            Log::info('✅ RateAmount Confirmed', $rateAmount->toArray());
+
+            // Step 4: Create RateAssign
+
+            Log::info('📘 Preparation Of RateAssign', [
+                'teacher_id' => $teacherId,
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'total_amount' => $coordinator_rate,
+                'exam_type_id'=>$exam_type,
+            ]);
+
+            RateAssign::where('session_id', $session->id)
+                ->where('exam_type_id', $exam_type)
+                ->where('rate_head_id', $rateHead->id)
+                ->delete();
+
+            $rateAssign = RateAssign::create([
+                'rate_head_id' => $rateHead->id,
+                'session_id' => $session->id,
+                'teacher_id' => $teacherId,
+                'total_amount' => $coordinator_rate,
+                'exam_type_id'=>$exam_type,
+            ]);
+            Log::info('📝 RateAssign Created:', $rateAssign->toArray());
+
+            DB::commit();
+
+            return response()->json(['message' => 'Course Co-ordinator Honorarium saved successfully!']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ Error Storing Chairman Honorarium:', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Something went wrong!'], 500);
+        }
+    }
+
 
     public function storeHonorariumChairman(Request $request)
     {

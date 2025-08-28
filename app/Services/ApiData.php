@@ -57,33 +57,98 @@ class ApiData{
         return $data->sessions ?? null;
     }
 
-    public static function getSessionWiseTheoryCoursesRegular($sid)
-{
-    $response = Http::withHeaders([
-        'X-API-KEY' => 'EXAMBILL_98745012'
-    ])->get("https://ugr.duetbd.org/api/session-wise-theory-courses-regular/{$sid}");
-
-    // Handle response
-    if ($response->failed()) {
-        Log::error('Theory course fetch failed', [
-            'status' => $response->status(),
-            'body' => $response->body()
-        ]);
-
-        return [
-            'error' => 'Unable to fetch data',
-            'status_code' => $response->status(),
-        ];
-    }
-
-    return json_decode($response->body()); // Returns a stdClass object
-}
-
-    public static function getSessionWiseTheoryCoursesReview($sid)
+    public static function getReviewSessionExtra()
     {
         $response = Http::withHeaders([
             'X-API-KEY' => 'EXAMBILL_98745012'
-        ])->get("https://ugr.duetbd.org/api/session-wise-theory-courses-review/{$sid}");
+        ])->get('https://ugr.duetbd.org/api/architecture/latest-inactive-session-architecture');
+
+        if ($response->failed()) {
+            Log::error('Session import failed from API.');
+            return null;
+        }
+
+        $data = json_decode($response->body());
+
+        // correct key is "session", not "sessions"
+        return $data->session ?? null;
+    }
+
+
+    public static function getSpecialSession()
+    {
+        $response = Http::withHeaders([
+            'X-API-KEY' => 'EXAMBILL_98745012'
+        ])->get('https://ugr.duetbd.org/api/architecture/latest-special-session-architecture');
+
+        if ($response->failed()) {
+            Log::error('Session import failed from API.');
+            return null;
+        }
+
+        $data = json_decode($response->body());
+
+        // correct key is "session", not "sessions"
+        return $data->session ?? null;
+    }
+
+
+
+
+    public static function getSessionWiseTheoryCoursesRegular($sid)
+    {
+        $response = Http::withHeaders([
+            'X-API-KEY' => 'EXAMBILL_98745012'
+        ])->get("https://ugr.duetbd.org/api/session-wise-theory-courses-regular/{$sid}");
+
+        // Handle response
+        if ($response->failed()) {
+            Log::error('Theory course fetch failed', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            return [
+                'error' => 'Unable to fetch data',
+                'status_code' => $response->status(),
+            ];
+        }
+
+        return json_decode($response->body()); // Returns a stdClass object
+    }
+
+    public static function getSessionWiseTheoryCoursesReview($sid)
+    {
+        /*$response = Http::withHeaders([
+            'X-API-KEY' => 'EXAMBILL_98745012'
+        ])->get("https://ugr.duetbd.org/api/session-wise-theory-courses-review/{$sid}");*/
+
+        $response = Http::withHeaders([
+            'X-API-KEY' => 'EXAMBILL_98745012'
+        ])->get("https://ugr.duetbd.org/api/session-wise-theory-courses-review-1");
+
+        // Handle response
+        if ($response->failed()) {
+            Log::error('Theory course fetch failed', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            return [
+                'error' => 'Unable to fetch data',
+                'status_code' => $response->status(),
+            ];
+        }
+
+        return json_decode($response->body()); // Returns a stdClass object
+    }
+
+    //for special session
+    public static function getSessionWiseTheoryCoursesSpecial()
+    {
+        $response = Http::withHeaders([
+            'X-API-KEY' => 'EXAMBILL_98745012'
+        ])->get("https://ugr.duetbd.org/api/session-wise-theory-courses-special-architecture");
 
         // Handle response
         if ($response->failed()) {

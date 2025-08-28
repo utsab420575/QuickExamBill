@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
-class CommitteeInputReviewController extends Controller
+class CommitteeInputReviewController_v7 extends Controller
 {
     //showing session list
     public function reviewSessionShow(){
@@ -190,85 +190,16 @@ class CommitteeInputReviewController extends Controller
 
         $filteredRows = array_values($byCourseId);
 
-
-        // === 4.5) Merge duplicates that only differ by hyphen/space in courseno ===
-        // Key by a normalized courseno (remove non-alphanumerics, uppercase)
-        // Keep the latest courseObject by id; sum the registered_students_count
-        $bucket = [];
-
-        $normalize = function (?string $code) {
-            // CE 2111, CE-2111, ce-2111 -> CE2111
-            return preg_replace('/[^A-Z0-9]/', '', strtoupper((string) $code));
-        };
-
-        foreach ($filteredRows as $row) {
-            if (!isset($row->courseObject)) continue;
-
-            $course    = $row->courseObject;
-            $origCode  = $course->courseno ?? '';
-            $normCode  = $normalize($origCode);
-            $count     = (int) ($row->registered_students_count ?? 0);
-            $courseId  = (int) ($course->id ?? 0);
-
-            if (!isset($bucket[$normCode])) {
-                // seed
-                $bucket[$normCode] = [
-                    'row'        => $row,              // keep full wrapper (courseObject + registered_students_count)
-                    'latest_id'  => $courseId,         // track latest by id
-                    'coursenos'  => [$origCode],       // collect original courseno variants
-                    'sum_count'  => $count,            // sum of registered_students_count
-                ];
-                continue;
-            }
-
-            // aggregate
-            $bucket[$normCode]['sum_count'] += $count;
-
-            // collect this courseno variant
-            if (!in_array($origCode, $bucket[$normCode]['coursenos'], true)) {
-                $bucket[$normCode]['coursenos'][] = $origCode;
-            }
-
-            // if this is the newer course by id, replace the base row (but keep the running sum & list)
-            if ($courseId > $bucket[$normCode]['latest_id']) {
-                $bucket[$normCode]['row']       = $row;
-                $bucket[$normCode]['latest_id'] = $courseId;
-            }
-        }
-
-        // Build merged rows: latest courseObject stays, code becomes "latest/others", count becomes sum
-        $mergedRows = [];
-        foreach ($bucket as $normCode => $data) {
-            /** @var stdClass $row */
-            $row = $data['row'];
-
-            // Set summed count
-            $row->registered_students_count = $data['sum_count'];
-
-            // courseno display: put latest first, then the other variants
-            $latestCode = $row->courseObject->courseno ?? '';
-            $others     = array_values(array_diff($data['coursenos'], [$latestCode]));
-            if (!empty($others)) {
-                // e.g. "CE 2111/CE-2111/CE2111"
-                $row->courseObject->courseno = $latestCode . '/' . implode('/', $others);
-            }
-
-            $mergedRows[] = $row;
-        }
-
-
-
         // 5) Overwrite the payload to match what your Blade expects
-        $all_course_with_teacher->courses = $mergedRows;
+        $all_course_with_teacher->courses = $filteredRows;
         //return $all_course_with_teacher->courses;
 
 // (Optional) If you don't need the original sessions block anymore, you can slim it:
 // unset($all_course_with_teacher->sessions);
 
 // 6) Count for your Blade
-        $number_of_theory_courses = count($mergedRows);
+        $number_of_theory_courses = count($filteredRows);
 
-        //return $number_of_theory_courses;
 
        /* // Count number of theory courses
         $number_of_theory_courses = isset($all_course_with_teacher->courses)

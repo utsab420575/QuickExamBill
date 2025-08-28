@@ -67,6 +67,24 @@
                                         </a>
                                     </li>
                                 @endcan
+                                @can('committee.input.review.session.extra')
+                                    <li>
+                                        <a class="nav-link {{ request()->routeIs('committee.input.review.session.extra') ? 'text-primary' : '' }}"
+                                           href="{{ route('committee.input.review.session.extra') }}">
+                                            All Review Session Extra
+                                        </a>
+                                    </li>
+                                @endcan
+
+                                @can('committee.input.special.session')
+                                    <li>
+                                        <a class="nav-link {{ request()->routeIs('committee.input.special.session') ? 'text-primary' : '' }}"
+                                           href="{{ route('committee.input.special.session') }}">
+                                            All Special Session
+                                        </a>
+                                    </li>
+                                @endcan
+
                             </ul>
                         </li>
                     @endif
@@ -102,6 +120,12 @@
                                     <a class="nav-link {{ request()->routeIs('statement.review.session') ? 'text-primary' : '' }}"
                                        href="{{ route('statement.review.session') }}">
                                         All Review Session
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="nav-link {{ request()->routeIs('statement.review.extra.session') ? 'text-primary' : '' }}"
+                                       href="{{ route('statement.review.extra.session') }}">
+                                        All Review Session Extra
                                     </a>
                                 </li>
                             </ul>
@@ -256,6 +280,26 @@
                             </ul>
                         </li>
                     @endif
+
+                    {{-- Special Review --}}
+
+                        <li class="nav-parent {{ request()->routeIs('role.assignments.*') ? 'nav-expanded nav-active' : '' }}">
+                            <a class="nav-link" href="#">
+                                <i class="fa-solid fa-lock-open" aria-hidden="true"></i>
+                                <span>Session</span>
+                            </a>
+                            <ul class="nav nav-children">
+
+                                    <li>
+                                        <a class="nav-link {{ request()->routeIs('session.add') ? 'text-primary' : '' }}"
+                                           href="{{ route('session.add') }}">
+                                            Add Session
+                                        </a>
+                                    </li>
+
+                            </ul>
+                        </li>
+
 
                 </ul>
 

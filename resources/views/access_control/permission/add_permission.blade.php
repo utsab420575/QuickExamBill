@@ -52,8 +52,10 @@
                                                 <option value="import"> Import</option>
                                                 <option value="committee_input_regular"> Committee Input Regular</option>
                                                 <option value="committee_input_review"> Committee Input Review</option>
+                                                <option value="committee_input_special"> Committee Input Special</option>
                                                 <option value="report_regular"> Report Regular</option>
                                                 <option value="report_review"> Report Review</option>
+                                                <option value="report_special"> Report Special</option>
                                                 <option value="statement"> Statement</option>
                                                 <option value="teacher"> Teacher</option>
                                                 <option value="employee"> Employee</option>
