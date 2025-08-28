@@ -8,6 +8,7 @@ use App\Http\Controllers\ImportExportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReportReviewController;
+use App\Http\Controllers\ReportSpecialController;
 use App\Http\Controllers\ReviewSpecialSessionController;
 use App\Http\Controllers\RoleAssignmentController;
 use App\Http\Controllers\RoleController;
@@ -177,6 +178,15 @@ Route::middleware('auth')->group(function () {
         //generate for both review,review extra
         Route::post('/review/generate', 'reviewReportGenerate')->name('report.review.generate');
     });
+
+    //Report For Special Session
+    Route::prefix('report')->controller(ReportSpecialController::class)->group(function () {
+        Route::get('/special/session', 'specialSessionShow')->name('report.special.session');
+        Route::post('/special/generate', 'specialReportGenerate')->name('report.special.generate');
+    });
+
+
+
 
 
 

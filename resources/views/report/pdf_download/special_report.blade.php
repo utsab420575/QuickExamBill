@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Exam Bill Review</title>
+    <title>Exam Bill Special</title>
     <style>
         @page {
             /*top right bottom left*/
@@ -116,7 +116,7 @@
             <td>
                 <div style="display: flex; justify-content: space-between;">
                     <span>{{ $yearText }} year {{ $semesterText }} semester</span>
-                    <span style="font-weight: bold; padding-left: 10px;">Review</span>
+                    <span style="font-weight: bold; padding-left: 10px;">Special</span>
                 </div>
             </td>
             <td style="text-align: left;padding-left: 20px;">
@@ -172,7 +172,7 @@
             //$assigns_order_1 = $teacher->rateAssigns->where('rateHead.order_no', '1');
             $assigns_order_1 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
+                       $assign->exam_type_id == 3 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '1';
             });
@@ -219,7 +219,7 @@
             //$assigns_order_2 = $teacher->rateAssigns->where('rateHead.order_no', '2');
             /* $assigns_order_2 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                  return $assign->session_id == $session_info->id &&
-            $assign->exam_type_id == 2 &&
+            $assign->exam_type_id == 3 &&
             $assign->rateHead &&
                         $assign->rateHead->order_no == '2';
              });*/
@@ -274,7 +274,7 @@
             //$assigns_order_3 = $teacher->rateAssigns->where('rateHead.order_no', '3');
              $assigns_order_3 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '3';
                });
@@ -322,7 +322,7 @@
             //$assigns_order_4 = $teacher->rateAssigns->where('rateHead.order_no', '4');
             $assigns_order_4 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '4';
                });
@@ -372,7 +372,7 @@
             //$assigns_order_5 = $teacher->rateAssigns->where('rateHead.order_no', '5');
             $assigns_order_5 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '5';
                });
@@ -425,7 +425,7 @@
             // ALL 6.a rows for this teacher (session + exam type)
             $assigns_6a = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id
-                    && $assign->exam_type_id == 2
+                    && $assign->exam_type_id == 3
                     && $assign->rateHead
                     && $assign->rateHead->order_no == '6.a';
             });
@@ -490,7 +490,7 @@
             //$assign_6b = $teacher->rateAssigns->where('rateHead.order_no', '6.b')->first();
              $assign_6b = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '6.b';
                })->first();
@@ -520,7 +520,7 @@
             //$assign_6c = $teacher->rateAssigns->where('rateHead.order_no', '6.c')->first();
              $assign_6c = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '6.c';
                })->first();
@@ -550,7 +550,7 @@
             //$assign_6d = $teacher->rateAssigns->where('rateHead.order_no', '6.d')->first();
              $assign_6d = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '6.d';
                })->first();
@@ -581,7 +581,7 @@
             // 7.e (usually single)
             $assign_7e = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
+                       $assign->exam_type_id == 3 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '7.e';
             });
@@ -602,7 +602,7 @@
             // 7.f (can be multiple like 8.b)
             $assigns_7f = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
+                       $assign->exam_type_id == 3 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '7.f';
             });
@@ -664,21 +664,21 @@
             //$assigns_order_8a = $teacher->rateAssigns->where('rateHead.order_no', '8.a');
             $assigns_order_8a = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '8.a';
                });
             //$assigns_order_8b = $teacher->rateAssigns->where('rateHead.order_no', '8.b');
              $assigns_order_8b = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '8.b';
                });
 
              $assigns_order_8c = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '8.c';
                })->first();
@@ -686,7 +686,7 @@
 
             /*$assigns_order_8d = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-            $assign->exam_type_id == 2 &&
+            $assign->exam_type_id == 3 &&
             $assign->rateHead &&
                           $assign->rateHead->order_no == '8.d';
                })->first();*/
@@ -802,7 +802,7 @@
         @php
             $assign_8_d = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
+                       $assign->exam_type_id == 3 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '8.d';
             });
@@ -857,7 +857,7 @@
             //$assigns_order_9 = $teacher->rateAssigns->where('rateHead.order_no', '9');
             $assigns_order_9 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '9';
                });
@@ -907,7 +907,7 @@
         @php
             $assign_10_a = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
+                       $assign->exam_type_id == 3 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '10.a';
             });
@@ -955,7 +955,7 @@
                 <td class="textend"></td>
                 <td class="textend"></td>
             </tr>
-            $assign->exam_type_id == 2 &&
+            $assign->exam_type_id == 3 &&
         @endif
 
 
@@ -991,7 +991,7 @@
         @php
             $assign_10_b = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
+                       $assign->exam_type_id == 3 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '10.b';
             });
@@ -1048,7 +1048,7 @@
         @php
             $assigns_order_11 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                  return $assign->session_id == $session_info->id &&
-                        $assign->exam_type_id == 2 &&
+                        $assign->exam_type_id == 3 &&
                         $assign->rateHead &&
                         $assign->rateHead->order_no == '11';
              });
@@ -1085,7 +1085,7 @@
             // Collect ALL 12.a assigns for this teacher (no ->first)
             $assigns_12_a = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
+                       $assign->exam_type_id == 3 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '12.a';
             });
@@ -1128,7 +1128,7 @@
             //$assign_12_b = $teacher->rateAssigns->where('rateHead.order_no', '12.b')->first();
              $assign_12_b = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '12.b';
                });
@@ -1168,7 +1168,7 @@
             //$assign_13 = $teacher->rateAssigns->where('rateHead.order_no', '13')->first();
             $assign_13 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '13';
                })->first();
@@ -1199,7 +1199,7 @@
             //$assigns_order_14 = $teacher->rateAssigns->where('rateHead.order_no', '14')->first();
              $assigns_order_14 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '14';
                })->first();
@@ -1224,7 +1224,7 @@
             //$assigns_order_15 = $teacher->rateAssigns->where('rateHead.order_no', '15')->first();
             $assigns_order_15 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '15';
                })->first();
@@ -1249,7 +1249,7 @@
             //$assign_16 = $teacher->rateAssigns->where('rateHead.order_no', '16')->first();
             $assign_16 = $teacher->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '16';
                })->first();
@@ -1388,7 +1388,7 @@
             <td>
                 <div style="display: flex; justify-content: space-between;">
                     <span>{{ $yearText }} year {{ $semesterText }} semester</span>
-                    <span style="font-weight: bold; padding-left: 10px;">Review</span>
+                    <span style="font-weight: bold; padding-left: 10px;">Special</span>
                 </div>
             </td>
             <td style="text-align: left;padding-left: 20px;">
@@ -1442,7 +1442,7 @@
             //$assigns_order_1 = $employee->rateAssigns->where('rateHead.order_no', '1');
             $assigns_order_1 = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
+                       $assign->exam_type_id == 3 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '1';
             });
@@ -1489,7 +1489,7 @@
             //$assigns_order_2 = $employee->rateAssigns->where('rateHead.order_no', '2');
             /* $assigns_order_2 = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                  return $assign->session_id == $session_info->id &&
-            $assign->exam_type_id == 2 &&
+            $assign->exam_type_id == 3 &&
             $assign->rateHead &&
                         $assign->rateHead->order_no == '2';
              });*/
@@ -1544,7 +1544,7 @@
             //$assigns_order_3 = $employee->rateAssigns->where('rateHead.order_no', '3');
              $assigns_order_3 = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '3';
                });
@@ -1592,7 +1592,7 @@
             //$assigns_order_4 = $employee->rateAssigns->where('rateHead.order_no', '4');
             $assigns_order_4 = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '4';
                });
@@ -1642,7 +1642,7 @@
             //$assigns_order_5 = $employee->rateAssigns->where('rateHead.order_no', '5');
             $assigns_order_5 = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '5';
                });
@@ -1695,7 +1695,7 @@
             // ALL 6.a rows for this teacher (session + exam type)
             $assigns_6a = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id
-                    && $assign->exam_type_id == 2
+                    && $assign->exam_type_id == 3
                     && $assign->rateHead
                     && $assign->rateHead->order_no == '6.a';
             });
@@ -1760,7 +1760,7 @@
             //$assign_6b = $employee->rateAssigns->where('rateHead.order_no', '6.b')->first();
              $assign_6b = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '6.b';
                })->first();
@@ -1790,7 +1790,7 @@
             //$assign_6c = $employee->rateAssigns->where('rateHead.order_no', '6.c')->first();
              $assign_6c = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '6.c';
                })->first();
@@ -1820,7 +1820,7 @@
             //$assign_6d = $employee->rateAssigns->where('rateHead.order_no', '6.d')->first();
              $assign_6d = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '6.d';
                })->first();
@@ -1851,7 +1851,7 @@
             // 7.e (usually single)
             $assign_7e = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
+                       $assign->exam_type_id == 3 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '7.e';
             });
@@ -1872,7 +1872,7 @@
             // 7.f (can be multiple like 8.b)
             $assigns_7f = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
+                       $assign->exam_type_id == 3 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '7.f';
             });
@@ -1934,21 +1934,21 @@
             //$assigns_order_8a = $employee->rateAssigns->where('rateHead.order_no', '8.a');
             $assigns_order_8a = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '8.a';
                });
             //$assigns_order_8b = $employee->rateAssigns->where('rateHead.order_no', '8.b');
              $assigns_order_8b = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '8.b';
                });
 
              $assigns_order_8c = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '8.c';
                })->first();
@@ -1956,7 +1956,7 @@
 
             /*$assigns_order_8d = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-            $assign->exam_type_id == 2 &&
+            $assign->exam_type_id == 3 &&
             $assign->rateHead &&
                           $assign->rateHead->order_no == '8.d';
                })->first();*/
@@ -2072,7 +2072,7 @@
         @php
             $assign_8_d = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
+                       $assign->exam_type_id == 3 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '8.d';
             });
@@ -2127,7 +2127,7 @@
             //$assigns_order_9 = $employee->rateAssigns->where('rateHead.order_no', '9');
             $assigns_order_9 = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '9';
                });
@@ -2177,7 +2177,7 @@
         @php
             $assign_10_a = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
+                       $assign->exam_type_id == 3 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '10.a';
             });
@@ -2225,7 +2225,7 @@
                 <td class="textend"></td>
                 <td class="textend"></td>
             </tr>
-            $assign->exam_type_id == 2 &&
+            $assign->exam_type_id == 3 &&
         @endif
 
 
@@ -2261,7 +2261,7 @@
         @php
             $assign_10_b = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
+                       $assign->exam_type_id == 3 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '10.b';
             });
@@ -2318,7 +2318,7 @@
         @php
             $assigns_order_11 = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                  return $assign->session_id == $session_info->id &&
-                        $assign->exam_type_id == 2 &&
+                        $assign->exam_type_id == 3 &&
                         $assign->rateHead &&
                         $assign->rateHead->order_no == '11';
              });
@@ -2355,7 +2355,7 @@
             // Collect ALL 12.a assigns for this teacher (no ->first)
             $assigns_12_a = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                 return $assign->session_id == $session_info->id &&
-                       $assign->exam_type_id == 2 &&
+                       $assign->exam_type_id == 3 &&
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '12.a';
             });
@@ -2398,7 +2398,7 @@
             //$assign_12_b = $employee->rateAssigns->where('rateHead.order_no', '12.b')->first();
              $assign_12_b = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '12.b';
                });
@@ -2438,7 +2438,7 @@
             //$assign_13 = $employee->rateAssigns->where('rateHead.order_no', '13')->first();
             $assign_13 = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '13';
                })->first();
@@ -2469,7 +2469,7 @@
             //$assigns_order_14 = $employee->rateAssigns->where('rateHead.order_no', '14')->first();
              $assigns_order_14 = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '14';
                })->first();
@@ -2494,7 +2494,7 @@
             //$assigns_order_15 = $employee->rateAssigns->where('rateHead.order_no', '15')->first();
             $assigns_order_15 = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '15';
                })->first();
@@ -2519,7 +2519,7 @@
             //$assign_16 = $employee->rateAssigns->where('rateHead.order_no', '16')->first();
             $assign_16 = $employee->rateAssigns->filter(function($assign) use ($session_info) {
                    return $assign->session_id == $session_info->id &&
-                          $assign->exam_type_id == 2 &&
+                          $assign->exam_type_id == 3 &&
                           $assign->rateHead &&
                           $assign->rateHead->order_no == '16';
                })->first();

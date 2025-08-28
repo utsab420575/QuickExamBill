@@ -13,23 +13,10 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
-class ReportReviewController extends Controller
+class ReportSpecialController extends Controller
 {
-    public function reviewSessionShow(){
-        $sessions=ApiData::getReviewSessions();
-        if($sessions === null) {
-            return redirect()->back()->with([
-                'message' => 'Session Import Failed',
-                'alert-type' => 'error',
-            ]);
-        }
-        return view('report.session_view.review_session_list',compact('sessions'));
-    }
-
-
-    public function reviewSessionExtraShow()
-    {
-        $sessionData = ApiData::getReviewSessionExtra(); // should contain ->session
+    public function specialSessionShow(){
+        $sessionData = ApiData::getSpecialSession(); // should contain ->session
 
         //return $sessionData;
 
@@ -41,38 +28,38 @@ class ReportReviewController extends Controller
             ]);
         }
 
-        // Query: session match, exam_type_id = 2 (review), ugr_id is NULL
+        // Query: session match, exam_type_id = 2 (special), ugr_id is NULL
         $sessions = Session::query()
             ->where('session', $sessionData->session)
-            ->where('exam_type_id', 2)
+            ->where('exam_type_id', 3)
             ->whereNull('ugr_id')
             ->orderBy('id')
             ->get();
 
         if ($sessions->isEmpty()) {
             return redirect()->back()->with([
-                'message' => 'No matching review sessions found.',
+                'message' => 'No matching Special sessions found.',
                 'alert-type' => 'error',
             ])->withInput();
         }
 
-
         //return $sessions;
-
-        return view('report.session_view.review_session_extra_list', compact('sessions'));
-
+        return view('report.session_view.special_session_list', compact('sessions'));
     }
 
-    public function reviewReportGenerate(Request $request){
+    public function specialReportGenerate(Request $request){
+        //return 'hi';
         $sid = $request->sid;
 
-        $exam_type = ExamType::where('type','Review')->value('id');
+        $exam_type = ExamType::where('type','Special')->value('id');
+
 
         // try to find session where id = sid and ugr_id is null
         $session_info = Session::whereNull('ugr_id')
             ->where('exam_type_id', $exam_type)
             ->where('id', $sid)
             ->first();
+
 
         // if not found, try where ugr_id = sid
         if (!$session_info) {
@@ -338,7 +325,7 @@ class ReportReviewController extends Controller
         Log::info('📦rateHead_order_16', optional($rateHead_order_16)->toArray() ?? []);
 
 
-        $pdf = Pdf::loadView('report.pdf_download.review_report', [
+        $pdf = Pdf::loadView('report.pdf_download.special_report', [
             'teachers' => $teachers,
             'employees' => $employees,
             'session_info' => $session_info,
@@ -407,9 +394,8 @@ class ReportReviewController extends Controller
         ])->setPaper('legal', 'portrait'); // or 'landscape';
 
 
-        $filename = 'review_' . $session_info->session . '_' . $session_info->year . '_' . $session_info->semester . '_exam_bill.pdf';
+        $filename = 'special_' . $session_info->session . '_' . $session_info->year . '_' . $session_info->semester . '_exam_bill.pdf';
         return $pdf->stream($filename);
         // return $pdf->download('demo_exam_bill.pdf');
     }
-
 }

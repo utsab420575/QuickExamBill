@@ -227,6 +227,14 @@
                                         </a>
                                     </li>
                                 @endcan
+                                @can('report.special.session')
+                                    <li>
+                                        <a class="nav-link {{ request()->routeIs('report.special.session') ? 'text-primary' : '' }}"
+                                           href="{{ route('report.special.session') }}">
+                                            All Special Session
+                                        </a>
+                                    </li>
+                                @endcan
                             </ul>
                         </li>
                     @endif
