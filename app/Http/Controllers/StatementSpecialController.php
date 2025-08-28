@@ -7,24 +7,12 @@ use App\Models\RateAssign;
 use App\Models\RateHead;
 use App\Models\Session;
 use App\Services\ApiData;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
-class StatementReviewController extends Controller
+class StatementSpecialController extends Controller
 {
-    public function reviewSessionShow(){
-        $sessions=ApiData::getReviewSessions();
-        if($sessions === null) {
-            return redirect()->back()->with([
-                'message' => 'Session Import Failed',
-                'alert-type' => 'error',
-            ]);
-        }
-        return view('statement.session_view.review_session_list',compact('sessions'));
-    }
-
-    public function reviewSessionExtraShow(){
-        $sessionData = ApiData::getReviewSessionExtra(); // should contain ->session
+    public function specialSessionShow(){
+        $sessionData = ApiData::getSpecialSession(); // should contain ->session
 
         //return $sessionData;
 
@@ -36,27 +24,31 @@ class StatementReviewController extends Controller
             ]);
         }
 
-        // Query: session match, exam_type_id = 2 (review), ugr_id is NULL
+        // Query: session match, exam_type_id = 2 (special), ugr_id is NULL
         $sessions = Session::query()
             ->where('session', $sessionData->session)
-            ->where('exam_type_id', 2)
+            ->where('exam_type_id', 3)
             ->whereNull('ugr_id')
             ->orderBy('id')
             ->get();
 
         if ($sessions->isEmpty()) {
             return redirect()->back()->with([
-                'message' => 'No matching review sessions found.',
+                'message' => 'No matching Special sessions found.',
                 'alert-type' => 'error',
             ])->withInput();
         }
-        return view('statement.session_view.review_session_list_extra',compact('sessions'));
+
+
+        //return $sessions;
+
+        return view('statement.session_view.special_session_list', compact('sessions'));
     }
 
-    public function reviewStatementGenerate(Request $request){
+    public function specialStatementGenerate(Request $request){
         $sid = $request->sid;
 
-        $exam_type = ExamType::where('type','Review')->value('id');
+        $exam_type = ExamType::where('type','Special')->value('id');
 
         // try to find session where id = sid and ugr_id is null
         $session_info = Session::whereNull('ugr_id')
@@ -452,6 +444,7 @@ class StatementReviewController extends Controller
             ->get();
 
 
+
         // order 15
         $rateHead_order_15 = RateHead::where('order_no', '15')->first();
 
@@ -468,7 +461,7 @@ class StatementReviewController extends Controller
 
 
         //return $assigns_order_1;
-        return view('statement.statement_download.review_statement', [
+        return view('statement.statement_download.special_statement', [
             'session_info'      => $session_info,
             'exam_type'         => $exam_type,
             'assigns_order_1'   => $assigns_order_1,

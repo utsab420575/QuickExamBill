@@ -14,7 +14,7 @@
         }
     </style>
 @endpush
-<form id="form-list-of-scrutinizers" action="{{ route('committee.input.review.scrutinizers.store') }}" method="POST">
+<form id="form-list-of-scrutinizers" action="{{ route('committee.input.special.scrutinizers.store') }}" method="POST">
     @csrf
     <input type="hidden" id="sid" name="sid" value="{{$sid}}">
     <div class="row mb-5">

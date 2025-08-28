@@ -90,7 +90,7 @@
         .card-header.d-flex { gap: 14px; }
     </style>
 @endpush
-<form id="form-list-of-scrutinizers-theory-grade-sheet" action="{{ route('committee.input.review.scrutinizers.theory.grade.sheet.store') }}" method="POST">
+<form id="form-list-of-scrutinizers-theory-grade-sheet" action="{{ route('committee.input.special.scrutinizers.theory.grade.sheet.store') }}" method="POST">
     @csrf
     <input type="hidden" id="sid" name="sid" value="{{$sid}}">
     <div class="row mb-5">

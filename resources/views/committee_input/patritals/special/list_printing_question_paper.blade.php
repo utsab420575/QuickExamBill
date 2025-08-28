@@ -10,7 +10,7 @@
     </style>
 @endpush
 
-<form id="form-list-of-printing-question-paper" action="{{ route('committee.input.review.printing.question.committee.store') }}" method="POST">
+<form id="form-list-of-printing-question-paper" action="{{ route('committee.input.special.printing.question.committee.store') }}" method="POST">
     @csrf
     <input type="hidden" value="{{ $sid }}" name="sid">
     <div class="row mb-5">

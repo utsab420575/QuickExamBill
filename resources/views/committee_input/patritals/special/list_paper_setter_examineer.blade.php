@@ -18,7 +18,7 @@
         }
     </style>
 @endpush
-<form id="form-list-of-examiner-paper-setter" action="{{ route('committee.input.review.examiner.paper.setter.store') }}" method="POST">
+<form id="form-list-of-examiner-paper-setter" action="{{ route('committee.input.special.examiner.paper.setter.store') }}" method="POST">
     @csrf
     <input type="hidden" id="{{$sid}}" name="sid" value="{{$sid}}">
     <div class="row mb-5">

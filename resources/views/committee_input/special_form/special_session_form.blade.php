@@ -21,7 +21,7 @@
 @section('content')
     <section role="main" class="content-body">
         <header class="page-header">
-            <h2>Review Session All Form(Session:{{$session_info['session']}}-{{$session_info['year']}}/{{$session_info['semester']}})</h2>
+            <h2>Special Session All Form(Session:{{$session_info['session']}}-{{$session_info['year']}}/{{$session_info['semester']}})</h2>
             <div class="right-wrapper text-end">
                 <ol class="breadcrumbs">
                     <li>
@@ -71,6 +71,8 @@
             $print_question_paper_rate=null;
 
             $comparison_rate=null;
+
+            $honorium_coordinator=null;
 
             $honorium_chairman=null;
 
@@ -236,6 +238,24 @@
                     $comparison_rate=$ComparisonData?->default_rate;
                     }
 
+                     //For HonorariumCoordinator
+                    $rateHonorariumCoordinator = RateHead::where('order_no', '=','14')->first();
+                    if($rateHonorariumCoordinator){
+                          $savedRateAssignHonorariumCoordinator = RateAssign::getTeachersFromCommittee(
+                            $session_info->id,
+                            $exam_type,
+                            $rateHonorariumCoordinator->id
+                        );
+
+                           $HonorariumCoordinatorData  = RateAmount::where('exam_type_id', $exam_type)
+                            ->where('rate_head_id', $rateHonorariumCoordinator->id)
+                            ->where('session_id', $session_info->id)
+                            ->first();
+
+                           $honorium_coordinator=$HonorariumCoordinatorData?->default_rate;
+                    }
+
+
                      //For HonorariumChairman
                     $rateHonorariumChairman = RateHead::where('order_no', '=','15')->first();
                     if($rateHonorariumChairman){
@@ -256,42 +276,45 @@
 
 
         {{--order -1--}}
-       @include('committee_input.patritals.review.list_moderation_committe')
+       @include('committee_input.patritals.special.list_moderation_committe')
 
 
         {{--order-2,3--}}
 
-            @include('committee_input.patritals.review.list_paper_setter_examineer')
+            @include('committee_input.patritals.special.list_paper_setter_examineer')
 
 
 
         {{--order-9--}}
-        @include('committee_input.patritals.review.list_scrutinizers')
+        @include('committee_input.patritals.special.list_scrutinizers')
 
 
         {{--order-8.a--}}
-        @include('committee_input.patritals.review.list_preparation_theory_grade_sheet')
+        @include('committee_input.patritals.special.list_preparation_theory_grade_sheet')
 
 
         {{--order-10.a--}}
-        @include('committee_input.patritals.review.list_scrutinizing_theory_grade_sheet')
+        @include('committee_input.patritals.special.list_scrutinizing_theory_grade_sheet')
 
 
 
         {{--order-12.a--}}
-        @include('committee_input.patritals.review.list_stencil_cutting_question_paper')
+        @include('committee_input.patritals.special.list_stencil_cutting_question_paper')
 
 
         {{--order-12.b--}}
 
-        @include('committee_input.patritals.review.list_printing_question_paper')
+        @include('committee_input.patritals.special.list_printing_question_paper')
 
 
         {{--order-12.b--}}
-        @include('committee_input.patritals.review.list_comparison_question_paper')
+        @include('committee_input.patritals.special.list_comparison_question_paper')
+
+        {{-- order-14--}}
+        @include('committee_input.patritals.special.list_honorarium_coordinator')
 
         {{--order-15--}}
-        @include('committee_input.patritals.review.list_honorarium_chairman')
+        @include('committee_input.patritals.special.list_honorarium_chairman')
 
 
 

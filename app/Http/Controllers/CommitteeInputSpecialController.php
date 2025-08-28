@@ -32,7 +32,7 @@ class CommitteeInputSpecialController extends Controller
             ]);
         }
 
-        // Query: session match, exam_type_id = 2 (review), ugr_id is NULL
+        // Query: session match, exam_type_id = 2 (special), ugr_id is NULL
         $sessions = Session::query()
             ->where('session', $sessionData->session)
             ->where('exam_type_id', 3)
@@ -105,10 +105,13 @@ class CommitteeInputSpecialController extends Controller
         //this is for get special session id from ugr
         $sessionData = ApiData::getSpecialSession(); //full row
         $sid_specical=$sessionData->id;//this is id from ugr of 6/3 session; this will help me for get finding courses
+        //return $sid_specical;
 
         //this id for local session table id ; for special session 2021-2022 1/2,2/2 etc.
         $sid=$request->sid;
+        //return $sid;
         $exam_type = ExamType::where('type', 'special')->first();
+        //return $exam_type;
         $session_info = LocalData::getOrCreateRegularSession($sid,$exam_type->id);
         //return $session_info;
 
@@ -142,6 +145,8 @@ class CommitteeInputSpecialController extends Controller
 
         // all theory course with teacher (multi-session payload)
         $all_course_with_teacher = ApiData::getSessionWiseTheoryCoursesSpecial();
+
+        //return $all_course_with_teacher;
 
         // 1) Target year/semester from $session_info
         $targetYear     = (int) ($session_info->year ?? 0);
@@ -249,7 +254,7 @@ class CommitteeInputSpecialController extends Controller
 
         // 5) Overwrite the payload to match what your Blade expects
         $all_course_with_teacher->courses = $mergedRows;
-        return $all_course_with_teacher->courses;
+        //return $all_course_with_teacher->courses;
 
 // (Optional) If you don't need the original sessions block anymore, you can slim it:
 // unset($all_course_with_teacher->sessions);
@@ -297,134 +302,6 @@ class CommitteeInputSpecialController extends Controller
             ->with('all_advisor_with_student_count', $all_advisor_with_student_count);
     }
 
-    //no need this ; we can delete this method;
-    public function reviewSessionExtraForm(Request $request)
-    {
-
-        $sid=$request->sid;
-        //return $sid;
-        $exam_type = ExamType::where('type', 'review')->first();
-        $session_info = Session::find($sid);
-        //return $session_info;
-
-        $order = ['Arch', 'CE', 'ChE', 'Chem','CSE','EEE','FE','HSS','IPE','Math','ME','MME','Phy','TE']; // Custom order of departments
-
-        $teachers = Teacher::with('user', 'designation', 'department')
-            ->whereHas('department', function ($query) use ($order) {
-                $query->whereIn('shortname', $order);
-            })
-            ->join('departments', 'teachers.department_id', '=', 'departments.id')
-            ->orderByRaw("FIELD(departments.shortname, '" . implode("','", $order) . "')")
-            ->select('teachers.*') // Select only teacher fields to avoid conflict
-            ->get();
-        //return $teachers;
-
-        // Group by department short name
-        $groupedTeachers = $teachers->groupBy(function ($teacher) {
-            return $teacher->department->fullname ?? 'Unknown';
-        });
-
-        // Move 'Arch' to the beginning
-        $groupedTeachers = $groupedTeachers->sortBy(function ($group, $key) {
-            return $key === 'Architecture' ? 0 : 1;
-        });
-        //return $groupedTeachers;
-
-        $employees = Employee::with('user', 'designation', 'department')
-            ->where('department_id', 2)
-            ->orderBy('id') // or any ordering you prefer
-            ->get();
-
-        // all theory course with teacher (multi-session payload)
-        $all_course_with_teacher = ApiData::getSessionWiseTheoryCoursesReview($sid);
-        //return $all_course_with_teacher;
-
-        // 1) Target year/semester from $session_info
-        $targetYear     = (int) ($session_info->year ?? 0);
-        $targetSemester = (int) ($session_info->semester ?? 0);
-        //return $targetSemester;
-
-
-        // 2) Helper: extract (year, semester) from courseno (first & third digits)
-        $pickYearSemesterFromCourseNo = function (?string $courseno): array {
-            $digits = preg_replace('/\D/', '', (string) $courseno); // keep only digits
-            if (strlen($digits) < 3) return [null, null];           // skip malformed codes
-            return [(int)$digits[0], (int)$digits[2]];              // 1st=year, 3rd=semester
-        };
-
-        // 3) Flatten ALL sessions -> rows
-        $sessions = $all_course_with_teacher->sessions ?? [];
-        $flattenedRows = [];
-        foreach ($sessions as $sess) {
-            foreach (($sess->courses ?? []) as $row) {
-                // each $row has ->courseObject and ->registered_students_count
-                $flattenedRows[] = $row;
-            }
-        }
-
-        // 4) Filter by year/semester pattern, and DEDUPE by course id WHILE KEEPING THE WRAPPER ROW
-        $byCourseId = [];
-        foreach ($flattenedRows as $row) {
-            $course = $row->courseObject ?? null;
-            if (!$course) continue;
-
-            [$yr, $sem] = $pickYearSemesterFromCourseNo($course->courseno ?? '');
-            if ($yr === $targetYear && $sem === $targetSemester) {
-                // Keep the full row so Blade still has courseObject + registered_students_count
-                $byCourseId[$course->id] = $row;
-            }
-        }
-
-        $filteredRows = array_values($byCourseId);
-
-        // 5) Overwrite the payload to match what your Blade expects
-        $all_course_with_teacher->courses = $filteredRows;
-        //return $all_course_with_teacher->courses;
-
-// (Optional) If you don't need the original sessions block anymore, you can slim it:
-// unset($all_course_with_teacher->sessions);
-
-// 6) Count for your Blade
-        $number_of_theory_courses = count($filteredRows);
-
-
-        /* // Count number of theory courses
-         $number_of_theory_courses = isset($all_course_with_teacher->courses)
-             ? count($all_course_with_teacher->courses)
-             : 0;*/
-
-        // return $number_of_theory_courses;
-
-        //no need to call again for class test(class test for theory course)
-        // $all_course_with_class_test_teacher=ApiData::getSessionWiseTheoryCourses(sid);
-        //all sessional course with teacher
-        $all_sessional_course_with_teacher = ApiData::getSessionWiseSessionalCourses($sid);
-        //all theory sessional courses
-        $all_theory_sessional_courses_with_student_count = ApiData::getSessionWiseTheorySessionalCourses($sid);
-        //all student advisor in specific student
-        $all_advisor_with_student_count = ApiData::getSessionWiseStudentAdvisor($sid);
-        //active head
-        $teacher_head = ApiData::getHead();
-
-        // return response()->json(['$all_course_with_teacher'=>$all_course_with_teacher]);
-        /*return response()->json(['head'=>$all_course_with_class_test_teacher]);*/
-        return view('committee_input.review_form.review_session_form')
-            ->with('sid',$sid)
-            /*->with('teacher_head', $teacher_head)*/
-            /*  ->with('teacher_coordinator', $teacher_coordinator)*/
-            ->with('session_info', $session_info)
-            ->with('exam_type',$exam_type->id)
-            ->with('teachers', $teachers)
-            ->with('employees', $employees)
-            ->with('teacher_head', $teacher_head)
-            ->with('groupedTeachers', $groupedTeachers)
-            ->with('all_course_with_teacher', $all_course_with_teacher)
-            ->with('number_of_theory_courses', $number_of_theory_courses)
-            ->with('all_course_with_class_test_teacher', $all_course_with_teacher)
-            ->with('all_sessional_course_with_teacher', $all_sessional_course_with_teacher)
-            ->with('all_theory_sessional_courses_with_student_count', $all_theory_sessional_courses_with_student_count)
-            ->with('all_advisor_with_student_count', $all_advisor_with_student_count);
-    }
 
 
     //Examinat
@@ -439,7 +316,7 @@ class CommitteeInputSpecialController extends Controller
         $sessionId = $request->sid;
         $min_rate=$request->moderation_committee_min_rate;
         $max_rate=$request->moderation_committee_max_rate;
-        $exam_type_record=ExamType::where('type','review')->first();
+        $exam_type_record=ExamType::where('type','special')->first();
         $exam_type = $exam_type_record->id;
 
 
@@ -584,7 +461,7 @@ class CommitteeInputSpecialController extends Controller
         $examiner_min_rate=$request->examiner_min_rate;
         $paper_setter_rate=$request->paper_setter_rate;
         $sessionId = $request->sid;
-        $exam_type_record=ExamType::where('type','review')->first();
+        $exam_type_record=ExamType::where('type','special')->first();
         $exam_type = $exam_type_record->id;
 
         // ✅ Log all data
@@ -728,7 +605,7 @@ class CommitteeInputSpecialController extends Controller
                 $total_input_students = $noOfScripts[$courseId] ?? 0;
                 $no_of_scripts = $noOfScripts[$courseId] ?? 0;
 
-                $teacherCount = count($teacherIds);//this is used here because in review don't have specific teacher for a course
+                $teacherCount = count($teacherIds);//this is used here because in special don't have specific teacher for a course
 
                 //hidden input
                 $courseno = $request->input("courseno.$courseId");
@@ -825,7 +702,7 @@ class CommitteeInputSpecialController extends Controller
         $sessionId = $request->input('sid');
         $scrutinize_script_rate = $request->input('scrutinize_script_rate');
         $scrutinize_min_rate = $request->input('scrutinize_min_rate');
-        $exam_type_record=ExamType::where('type','review')->first();
+        $exam_type_record=ExamType::where('type','special')->first();
         $exam_type = $exam_type_record->id;
 
         Log::info('📥 Scrutinizer Form Submission Received', [
@@ -989,7 +866,7 @@ class CommitteeInputSpecialController extends Controller
         $studentData = $request->input('prepares_theory_grade_sheet_no_of_students', []);
         $sessionId=$request->sid;
         $theory_grade_sheet_rate=$request->theory_grade_sheet_rate;
-        $exam_type_record=ExamType::where('type','review')->first();
+        $exam_type_record=ExamType::where('type','special')->first();
         $exam_type = $exam_type_record->id;
 
 
@@ -1143,7 +1020,7 @@ class CommitteeInputSpecialController extends Controller
         $studentData = $request->input('scrutinizing_theory_grade_sheet_no_of_students', []);
         $sessionId = $request->sid;
         $scrutinize_theory_grade_sheet_rate = $request->scrutinize_theory_grade_sheet_rate;
-        $exam_type_record=ExamType::where('type','review')->first();
+        $exam_type_record=ExamType::where('type','special')->first();
         $exam_type = $exam_type_record->id;
 
 
@@ -1306,7 +1183,7 @@ class CommitteeInputSpecialController extends Controller
         $sessionId       = (int) $request->sid;
         $ratePerStencil  = (float) $request->stencil_cutting_question_paper_rate;
 
-        $examType = ExamType::where('type', 'review')->value('id');
+        $examType = ExamType::where('type', 'special')->value('id');
 
         // ---- Validation ----
         /*  $request->validate([
@@ -1410,7 +1287,7 @@ class CommitteeInputSpecialController extends Controller
         $sessionId      =  $request->sid;
         $ratePerStencil = (float) $request->printing_question_paper_rate;
 
-        $examType = ExamType::where('type', 'review')->value('id');
+        $examType = ExamType::where('type', 'special')->value('id');
 
         // ---- Validation ----
         $request->validate([
@@ -1509,7 +1386,7 @@ class CommitteeInputSpecialController extends Controller
         $sessionId = $request->sid;
         $rate      = (float) $request->comparison_question_paper_rate;
 
-        $exam_type = ExamType::where('type','Review')->value('id');
+        $exam_type = ExamType::where('type','Special')->value('id');
 
         if (empty($teacherGroups) || empty($questionCounts)) {
             return response()->json(['message' => 'Please add at least one row with teacher(s) and question count.'], 422);
@@ -1602,7 +1479,7 @@ class CommitteeInputSpecialController extends Controller
         $teacherId = $request->input('coordinator_id');
         $coordinator_rate = $request->input('coordinator_amount');
         $sessionId=$request->input('sid');
-        $exam_type_record=ExamType::where('type','regular')->first();
+        $exam_type_record=ExamType::where('type','special')->first();
         $exam_type = $exam_type_record->id;
 
         Log::info('📥 Received Coordinator Data', [
@@ -1685,7 +1562,7 @@ class CommitteeInputSpecialController extends Controller
         $teacherId = $request->input('chairman_id');
         $chairman_rate = $request->input('chairman_amount');
         $sessionId=$request->input('sid');
-        $exam_type_record=ExamType::where('type','review')->first();
+        $exam_type_record=ExamType::where('type','special')->first();
         $exam_type = $exam_type_record->id;
 
 

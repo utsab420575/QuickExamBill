@@ -7,7 +7,7 @@
     </style>
 @endpush
 
-<form id="form-list-of-comparison-question-paper" action="{{ route('committee.input.review.comparison.committee.store') }}" method="POST">
+<form id="form-list-of-comparison-question-paper" action="{{ route('committee.input.special.comparison.committee.store') }}" method="POST">
     @csrf
     <input type="hidden" value="{{ $sid }}" name="sid">
 

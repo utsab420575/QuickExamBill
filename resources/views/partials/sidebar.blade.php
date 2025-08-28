@@ -128,6 +128,12 @@
                                         All Review Session Extra
                                     </a>
                                 </li>
+                                <li>
+                                    <a class="nav-link {{ request()->routeIs('statement.special.session') ? 'text-primary' : '' }}"
+                                       href="{{ route('statement.special.session') }}">
+                                        All Special Session
+                                    </a>
+                                </li>
                             </ul>
                         </li>
                     @endif

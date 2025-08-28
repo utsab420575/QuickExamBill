@@ -19,7 +19,7 @@
     </style>
 @endpush
 
-<form id="form-list-of-stencil-cutting-question-paper" action="{{ route('committee.input.review.stencil.cutting.committee.store') }}" method="POST">
+<form id="form-list-of-stencil-cutting-question-paper" action="{{ route('committee.input.special.stencil.cutting.committee.store') }}" method="POST">
     @csrf
     <input type="hidden" value="{{$sid}}" name="sid">
     <div class="row mb-5">

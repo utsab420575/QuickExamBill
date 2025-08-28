@@ -1,4 +1,4 @@
-<form id="form-list-of-honorarium-coordinator"   action="{{ route('committee.input.honorarium.coordinator.store') }}" method="POST">
+<form id="form-list-of-honorarium-coordinator"   action="{{ route('committee.input.special.honorarium.coordinator.store') }}" method="POST">
     @csrf
     <input type="hidden" value="{{$sid}}" name="sid">
     <div class="row mb-5">

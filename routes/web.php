@@ -13,6 +13,7 @@ use App\Http\Controllers\RoleAssignmentController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StatementController;
 use App\Http\Controllers\StatementReviewController;
+use App\Http\Controllers\StatementSpecialController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserController;
 use App\Models\Employee;
@@ -128,7 +129,7 @@ Route::middleware('auth')->group(function () {
     });
 
 
-    //For Review Session
+    //For Special Session
     Route::prefix('committee/input')->controller(CommitteeInputSpecialController::class)->group(function () {
         //show review session list form
         Route::get('special/session', 'specialSessionShow')->name('committee.input.special.session');
@@ -149,6 +150,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/special/stencil/cutting/committee/store', 'storeStencilCuttingCommittee')->name('committee.input.special.stencil.cutting.committee.store');
         Route::post('/special/printing/question/committee/store', 'storePrintingQuestion')->name('committee.input.special.printing.question.committee.store');
         Route::post('/special/comparison/committee/store', 'storeComparisonCommittee')->name('committee.input.special.comparison.committee.store');
+        Route::post('/special/honorarium/coordinator/store', 'storeHonorariumCoordinator')->name('committee.input.special.honorarium.coordinator.store');
         Route::post('/special/chairman/coordinator/store', 'storeHonorariumChairman')->name('committee.input.special.chairman.coordinator.store');
     });
 
@@ -249,10 +251,18 @@ Route::middleware('auth')->group(function () {
 
     //For Review Session
     Route::prefix('statement')->controller(StatementReviewController::class)->group(function () {
+        //review session list show
         Route::get('/review/session', 'reviewSessionShow')->name('statement.review.session');
+        //extra review session list show
         Route::get('/review/extra/session', 'reviewSessionExtraShow')->name('statement.review.extra.session');
+        //now generate review blade same for both(review and extra review)
         Route::post('/review/generate', 'reviewStatementGenerate')->name('statement.review.generate');
+    });
 
+    //For Special Session
+    Route::prefix('statement')->controller(StatementSpecialController::class)->group(function () {
+        Route::get('/special/session', 'specialSessionShow')->name('statement.special.session');
+        Route::post('/special/generate', 'specialStatementGenerate')->name('statement.special.generate');
     });
 
 
