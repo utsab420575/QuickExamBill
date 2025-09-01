@@ -817,6 +817,16 @@
                        $assign->rateHead &&
                        $assign->rateHead->order_no == '8.d';
             });
+             // just the course_code values (unique, trimmed)
+            $course_codes = $assign_8_d
+                ->pluck('course_code')
+                ->filter(fn($c) => filled($c))
+                ->map(fn($c) => trim($c))
+                ->unique()
+                ->values()
+                ->all();
+            // collect "s/t" per course for THIS teacher
+            $fraction_parts = [];
 
             $total_assigns = $assign_8_d->count();
 
@@ -836,13 +846,27 @@
                    /* $total_student_all_course += $assign->total_students ?? 0;*/
                     $total_student_all_course += $assign->no_of_items ?? 0;
                     $total_amount_all_course += $assign->total_amount ?? 0;
+
+                    // build "students/teachers" text from the row (no extra queries)
+                    $s = (int)   ($assign->total_students  ?? 0);
+                    $t = max(1, (int) ($assign->total_teachers ?? 0)); // guard divide-by-zero
+                    $fraction_parts[] = "{$s}/{$t}";
                 @endphp
             @endforeach
+
+            @php
+                $chunks = array_chunk($fraction_parts, 3);
+                $pretty_total = rtrim(rtrim(number_format($total_student_all_course, 2, '.', ''), '0'), '.');
+            @endphp
             <tr>
                 <td class="textstart" colspan="2">{{ $head }}</td>
-                <td>{{ $total_assigns }} courses</td>
+                <td class="textstart">{{ implode(', ', $course_codes) }}</td>
                 {{--<td>{{ $total_student_all_course }}/2</td>--}}
-                <td>{{ $total_student_all_course }}</td>
+                <td class="textcenter">
+                    @foreach ($chunks as $i => $chunk)
+                        {{ implode(' + ', $chunk) }}@if ($i < count($chunks) - 1) +<br>@endif
+                    @endforeach
+                </td>
                 <td class="textend">{{ number_format($default_rate_8_d, 2) }}</td>
                 <td class="textend">{{ number_format($total_amount_all_course, 2) }}</td>
             </tr>
@@ -923,6 +947,17 @@
                        $assign->rateHead->order_no == '10.a';
             });
 
+             // just the course_code values (unique, trimmed)
+            $course_codes = $assign_10_a
+                ->pluck('course_code')
+                ->filter(fn($c) => filled($c))
+                ->map(fn($c) => trim($c))
+                ->unique()
+                ->values()
+                ->all();
+            // collect "s/t" per course for THIS teacher
+            $fraction_parts = [];
+
             $total_assigns = $assign_10_a->count();
 
             $rateHead=\App\Models\RateHead::where('order_no','10.a')->first();
@@ -942,15 +977,29 @@
                    /* $total_student_all_course += $assign->total_students ?? 0;*/
                     $total_student_all_course += $assign->no_of_items ?? 0;
                     $total_amount_all_course += $assign->total_amount ?? 0;
+
+                     // build "students/teachers" text from the row (no extra queries)
+                    $s = (int)   ($assign->total_students  ?? 0);
+                    $t = max(1, (int) ($assign->total_teachers ?? 0)); // guard divide-by-zero
+                    $fraction_parts[] = "{$s}/{$t}";
                 @endphp
             @endforeach
+
+            @php
+                $chunks = array_chunk($fraction_parts, 3);
+                $pretty_total = rtrim(rtrim(number_format($total_student_all_course, 2, '.', ''), '0'), '.');
+            @endphp
             <tr>
                 <td rowspan="2">10</td>
                 <td class="textstart" rowspan="2">{{ $head }}</td>
                 <td class="textstart">(a) {{ $sub_head_10_a }}</td>
-                <td>{{ $total_assigns }} courses</td>
+                <td class="textstart">{{ implode(', ', $course_codes) }}</td>
                 {{--<td>{{ $total_student_all_course }}/2</td>--}}
-                <td>{{ $total_student_all_course }}</td>
+                <td class="textcenter">
+                    @foreach ($chunks as $i => $chunk)
+                        {{ implode(' + ', $chunk) }}@if ($i < count($chunks) - 1) +<br>@endif
+                    @endforeach
+                </td>
                 <td class="textend">{{ number_format($default_rate_10_a, 2) }}</td>
                 <td class="textend">{{ number_format($total_amount_all_course, 2) }}</td>
             </tr>
@@ -1007,6 +1056,17 @@
                        $assign->rateHead->order_no == '10.b';
             });
 
+            // just the course_code values (unique, trimmed)
+            $course_codes = $assign_10_b
+                ->pluck('course_code')
+                ->filter(fn($c) => filled($c))
+                ->map(fn($c) => trim($c))
+                ->unique()
+                ->values()
+                ->all();
+            // collect "s/t" per course for THIS teacher
+            $fraction_parts = [];
+
             $total_assigns = $assign_10_b->count();
 
             $rateHead=\App\Models\RateHead::where('order_no','10.b')->first();
@@ -1026,13 +1086,27 @@
                     /*$total_student_all_course += $assign->total_students ?? 0;*/
                     $total_student_all_course += $assign->no_of_items ?? 0;
                     $total_amount_all_course += $assign->total_amount ?? 0;
+
+                    // build "students/teachers" text from the row (no extra queries)
+                    $s = (int)   ($assign->total_students  ?? 0);
+                    $t = max(1, (int) ($assign->total_teachers ?? 0)); // guard divide-by-zero
+                    $fraction_parts[] = "{$s}/{$t}";
                 @endphp
             @endforeach
+
+            @php
+                $chunks = array_chunk($fraction_parts, 3);
+                $pretty_total = rtrim(rtrim(number_format($total_student_all_course, 2, '.', ''), '0'), '.');
+            @endphp
             <tr>
                 <td class="textstart">(b) {{ $sub_head_10_b }}</td>
-                <td>{{ $total_assigns }} courses</td>
+                <td class="textstart">{{ implode(', ', $course_codes) }}</td>
                 {{--<td>{{ $total_student_all_course }}/2</td>--}}
-                <td>{{ $total_student_all_course }}</td>
+                <td class="textcenter">
+                    @foreach ($chunks as $i => $chunk)
+                        {{ implode(' + ', $chunk) }}@if ($i < count($chunks) - 1) +<br>@endif
+                    @endforeach
+                </td>
                 <td class="textend">{{ number_format($default_rate_10_b, 2) }}</td>
                 <td class="textend">{{ number_format($total_amount_all_course, 2) }}</td>
             </tr>
@@ -2090,6 +2164,17 @@
                        $assign->rateHead->order_no == '8.d';
             });
 
+            // just the course_code values (unique, trimmed)
+            $course_codes = $assign_8_d
+                ->pluck('course_code')
+                ->filter(fn($c) => filled($c))
+                ->map(fn($c) => trim($c))
+                ->unique()
+                ->values()
+                ->all();
+            // collect "s/t" per course for THIS teacher
+            $fraction_parts = [];
+
             $total_assigns = $assign_8_d->count();
 
             $rateHead=\App\Models\RateHead::where('order_no','8.d')->first();
@@ -2108,13 +2193,25 @@
                    /* $total_student_all_course += $assign->total_students ?? 0;*/
                     $total_student_all_course += $assign->no_of_items ?? 0;
                     $total_amount_all_course += $assign->total_amount ?? 0;
+
+                      // build "students/teachers" text from the row (no extra queries)
+                    $s = (int)   ($assign->total_students  ?? 0);
+                    $t = max(1, (int) ($assign->total_teachers ?? 0)); // guard divide-by-zero
+                    $fraction_parts[] = "{$s}/{$t}";
                 @endphp
             @endforeach
+            @php
+                $chunks = array_chunk($fraction_parts, 3);
+                $pretty_total = rtrim(rtrim(number_format($total_student_all_course, 2, '.', ''), '0'), '.');
+            @endphp
             <tr>
                 <td class="textstart" colspan="2">{{ $head }}</td>
-                <td>{{ $total_assigns }} courses</td>
+                <td class="textstart">{{ implode(', ', $course_codes) }}</td>
                 {{--<td>{{ $total_student_all_course }}/2</td>--}}
-                <td>{{ $total_student_all_course }}</td>
+                <td class="textcenter">
+                    @foreach ($chunks as $i => $chunk)
+                        {{ implode(' + ', $chunk) }}@if ($i < count($chunks) - 1) +<br>@endif
+                @endforeach
                 <td class="textend">{{ number_format($default_rate_8_d, 2) }}</td>
                 <td class="textend">{{ number_format($total_amount_all_course, 2) }}</td>
             </tr>
