@@ -106,9 +106,9 @@ class RateAssign extends Model
 
         return $data;
     }
-
-
-    public static function getTeacherWithGroup($sessionId, $examTypeId, $rateHeadId)
+  
+    
+   public static function getTeacherWithGroup($sessionId, $examTypeId, $rateHeadId)
     {
         Log::info('📥 getTeacherWithGroup() input received', [
             'session_id' => $sessionId,
@@ -178,7 +178,7 @@ class RateAssign extends Model
             'full_grouped_data' => $result
         ];
     }
-
+  
     public static function getInternalExternalTeacher($sessionId, $examTypeId, $rateHeadId)
     {
         // Pull only rows that have a real group_no
@@ -214,5 +214,4 @@ class RateAssign extends Model
 
         return $rows;
     }
-
 }

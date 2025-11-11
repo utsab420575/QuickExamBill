@@ -1397,9 +1397,6 @@
         $isAdmin = $user->hasAnyRole(['Admin','SuperAdmin']);
         $isEmployeeOnly = $user->hasRole('Employee') && !$isAdmin;
         $uid = $user->id;
-
-
-
     @endphp
     @php
         // Skip other teachers if the user is a teacher

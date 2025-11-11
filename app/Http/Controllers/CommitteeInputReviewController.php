@@ -829,7 +829,6 @@ class CommitteeInputReviewController extends Controller
         }
     }
 
-    //order 9
     public function storeScrutinizers(Request $request)
     {
         $scrutinizer_teacher_ids = $request->input('scrutinizer_teacher_ids', []);
