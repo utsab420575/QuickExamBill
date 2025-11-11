@@ -65,9 +65,14 @@
 @endphp
 @foreach($teachers as  $teacher)
     @php
+        $user = auth()->user();
+        $isAdmin = $user->hasAnyRole(['Admin','SuperAdmin']); // or 'Admin|SuperAdmin' if using Spatie
+        $isTeacherOnly = $user->hasRole('Teacher') && !$isAdmin;
+    @endphp
+    @php
         // Skip other teachers if the user is a teacher
-        if (auth()->user()->hasRole('Teacher') && auth()->user()->id !== $teacher->user_id) {
-            continue;
+         if ($isTeacherOnly && $user->id !== $teacher->user_id) {
+            continue; // only teachers (not admins) are restricted to their own row
         }
         $global_sum=0;
     @endphp
@@ -1367,8 +1372,14 @@
 @endphp
 @foreach($employees as  $employee)
     @php
-        // Skip other teachers if the user is a teacher
-        if (auth()->user()->hasRole('Employee') && auth()->user()->id !== $employee->user_id) {
+        $user = auth()->user();
+        $isAdmin = $user->hasAnyRole(['Admin','SuperAdmin']);
+        $isEmployeeOnly = $user->hasRole('Employee') && !$isAdmin;
+        $uid = $user->id;
+    @endphp
+    @php
+        // Skip other employee if the user is a teacher
+        if ($isEmployeeOnly && $uid !== $employee->user_id) {
             continue;
         }
         $global_sum=0;
