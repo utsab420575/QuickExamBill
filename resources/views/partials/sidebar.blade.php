@@ -313,14 +313,49 @@
                             <ul class="nav nav-children">
 
                                     <li>
+                                        <a class="nav-link {{ request()->routeIs('session.all') ? 'text-primary' : '' }}"
+                                           href="{{ route('session.all') }}">
+                                            All Session
+                                        </a>
+                                    </li>
+                                    <li>
                                         <a class="nav-link {{ request()->routeIs('session.add') ? 'text-primary' : '' }}"
                                            href="{{ route('session.add') }}">
                                             Add Session
                                         </a>
                                     </li>
 
+
+
                             </ul>
                         </li>
+
+
+
+                    <li class="nav-parent {{ request()->routeIs('role.assignments.*') ? 'nav-expanded nav-active' : '' }}">
+                        <a class="nav-link" href="#">
+                            <i class="fa-solid fa-lock-open" aria-hidden="true"></i>
+                            <span>Contributors</span>
+                        </a>
+                        <ul class="nav nav-children">
+
+                            <li>
+                                <a class="nav-link {{ request()->routeIs('contributors.all') ? 'text-primary' : '' }}"
+                                   href="{{ route('contributors.all') }}">
+                                    All Contributors
+                                </a>
+                            </li>
+                            <li>
+                                <a class="nav-link {{ request()->routeIs('contributors.add') ? 'text-primary' : '' }}"
+                                   href="{{ route('contributors.add') }}">
+                                    Add Contributor
+                                </a>
+                            </li>
+
+
+
+                        </ul>
+                    </li>
 
 
                 </ul>

@@ -37,7 +37,9 @@ class CommitteeInputReviewController extends Controller
 
     public function reviewSessionShowExtra()
     {
+        //only single session retrive for use session(2023-2024 / 2024-2025 ........)
         $sessionData = ApiData::getReviewSessionExtra(); // should contain ->session
+        //return $sessionData;
 
         //return $sessionData;
 
@@ -49,11 +51,13 @@ class CommitteeInputReviewController extends Controller
             ]);
         }
 
+        //here only showing manually inserted sessions
         // Query: session match, exam_type_id = 2 (review), ugr_id is NULL
         $sessions = Session::query()
             ->where('session', $sessionData->session)
             ->where('exam_type_id', 2)
             ->whereNull('ugr_id')
+            ->where('status',1)
             ->orderBy('id')
             ->get();
 

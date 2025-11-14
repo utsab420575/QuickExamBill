@@ -27,6 +27,7 @@ class CommitteeInputController extends Controller
                 'alert-type' => 'error',
             ]);
         }
+        //return $sessions;
         return view('committee_input.session_view.regular_session_list',compact('sessions'));
     }
 

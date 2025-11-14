@@ -36,6 +36,7 @@ class CommitteeInputSpecialController extends Controller
         $sessions = Session::query()
             ->where('session', $sessionData->session)
             ->where('exam_type_id', 3)
+            ->where('status', 1)
             ->whereNull('ugr_id')
             ->orderBy('id')
             ->get();

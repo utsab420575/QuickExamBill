@@ -28,6 +28,7 @@ class StatementSpecialController extends Controller
         $sessions = Session::query()
             ->where('session', $sessionData->session)
             ->where('exam_type_id', 3)
+            ->where('status', 1)
             ->whereNull('ugr_id')
             ->orderBy('id')
             ->get();
@@ -54,6 +55,7 @@ class StatementSpecialController extends Controller
         $session_info = Session::whereNull('ugr_id')
             ->where('exam_type_id', $exam_type)
             ->where('id', $sid)
+            ->where('status', 1)
             ->first();
 
         // if not found, try where ugr_id = sid

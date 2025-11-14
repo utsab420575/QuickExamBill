@@ -14,12 +14,14 @@ class LocalData
         $session_info = Session::whereNull('ugr_id')
             ->where('exam_type_id', $exam_type)
             ->where('id', $sid)
+            ->where('status', 1)
             ->first();
 
         // 2) If not found, try to find session where ugr_id = sid
         if (!$session_info) {
             $session_info = Session::where('ugr_id', $sid)
                 ->where('exam_type_id', $exam_type)
+                ->where('status', 1)
                 ->first();
         }
 
@@ -33,7 +35,8 @@ class LocalData
                 $session_info->session      = $session_info_data['session'];
                 $session_info->year         = $session_info_data['year'];
                 $session_info->semester     = $session_info_data['semester'];
-                $session_info->exam_type_id = $exam_type; // ✅ corrected: use exam_type_id, not string
+                $session_info->exam_type_id = $exam_type;
+                $session_info->status = 1;
                 $session_info->created_at   = now();
                 $session_info->updated_at   = now();
                 $session_info->save();
@@ -111,12 +114,14 @@ class LocalData
         $session_info = Session::whereNull('ugr_id')
             ->where('exam_type_id', $exam_type)
             ->where('id', $sid)
+            ->where('status', 1)
             ->first();
 
         // 2) If not found, try to find session where ugr_id = sid
         if (!$session_info) {
             $session_info = Session::where('ugr_id', $sid)
                 ->where('exam_type_id', $exam_type)
+                ->where('status', 1)
                 ->first();
         }
 
@@ -130,7 +135,8 @@ class LocalData
                 $session_info->session      = $session_info_data['session'];
                 $session_info->year         = $session_info_data['year'];
                 $session_info->semester     = $session_info_data['semester'];
-                $session_info->exam_type_id = $exam_type; // ✅ corrected: use exam_type_id, not string
+                $session_info->exam_type_id = $exam_type;
+                $session_info->status = 1;
                 $session_info->created_at   = now();
                 $session_info->updated_at   = now();
                 $session_info->save();

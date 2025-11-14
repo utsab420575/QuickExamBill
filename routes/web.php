@@ -3,6 +3,7 @@
 use App\Http\Controllers\CommitteeInputController;
 use App\Http\Controllers\CommitteeInputReviewController;
 use App\Http\Controllers\CommitteeInputSpecialController;
+use App\Http\Controllers\ContributorsController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ImportExportController;
 use App\Http\Controllers\ProfileController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserController;
 use App\Models\Employee;
 use App\Models\Teacher;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -285,8 +287,28 @@ Route::middleware('auth')->group(function () {
     Route::prefix('session')->controller(ReviewSpecialSessionController::class)->group(function () {
         Route::get('/add', 'create')->name('session.add');
         Route::post('/store', 'store')->name('session.store');
+
+        Route::get('/all', 'index')->name('session.all');
+        Route::get('/edit/{id}', 'edit')->name('session.edit');
+        Route::post('/update', 'update')->name('session.update');
+        Route::get('/delete/{id}', 'destroy')->name('session.delete');
     });
 
+
+    // Contributors routes (add, list, edit, delete)
+    Route::prefix('contributors')->controller(ContributorsController::class)->group(function () {
+        Route::get('/add', 'create')->name('contributors.add');      // show add form
+        Route::post('/store', 'store')->name('contributors.store');  // save new
+
+        Route::get('/all', 'index')->name('contributors.all');       // list all
+        Route::get('/edit/{id}', 'edit')->name('contributors.edit'); // show edit form
+        Route::post('/update', 'update')->name('contributors.update');// update existing
+        Route::get('/delete/{id}', 'destroy')->name('contributors.delete'); // delete
+    });
+
+
+    //this is for showing all contributor from Header
+    Route::get('/contributors', [ContributorsController::class, 'contributors_view'])->name('contributors.view');
 
 
 
