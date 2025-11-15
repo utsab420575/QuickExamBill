@@ -21,6 +21,7 @@ class CommitteeInputController extends Controller
     //regular session list
     public function regularSessionShow(){
         $sessions=ApiData::getRegularSessions();
+        //return $sessions;
         if($sessions === null) {
             return redirect()->back()->with([
                 'message' => 'Session Import Failed',
@@ -81,6 +82,7 @@ class CommitteeInputController extends Controller
     {
 
         //this session id got from session list blade
+        //data send from view; session list is :   "id": 364,
         $sid=$request->sid;
         //return $sid;
         //$session_info=ApiData::getSessionInfo($sid);

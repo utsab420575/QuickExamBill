@@ -38,6 +38,7 @@ class ReportController extends Controller
 
         $session_info = Session::where('ugr_id', $sid)
                                 ->where('exam_type_id',$exam_type)
+                                ->where('status',1)
                                 ->first();
         if (!$session_info) {
             Log::error('❌ No matching session found', ['ugr_id' => $sid]);

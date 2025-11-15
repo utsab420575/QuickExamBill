@@ -18,9 +18,11 @@
                 <section class="card">
                     <div class="card-body">
                         <div class="mb-3 text-end">
-                            <a href="{{ route('session.add') }}" class="btn btn-primary">
-                                <i class="fa fa-plus"></i> Add Session
-                            </a>
+                            @can('session.add')
+                                <a href="{{ route('session.add') }}" class="btn btn-primary">
+                                    <i class="fa fa-plus"></i> Add Session
+                                </a>
+                            @endcan
                         </div>
 
                         <table class="table table-bordered table-striped mb-0" id="datatable-default">
@@ -54,13 +56,18 @@
                                     </td>
 
                                     <td class="text-center">
-                                        <a href="{{ route('session.edit', $single_session->id) }}" class="btn btn-sm btn-primary">
-                                            <i class="fa-solid fa-pen"></i>
-                                        </a>
-                                        &nbsp;&nbsp;
-                                        <a href="{{ route('session.delete', $single_session->id) }}" class="btn btn-sm btn-danger delete">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </a>
+                                        @can('session.edit')
+                                            <a href="{{ route('session.edit', $single_session->id) }}"
+                                               class="btn btn-sm btn-primary">
+                                                <i class="fa-solid fa-pen"></i>
+                                            </a>
+                                        @endcan
+                                        @can('session.delete')
+                                            <a href="{{ route('session.delete', $single_session->id) }}"
+                                               class="btn btn-sm btn-danger delete">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </a>
+                                        @endcan
                                     </td>
                                 </tr>
                             @endforeach

@@ -122,6 +122,7 @@ class ReviewSpecialSessionController extends Controller
                 ->where('year', $validated['year'])
                 ->where('semester', $validated['semester'])
                 ->where('exam_type_id', $validated['exam_type_id'])
+                ->whereNull('ugr_id')
                 ->where('id', '<>', $row->id)
                 ->exists();
 

@@ -113,7 +113,7 @@ Route::middleware('auth')->group(function () {
         Route::get('review/session', 'reviewSessionShow')->name('committee.input.review.session');
         Route::get('review/session/extra', 'reviewSessionShowExtra')->name('committee.input.review.session.extra');
 
-        //show full form
+        //show full form for review and review-extra same form
         Route::post('review/session/form', 'reviewSessionForm')->name('committee.input.review.session.form');
        /* Route::post('review/session/extra/form', 'reviewSessionExtraForm')->name('committee.input.review.session.extra.form');*/
 

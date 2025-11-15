@@ -20,7 +20,9 @@ class CommitteeInputReviewController extends Controller
 {
     //showing session list
     public function reviewSessionShow(){
+        //regular , review session is same
         $sessions=ApiData::getReviewSessions();
+        //return $sessions;
         //dd(ApiData::getReviewSessions());
         //return $sessions;
         if($sessions === null) {
@@ -41,8 +43,6 @@ class CommitteeInputReviewController extends Controller
         $sessionData = ApiData::getReviewSessionExtra(); // should contain ->session
         //return $sessionData;
 
-        //return $sessionData;
-
         // Validate the API data
         if (!$sessionData || empty($sessionData->session)) {
             return redirect()->back()->with([
@@ -53,6 +53,10 @@ class CommitteeInputReviewController extends Controller
 
         //here only showing manually inserted sessions
         // Query: session match, exam_type_id = 2 (review), ugr_id is NULL
+        // We search in local database using only session(2023-2024/2024-2025)
+
+        //if review session get from API is 1/2,2/2,3/2,4/2 than extra review session(we manually inputed) will be 1/1,2/1,3/1,4/1,5/1
+        //if review session get from API is 1/1,2/1,3/1,4/1 than extra review session(we manually inputed) will be 1/2,2/2,3/2,4/2,5/2
         $sessions = Session::query()
             ->where('session', $sessionData->session)
             ->where('exam_type_id', 2)
@@ -124,7 +128,7 @@ class CommitteeInputReviewController extends Controller
 
         $sid=$request->sid;
         $exam_type = ExamType::where('type', 'review')->first();
-        $session_info = LocalData::getOrCreateRegularSession($sid,$exam_type->id);
+        $session_info = LocalData::getOrCreateReviewSession($sid,$exam_type->id);
         //return $session_info;
 
         $order = ['Arch', 'CE', 'ChE', 'Chem','CSE','EEE','FE','HSS','IPE','Math','ME','MME','Phy','TE']; // Custom order of departments

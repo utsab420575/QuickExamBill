@@ -15,8 +15,15 @@
     <style>
         /* Page + base */
         @page {
-            size: Legal portrait;              /* Explicitly use Legal paper in portrait */
-            margin: 5mm 12mm 5mm 12mm;
+            size: Legal portrait;
+            margin-top: 18mm;      /* pages 2+ */
+            margin-right: 12mm;
+            margin-bottom: 20mm;
+            margin-left: 12mm;
+        }
+
+        @page:first {
+            margin-top: 5mm;       /* only first page */
         }
 
         html, body {

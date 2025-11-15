@@ -59,8 +59,8 @@
                                                 <option value="statement"> Statement</option>
                                                 <option value="teacher"> Teacher</option>
                                                 <option value="employee"> Employee</option>
-                                                <option value="employee"> Session</option>
-                                                <option value="employee"> Contributor</option>
+                                                <option value="session"> Session</option>
+                                                <option value="contributor"> Contributor</option>
                                                 <option value="permission"> Permission</option>
                                                 <option value="role"> Role</option>
                                                 <option value="role_permission"> Role Permission</option>

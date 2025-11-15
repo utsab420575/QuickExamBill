@@ -6,7 +6,7 @@
     <style>
         @page {
             /*top right bottom left*/
-            margin: 5mm 12mm 5mm 12mm;
+            margin: 5mm 12mm 2mm 12mm;
         }
 
         body {
@@ -18,6 +18,26 @@
             width: 100%;
             border-collapse: collapse;
         }
+
+        /*  ADD THIS BLOCK FOR Revenue Table */
+        .revenue_table {
+            width: 100%;
+            margin-top: 15px;
+            font-size: 11px;
+        }
+        .revenue-stamp-box {
+            border: 1px solid #000;
+            width: 90px;
+            height: 55px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .revenue-stamp-box span {
+            display: inline-block;
+            margin-top: 15px;
+            line-height: 1.2;
+        }
+        /* Revenue Table End here*/
 
         .header_table td {
             text-align: center;
@@ -1378,6 +1398,22 @@
         </tr>
     </table>
 
+    {{-- Revenue Stamp note --}}
+    <table class="revenue_table">
+        <tr>
+            <td style="width: 20%;">
+                <div class="revenue-stamp-box">
+                    <span>Revenue<br>Stamp</span>
+                </div>
+            </td>
+            <td style="width: 60%; text-align: center; vertical-align: bottom; padding-bottom: 0;">
+                N.B. For bill 400 Tk or above use Revenue Stamp of 10 Tk
+            </td>
+            <td style="width: 20%; text-align: right; vertical-align: bottom; padding-bottom: 0;">
+                # MRMR
+            </td>
+        </tr>
+    </table>
 
     <div class="page-break"></div>
 
@@ -2651,6 +2687,23 @@
             <td class="pt-40">Prepared by</td>
             <td class="pt-40">Assistant Comptroller</td>
             <td class="pt-40">Comptroller (In Charge)</td>
+        </tr>
+    </table>
+
+    {{-- Revenue Stamp note --}}
+    <table class="revenue_table">
+        <tr>
+            <td style="width: 20%;">
+                <div class="revenue-stamp-box">
+                    <span>Revenue<br>Stamp</span>
+                </div>
+            </td>
+            <td style="width: 60%; text-align: center; vertical-align: bottom; padding-bottom: 0;">
+                N.B. For bill 400 Tk or above use Revenue Stamp of 10 Tk
+            </td>
+            <td style="width: 20%; text-align: right; vertical-align: bottom; padding-bottom: 0;">
+                # MRMR
+            </td>
         </tr>
     </table>
 

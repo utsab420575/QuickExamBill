@@ -32,7 +32,7 @@ class CommitteeInputSpecialController extends Controller
             ]);
         }
 
-        // Query: session match, exam_type_id = 2 (special), ugr_id is NULL
+        // Query: session match, exam_type_id = 3 (special), ugr_id is NULL
         $sessions = Session::query()
             ->where('session', $sessionData->session)
             ->where('exam_type_id', 3)

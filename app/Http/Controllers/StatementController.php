@@ -36,6 +36,7 @@ class StatementController extends Controller
 
         $session_info = Session::where('ugr_id', $sid)
             ->where('exam_type_id', $exam_type)
+            ->where('status', 1)
             ->first();
 
         $rateHead_order_1 = RateHead::where('order_no', '1')->first();

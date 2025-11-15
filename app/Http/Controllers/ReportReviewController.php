@@ -45,6 +45,7 @@ class ReportReviewController extends Controller
         $sessions = Session::query()
             ->where('session', $sessionData->session)
             ->where('exam_type_id', 2)
+            ->where('status', 1)
             ->whereNull('ugr_id')
             ->orderBy('id')
             ->get();
@@ -71,6 +72,7 @@ class ReportReviewController extends Controller
         // try to find session where id = sid and ugr_id is null
         $session_info = Session::whereNull('ugr_id')
             ->where('exam_type_id', $exam_type)
+            ->where('status', 1)
             ->where('id', $sid)
             ->first();
 
@@ -78,6 +80,7 @@ class ReportReviewController extends Controller
         if (!$session_info) {
             $session_info = Session::where('ugr_id', $sid)
                 ->where('exam_type_id', $exam_type)
+                ->where('status', 1)
                 ->first();
         }
         //return $session_info;

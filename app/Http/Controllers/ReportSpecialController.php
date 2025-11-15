@@ -67,6 +67,7 @@ class ReportSpecialController extends Controller
         if (!$session_info) {
             $session_info = Session::where('ugr_id', $sid)
                 ->where('exam_type_id', $exam_type)
+                ->where('status', 1)
                 ->first();
         }
         //return $session_info;

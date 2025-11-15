@@ -51,10 +51,13 @@
                                                 <option value="statement" {{ $permission->group_name == 'statement' ? 'selected' : '' }}> Statement</option>
                                                 <option value="teacher" {{ $permission->group_name == 'teacher' ? 'selected' : '' }}> Teacher</option>
                                                 <option value="employee" {{ $permission->group_name == 'employee' ? 'selected' : '' }}> Employee</option>
+                                                <option value="session" {{ $permission->group_name == 'session' ? 'selected' : '' }}> Session</option>
+                                                <option value="contributor" {{ $permission->group_name == 'contributor' ? 'selected' : '' }}> Contributor</option>
                                                 <option value="permission" {{ $permission->group_name == 'permission' ? 'selected' : '' }}> Permission</option>
                                                 <option value="role" {{ $permission->group_name == 'role' ? 'selected' : '' }}> Role</option>
                                                 <option value="role_permission" {{ $permission->group_name == 'role_permission' ? 'selected' : '' }}> Role Permission</option>
                                                 <option value="role_assignment" {{ $permission->group_name == 'role_assignment' ? 'selected' : '' }}> Role Assignment For User</option>
+                                                <option value="menu" {{ $permission->group_name == 'menu' ? 'selected' : '' }}> Menu</option>
                                             </select>
                                         </div>
                                     </div>

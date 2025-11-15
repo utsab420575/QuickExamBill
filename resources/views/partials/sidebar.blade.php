@@ -28,7 +28,7 @@
                         <li class="nav-parent {{ request()->routeIs('import.table.*') ? 'nav-expanded nav-active' : '' }}">
                             <a class="nav-link" href="#">
                                 <i class="fa-solid fa-file-import" aria-hidden="true"></i>
-                                <span>Import/Export Manage</span>
+                                <span>UGR Data Import/Export</span>
                             </a>
                             <ul class="nav nav-children">
                                 @can('import.table.all')
@@ -48,7 +48,7 @@
                         <li class="nav-parent {{ request()->routeIs('committee.input.*') ? 'nav-expanded nav-active' : '' }}">
                             <a class="nav-link" href="#">
                                 <i class="fa-solid fa-money-check-dollar" aria-hidden="true"></i>
-                                <span>Committee Input Manage</span>
+                                <span>Data Entry</span>
                             </a>
                             <ul class="nav nav-children">
                                 @can('committee.input.regular.session')
@@ -107,7 +107,7 @@
                         <li class="nav-parent {{ request()->routeIs('statement.*') ? 'nav-expanded nav-active' : '' }}">
                             <a class="nav-link" href="#">
                                 <i class="bx bx-file" aria-hidden="true"></i>
-                                <span>Statement Manage</span>
+                                <span>Year-wise Statements</span>
                             </a>
                             <ul class="nav nav-children">
                                 <li>
@@ -144,7 +144,7 @@
                         <li class="nav-parent {{ request()->routeIs('teacher.*') ? 'nav-expanded nav-active' : '' }}">
                             <a class="nav-link" href="#">
                                 <i class="fa-solid fa-user-tie" aria-hidden="true"></i>
-                                <span>Committee Teacher Manage</span>
+                                <span>Committee Members (Faculty)</span>
                             </a>
                             <ul class="nav nav-children">
                                 @can('teacher.all')
@@ -172,7 +172,7 @@
                         <li class="nav-parent {{ request()->routeIs('employee.*') ? 'nav-expanded nav-active' : '' }}">
                             <a class="nav-link" href="#">
                                 <i class="fa-solid fa-users" aria-hidden="true"></i>
-                                <span>Committee Employee Manage</span>
+                                <span>Committee Members (Staff)</span>
                             </a>
                             <ul class="nav nav-children">
                                 @can('employee.all')
@@ -200,7 +200,7 @@
                         <li class="nav-parent {{ request()->routeIs('report.*') ? 'nav-expanded nav-active' : '' }}">
                             <a class="nav-link" href="#">
                                 <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
-                                <span>Committee Report Manage</span>
+                                <span>Personal Statements</span>
                             </a>
                             <ul class="nav nav-children">
                                 @can('report.regular.session')
@@ -305,57 +305,65 @@
 
                     {{-- Special Review --}}
 
-                        <li class="nav-parent {{ request()->routeIs('role.assignments.*') ? 'nav-expanded nav-active' : '' }}">
+                    @if(Auth::user()->can('session.menu'))
+                        <li class="nav-parent {{ request()->routeIs('session.*') ? 'nav-expanded nav-active' : '' }}">
                             <a class="nav-link" href="#">
-                                <i class="fa-solid fa-lock-open" aria-hidden="true"></i>
+                                <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
                                 <span>Session</span>
                             </a>
                             <ul class="nav nav-children">
 
+                                @can('session.all')
                                     <li>
                                         <a class="nav-link {{ request()->routeIs('session.all') ? 'text-primary' : '' }}"
                                            href="{{ route('session.all') }}">
                                             All Session
                                         </a>
                                     </li>
+                                @endcan
+                                @can('session.add')
                                     <li>
                                         <a class="nav-link {{ request()->routeIs('session.add') ? 'text-primary' : '' }}"
                                            href="{{ route('session.add') }}">
                                             Add Session
                                         </a>
                                     </li>
+                                @endcan
+                            </ul>
+                        </li>
+                    @endif
 
+
+
+                    @if(Auth::user()->can('contributors.menu'))
+                        <li class="nav-parent {{ request()->routeIs('contributors.*') ? 'nav-expanded nav-active' : '' }}">
+                            <a class="nav-link" href="#">
+                                <i class="fa-solid fa-people-group" aria-hidden="true"></i>
+                                <span>Contributors</span>
+                            </a>
+                            <ul class="nav nav-children">
+
+                                @can('contributors.all')
+                                    <li>
+                                        <a class="nav-link {{ request()->routeIs('contributors.all') ? 'text-primary' : '' }}"
+                                           href="{{ route('contributors.all') }}">
+                                            All Contributors
+                                        </a>
+                                    </li>
+                                @endcan
+                                @can('contributors.add')
+                                    <li>
+                                        <a class="nav-link {{ request()->routeIs('contributors.add') ? 'text-primary' : '' }}"
+                                           href="{{ route('contributors.add') }}">
+                                            Add Contributor
+                                        </a>
+                                    </li>
+                                @endcan
 
 
                             </ul>
                         </li>
-
-
-
-                    <li class="nav-parent {{ request()->routeIs('role.assignments.*') ? 'nav-expanded nav-active' : '' }}">
-                        <a class="nav-link" href="#">
-                            <i class="fa-solid fa-lock-open" aria-hidden="true"></i>
-                            <span>Contributors</span>
-                        </a>
-                        <ul class="nav nav-children">
-
-                            <li>
-                                <a class="nav-link {{ request()->routeIs('contributors.all') ? 'text-primary' : '' }}"
-                                   href="{{ route('contributors.all') }}">
-                                    All Contributors
-                                </a>
-                            </li>
-                            <li>
-                                <a class="nav-link {{ request()->routeIs('contributors.add') ? 'text-primary' : '' }}"
-                                   href="{{ route('contributors.add') }}">
-                                    Add Contributor
-                                </a>
-                            </li>
-
-
-
-                        </ul>
-                    </li>
+                    @endif
 
 
                 </ul>
